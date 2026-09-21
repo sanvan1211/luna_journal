@@ -4,21 +4,29 @@
 
 ^^ this is real life luna (she is a 4 year old holland lop rabbit) ^^ 
 
+Life Unraveled, Not Alone (LUNA)
 
 A Claude-powered AI journal companion that analyzes journals stored in Notion.
 
-Sometimes it's hard to reach out to someone and talk face-to-face about what you're going through. Sometimes you don't know how to explain what you're feeling. And sometimes, honestly, you just don't want to talk to anyone about it.
+Sometimes it's hard to reach out to someone and talk face-to-face about what you're going through. Sometimes you don't know how to explain what you're feeling. And sometimes, you simply don't want to talk about it yet.
 
-But those thoughts still matter.
+That doesn't mean those thoughts aren't important.
 
-Writing can be a different way to process them. A journal gives you a place to be completely honest, without having to figure out the right words for someone else.
+Journaling gives you a place to put those thoughts into words. But over time, it can become difficult to look back through everything you've written and recognize the bigger picture.
 
-Luna is an AI journal companion built to help you make sense of those thoughts.
+That's where Luna comes in.
 
-Luna connects to your journals in Notion and uses Claude to analyze what you've written, identify patterns over time, and offer thoughtful reflections, practical suggestions, and a little motivation when you need it.
+Luna connects to your journals in Notion and uses Claude to help you understand what you've written. It can organize your thoughts, recognize patterns that appear over time, and help you reflect on the experiences you're going through.
 
-Luna isn't here to replace the people in your life. It's here to help you understand yourself a little better before, during, or after those conversations.
+Luna can also offer practical suggestions and encouragement when you need another perspective.
 
+### But Luna is not here to replace real people.
+
+Your friends, family, mentors, counselors, and the people you trust are still an important part of your life. Sometimes the most important thing you can do is talk to someone.
+
+Luna is simply another place to start.
+
+A place to put your thoughts into words, look back at where you've been, recognize patterns you might have missed, and figure out how you want to move forward.
 And sometimes, you just need a little bunny sitting beside you while you figure things out. 🐰
 
 
