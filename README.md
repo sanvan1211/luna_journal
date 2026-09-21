@@ -1,7 +1,8 @@
 # luna_
 
+<img width="597" height="598" alt="Screenshot 2026-09-21 at 19 29 03" src="https://github.com/user-attachments/assets/971d1974-fb77-4f82-a24c-6cd14cad64ef" />
 
-
+^^ this is real life luna (she is a 4 year old holland lop rabbit ^^ 
 
 
 A Claude-powered AI journal companion that analyzes journals stored in Notion.
@@ -19,3 +20,6 @@ Luna connects to your journals in Notion and uses Claude to analyze what you've 
 Luna isn't here to replace the people in your life. It's here to help you understand yourself a little better before, during, or after those conversations.
 
 And sometimes, you just need a little bunny sitting beside you while you figure things out. 🐰
+
+
+
