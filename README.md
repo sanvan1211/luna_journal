@@ -2,7 +2,7 @@
 
 <img width="250" height="250" alt="Screenshot 2026-09-21 at 19 29 03" src="https://github.com/user-attachments/assets/971d1974-fb77-4f82-a24c-6cd14cad64ef" />
 
-^^ this is real life luna (she is a 4 year old holland lop rabbit ^^ 
+^^ this is real life luna (she is a 4 year old holland lop rabbit) ^^ 
 
 
 A Claude-powered AI journal companion that analyzes journals stored in Notion.
