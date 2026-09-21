@@ -1,2 +1,2 @@
-# luna_-claude-notion-_
+# luna_
 A Claude-powered AI journal companion that analyzes journals stored in Notion.
