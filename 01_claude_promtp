@@ -1,0 +1,49 @@
+# Build Luna — AI Journal Reflection Platform
+
+## Mission
+Build Luna: connects to a user's Notion journal, analyzes entries over time, and surfaces patterns, themes, and trends. It is **not** a therapist — it helps someone understand what they've already written, not diagnose or counsel them. Every insight it generates must be traceable back to the specific journal entries that support it.
+
+## Before writing any code
+Inspect the repo and report back:
+1. Framework, package manager, existing dependencies
+2. Current app structure and UI
+3. Existing auth and database/storage (if any)
+4. What needs to be added
+5. A concrete Phase 1 plan
+
+Do not rewrite existing project structure unnecessarily — build incrementally, follow existing conventions. Then implement Phase 1 (below).
+
+## Hard constraints — never violate these
+- **No fake data.** Never fabricate journal entries or AI responses and present them as real. If Notion or the AI provider isn't configured, show a real setup/error state — not mock content.
+- **No diagnosis language.** Never say "you are depressed" or assign mental-health scores/labels. Say "your recent entries contain several references to feeling persistently low" instead of naming a condition.
+- **No hidden reasoning.** Expose only: conclusion, concise explanation, supporting journal entries. Never expose chain-of-thought.
+- **Every insight needs receipts.** Insights are structured as `{insight, confidence, supporting_entries: [...]}`. The UI must let a user click "show me the entries" and see exactly which entries produced a claim.
+- **Privacy is load-bearing, not a checkbox.** API keys server-side only, via env vars. Never log raw journal content. Send the AI model only the minimum relevant journal content per request — never the whole database. User can disconnect Notion and delete Luna's memory at any time.
+- **Crisis language gets a supportive response + resources, never intervention.** Point to real, verified resources (988, school counselor, Safe2Say PA, trusted people) — never invented contact info, never Luna acting as the support itself.
+
+## Architecture
+- AI provider abstracted behind an `AI_PROVIDER` / `AI_MODEL` env-configured service — never hard-code a specific model through the app logic.
+- Retrieval starts simple: date filtering, keyword/theme matching. No vector DB unless a real need for semantic search shows up later — don't add one preemptively.
+- Luna's own memory (recurring themes, goals, prior strategies discussed) is separate from raw journal data, minimal, user-deletable, and stored as structured files — not a copy of every entry.
+- Suggested module layout: `/notion`, `/ai`, `/retrieval`, `/insights`, `/memory`, `/safety`, `/ui` — adapt to whatever the existing repo structure actually is.
+
+## Product surface (three experiences)
+1. **Journals** — connects to a user-selected Notion database; Notion stays the source of truth; never modifies journal content unless explicitly asked.
+2. **Dashboard** (the centerpiece, not chat) — overview stats (kept minimal, not a stats dump), recent activity, recurring themes, emotional-language trends framed as "journal language trends" (never "mental health score"), a "Luna noticed" insight card, a low-key "Need someone?" support panel.
+3. **Ask Luna** — conversational Q&A over journal history, always able to answer "show me the entries that led you to that conclusion."
+
+## Visual/UX direction
+Calm, minimal, warm — personal reflection space, not a corporate analytics dashboard. Rounded cards, whitespace, subtle Holland Lop bunny mascot used sparingly (loading/insight states, not decoration). Avoid gradients, glassmorphism, neon-AI aesthetics, or metric-dense dashboards.
+
+## Phases (build in order, incrementally)
+1. **Foundation** — branding, layout, dashboard shell, nav, responsive states, AI service abstraction, env config.
+2. **Notion** — auth, DB selection, journal retrieval/parsing, entry detail view.
+3. **AI Analysis** — single-entry analysis, structured output, insight cards.
+4. **Dashboard Intelligence** — theme extraction, trend analysis, activity viz, pattern detection with supporting references.
+5. **Ask Luna** — chat interface with context-aware retrieval and evidence citations.
+6. **Memory** — structured memory service, user controls (view/delete).
+7. **Support** — Need Someone? panel, verified resources, crisis-language routing.
+8. **Polish** — mascot integration, animations, accessibility, mobile, privacy controls.
+
+## Context
+This may be submitted to the Congressional App Challenge — prioritize real, demoable functionality over breadth. A judge should be able to open it and understand the flow (Notion → dashboard → insight → evidence → Ask Luna → support resources) within a few minutes.
