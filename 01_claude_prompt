@@ -36,6 +36,7 @@ Do not rewrite existing project structure unnecessarily — build incrementally,
 
 ## Visual/UX direction
 Calm, minimal, warm — personal reflection space, not a corporate analytics dashboard. Rounded cards, whitespace, subtle Holland Lop bunny mascot used sparingly (loading/insight states, not decoration). Avoid gradients, glassmorphism, neon-AI aesthetics, or metric-dense dashboards.
+Dark/navy blue theme- avoid generic vibecoded UI elemements, use solid colors- HTML, CSS, JS
 
 ## Phases (build in order, incrementally)
 1. **Foundation** — branding, layout, dashboard shell, nav, responsive states, AI service abstraction, env config.
