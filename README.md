@@ -38,7 +38,7 @@ Don't pretend to be okay when you're not okay
 Don't pretend to be happy when you're sad
 It'll only lead to your misery_
 
-<img width="150" height="150" alt="Screenshot 2026-10-03 at 00 02 30" src="https://github.com/user-attachments/assets/5c52936d-1505-4264-8cfe-e2cecae095f2" />
+<img width="240" height="199" alt="Screenshot 2026-10-03 at 00 02 30" src="https://github.com/user-attachments/assets/5c52936d-1505-4264-8cfe-e2cecae095f2" />
 
 
 Do not suffer in silence. 
