@@ -29,9 +29,9 @@ Luna is simply another place to start.
 
 A place to put your thoughts into words, look back at where you've been, recognize patterns you might have missed, and figure out how you want to move forward. Maybe its the starting point to get your thoughts together before seeking help from an actual human.  
 
-XXXTENTACION
-
 And sometimes, you just need a little bunny sitting beside you while you figure things out. 🐰
+
+In the song _Lets Pretend We're Numb_ by XXXTENTACION. 
 
 
 
