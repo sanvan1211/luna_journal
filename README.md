@@ -5,6 +5,7 @@
 ^^ this is real life luna (she is a 4 year old holland lop rabbit) ^^ 
 
 Life Unraveled, Not Alone (LUNA)
+(Olivia Rodrigo reference)
 
 A Claude-powered AI journal companion that analyzes journals stored in Notion.
 
