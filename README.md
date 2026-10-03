@@ -7,7 +7,7 @@
 Life Unraveled, Not Alone (LUNA)
 (Olivia Rodrigo reference)
 
-A Claude-powered AI journal companion that analyzes journals stored in Notion.
+# A Claude-powered AI journal companion that analyzes journals stored in Notion.
 
 Sometimes it's hard to reach out to someone and talk face-to-face about what you're going through. Sometimes you don't know how to explain what you're feeling. And sometimes, you simply don't want to talk about it yet.
 
@@ -27,7 +27,8 @@ Your friends, family, mentors, counselors, and the people you trust are still an
 
 Luna is simply another place to start.
 
-A place to put your thoughts into words, look back at where you've been, recognize patterns you might have missed, and figure out how you want to move forward.
+A place to put your thoughts into words, look back at where you've been, recognize patterns you might have missed, and figure out how you want to move forward. Maybe its the starting point to get your thoughts together 
+
 And sometimes, you just need a little bunny sitting beside you while you figure things out. 🐰
 
 
