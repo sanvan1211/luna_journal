@@ -33,9 +33,9 @@ And sometimes, you just need a little bunny sitting beside you while you figure 
 
 In the song _Lets Pretend We're Numb_ by XXXTENTACION, Jahseh says: 
 
-_I advise you to not hide your feelings
-Don't pretend to be okay when you're not okay
-Don't pretend to be happy when you're sad
+_I advise you to not hide your feelings...
+Don't pretend to be okay when you're not okay...
+Don't pretend to be happy when you're sad...
 It'll only lead to your misery_
 
 <img width="50" height="40" alt="Screenshot 2026-10-03 at 00 02 30" src="https://github.com/user-attachments/assets/5c52936d-1505-4264-8cfe-e2cecae095f2" />
