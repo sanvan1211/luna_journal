@@ -156,7 +156,7 @@ export async function render(el, { status }) {
           body: entries.length ? `
             <ul class="recent">
               ${entries.slice(0, 5).map((e) => `
-                <li><a href="${entryHref(e.key)}">${esc(e.title)}</a><span class="card-sub">${esc(formatDate(e.date))} · ${e.source === 'notion' ? 'Notion' : 'Luna'}</span></li>`).join('')}
+                <li><a href="${entryHref(e.key)}">${e.icon ? `<span class="entry-icon" aria-hidden="true">${esc(e.icon)}</span>` : ''}${esc(e.title)}</a><span class="card-sub">${esc(formatDate(e.date))} · ${e.source === 'notion' ? 'Notion' : 'Luna'}</span></li>`).join('')}
             </ul>`
             : '<div class="empty"><p>Your latest entries will show up here.</p></div>',
         })}
