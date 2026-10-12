@@ -5,9 +5,16 @@ import * as dashboard from './views/dashboard.js';
 import * as journals from './views/journals.js';
 import * as ask from './views/ask.js';
 import * as settings from './views/settings.js';
+import * as home from './views/home.js';
+import * as checkin from './views/checkin.js';
+import * as resources from './views/resources.js';
+import { refreshSidebar } from './sidebar.js';
 
-const views = { dashboard, journals, ask, settings };
-const titles = { dashboard: 'Dashboard', journals: 'Journal', ask: 'Ask Luna', settings: 'Privacy & setup' };
+const views = { home, dashboard, journals, ask, settings, checkin, resources };
+const titles = {
+  home: 'Home', dashboard: 'Insights', journals: 'Journal', ask: 'Chat with Luna',
+  settings: 'Account & privacy', checkin: 'Wellness check', resources: 'Resources',
+};
 
 const viewEl = document.getElementById('view');
 const mainEl = document.getElementById('main');
@@ -17,7 +24,8 @@ let cleanup = null;
 // "#/journals/luna/abc" → { name: 'journals', params: ['luna', 'abc'] }
 function currentRoute() {
   const [name, ...params] = location.hash.replace(/^#\/?/, '').split('?')[0].split('/').filter(Boolean);
-  return views[name] ? { name, params } : { name: 'dashboard', params: [] };
+  if (name === 'new') return { name: 'new', params };
+  return views[name] ? { name, params } : { name: 'home', params: [] };
 }
 
 async function render() {
@@ -30,11 +38,24 @@ async function render() {
     cleanup = null;
   }
 
-  document.querySelectorAll('.nav a').forEach((a) => {
-    if (a.dataset.route === name) a.setAttribute('aria-current', 'page');
+  // "new journal" isn't a page: make one and open it.
+  if (name === 'new') {
+    try {
+      const entry = await api.createEntry();
+      location.replace(`#/journals/luna/${entry.id}`);
+    } catch (err) {
+      viewEl.innerHTML = `<div class="loading">${bunny({ mood: 'resting' })}<p><strong>${esc(err.message)}</strong></p></div>`;
+    }
+    return;
+  }
+
+  const navKey = name === 'ask' && params[0] === 'search' ? 'search' : name;
+  document.querySelectorAll('[data-route]').forEach((a) => {
+    if (a.dataset.route === navKey) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
   });
-  document.title = `${titles[name]} · Luna`;
+  document.title = `${titles[name]} · luna`;
+  mainEl.classList.toggle('is-scene', name === 'home');
 
   // Only show the loading bunny if things are actually slow.
   const loadingTimer = setTimeout(() => {
@@ -56,6 +77,7 @@ async function render() {
     return;
   }
 
+  refreshSidebar(status);
   const ctx = { status, params, isCurrent: () => token === renderToken };
   const fresh = document.createElement('div');
   try {
@@ -108,5 +130,5 @@ window.addEventListener('pagehide', () => cleanup?.());
 
 initTheme();
 wireThemeToggles();
-if (!location.hash) history.replaceState(null, '', '#/dashboard');
+if (!location.hash) history.replaceState(null, '', '#/home');
 render();
