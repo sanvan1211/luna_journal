@@ -2,6 +2,7 @@
 // reflection. Only that one entry is sent to the model.
 
 import { complete, AIProviderError } from '../ai/index.js';
+import { HttpError } from '../errors.js';
 import { REFLECT_ENTRY, entryBlock } from '../ai/prompts.js';
 import { checkSafety } from '../safety/check.js';
 import { clearCollection, deleteRecord, listRecords, readRecord, writeRecord } from '../store.js';
@@ -32,7 +33,23 @@ export async function getReflection(entry) {
   return readRecord(COLLECTION, recordId(entry));
 }
 
+// Entries currently being reflected on, so a double-click doesn't pay for
+// two identical AI calls.
+const inFlight = new Set();
+
 export async function reflectOnEntry(entry) {
+  if (inFlight.has(entry.key)) {
+    throw new HttpError(429, 'Luna is already reading this entry.', 'reflection_in_progress');
+  }
+  inFlight.add(entry.key);
+  try {
+    return await reflect(entry);
+  } finally {
+    inFlight.delete(entry.key);
+  }
+}
+
+async function reflect(entry) {
   if (!entry.content.trim()) {
     return { status: 'empty', message: 'Write something first — Luna can only reflect on what’s there.' };
   }
