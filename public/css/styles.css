@@ -17,6 +17,9 @@
   --clay: #e0a679;
   --clay-soft: #3d2c25;
   --focus: #f3d99b;
+  --moon-edge: #54492c;
+  --brand-moon: var(--moon);
+  --scheme: dark;
 
   --radius: 18px;
   --radius-sm: 12px;
@@ -69,7 +72,7 @@ a:hover { color: var(--focus); }
 .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text); padding: 0 10px; }
 .brand-mark {
   width: 28px; height: 28px; border-radius: 50%;
-  background: var(--moon);
+  background: var(--brand-moon);
   box-shadow: inset -8px -3px 0 0 var(--surface); /* crescent, solid colors only */
 }
 .brand-name { font-family: var(--font-display); font-size: 1.45rem; letter-spacing: 0.01em; }
@@ -114,7 +117,7 @@ a:hover { color: var(--focus); }
 .card-head h2 { color: var(--text); }
 .card-sub { color: var(--text-faint); font-size: .85rem; }
 
-.card--moon { background: var(--moon-soft); border-color: #54492c; }
+.card--moon { background: var(--moon-soft); border-color: var(--moon-edge); }
 
 .empty { display: flex; flex-direction: column; gap: 6px; color: var(--text-muted); font-size: .95rem; }
 .empty strong { color: var(--text); font-weight: 600; }
@@ -344,7 +347,7 @@ a.pill:hover { color: var(--text); }
 
 .meta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
 .date-field input {
-  font: inherit; font-size: .88rem; color: var(--text-muted); color-scheme: dark;
+  font: inherit; font-size: .88rem; color: var(--text-muted); color-scheme: var(--scheme);
   background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 5px 10px;
 }
 .mood-picker { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -353,7 +356,7 @@ a.pill:hover { color: var(--text); }
   background: transparent; color: var(--text-muted); border: 1px solid var(--border);
 }
 .mood-picker button:hover { color: var(--text); border-color: var(--surface-3); }
-.mood-picker button[aria-pressed="true"] { background: var(--moon-soft); border-color: #54492c; color: var(--moon); }
+.mood-picker button[aria-pressed="true"] { background: var(--moon-soft); border-color: var(--moon-edge); color: var(--moon); }
 
 .body-input {
   width: 100%; min-height: 280px; resize: none; overflow: hidden;
@@ -431,4 +434,102 @@ a.pill:hover { color: var(--text); }
   .journal:not(.has-entry):not(.show-pane) .journal-pane { display: none; }
   .journal.has-entry .back-link { display: inline-block; }
   .editor-actions { margin-left: 0; }
+}
+
+/* ===========================================================================
+   Rough paper
+   Grain, fibers and uneven tone come from tiny SVG noise textures; card
+   edges are roughened with the #rough-edge filter in index.html.
+   The filters only ever touch backgrounds (::before), never text.
+   =========================================================================== */
+
+:root {
+  /* Night paper: pale specks and fibers on navy */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .4 0 0 0 -.17'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  --fibers: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .32' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .26 0 0 0 -.16'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  --mottle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.005' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .22 0 0 0 -.07'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
+}
+
+/* Day paper: warm cream stock, ink-blue accents */
+:root[data-theme="day"] {
+  --bg: #ebe2cf;
+  --surface: #f5eee0;
+  --surface-2: #e9dec8;
+  --surface-3: #ddcfb3;
+  --border: #c4b08c;
+  --text: #2a2520;
+  --text-muted: #5c5143;
+  --text-faint: #6b5e46;
+  --moon: #2d4877;
+  --moon-ink: #f7f1e4;
+  --moon-soft: #dfe2e0;
+  --moon-edge: #a9b6c2;
+  --brand-moon: #c69436;
+  --sage: #3b7350;
+  --sage-soft: #d6e4d3;
+  --clay: #8f451f;
+  --clay-soft: #f0dcc9;
+  --focus: #1d355f;
+  --scheme: light;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .28 0 0 0 0 .2 0 0 0 0 .1 .6 0 0 0 -.24'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  --fibers: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .32' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .26 0 0 0 0 .12 .4 0 0 0 -.22'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+}
+
+.svg-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+body {
+  background: var(--fibers), var(--mottle), var(--grain), var(--bg);
+  /* The tone layer is stretched over the viewport rather than tiled, so it never shows seams. */
+  background-size: auto, 100% 100%, auto, auto;
+  background-repeat: repeat, no-repeat, repeat, repeat;
+  background-attachment: scroll, fixed, scroll, scroll;
+}
+.sidebar { background: var(--grain), var(--surface); }
+
+/* Cards: the paper sheet is a ::before layer so its edges can be roughened. */
+.card, .card--moon, .support, .reflection .support {
+  position: relative; isolation: isolate;
+  background: none; border-color: transparent;
+}
+.card::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  border-radius: inherit;
+  background: var(--grain), var(--card-bg, var(--surface));
+  border: 1px solid var(--card-border, var(--border));
+  filter: url(#rough-edge);
+}
+.card--moon { --card-bg: var(--moon-soft); --card-border: var(--moon-edge); }
+.reflection .support { --card-bg: var(--surface-2); }
+
+.btn--primary { background: var(--grain), var(--moon); }
+.btn--primary:hover { background: var(--grain), var(--focus); }
+
+.checklist li, .source-tabs, .search, .prompt-q, .db-list li { background-image: var(--grain); }
+.tag, .pill { background-image: var(--grain); }
+
+/* Day paper: the cream bunny needs a faint pencil outline to read on cream. */
+:root[data-theme="day"] .mascot { filter: drop-shadow(0 0 .6px #6d5d45); }
+:root[data-theme="day"] .title-input::placeholder { color: var(--border); }
+:root[data-theme="day"] code, :root[data-theme="day"] pre.env { color: var(--text); }
+
+/* Theme toggle */
+.theme-toggle {
+  display: flex; align-items: center; gap: 10px; margin-top: auto;
+  font: inherit; font-size: .85rem; color: var(--text-muted);
+  background: none; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 8px 12px; cursor: pointer;
+}
+.theme-toggle:hover { color: var(--text); }
+.theme-toggle-dot {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--brand-moon); box-shadow: inset -4px -1px 0 0 var(--surface);
+}
+.sidebar .theme-toggle + .sidebar-note { margin-top: 0; }
+
+@media (max-width: 860px) {
+  .sidebar .theme-toggle { display: none; }
+}
+
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+  .card::before { filter: none; }
 }

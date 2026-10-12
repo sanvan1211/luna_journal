@@ -3,15 +3,24 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="dark">
+  <meta name="color-scheme" content="dark light">
   <meta name="theme-color" content="#0d1626">
   <title>Luna</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/css/styles.css">
+  <script src="/js/theme-init.js"></script>
   <script type="module" src="/js/app.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- Rough paper edges: noise displaces the edges of card backgrounds (never text). -->
+  <svg class="svg-defs" aria-hidden="true" focusable="false">
+    <filter id="rough-edge" x="-3%" y="-3%" width="106%" height="106%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="4" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </svg>
 
   <div class="shell">
     <aside class="sidebar" aria-label="Luna">
@@ -38,6 +47,11 @@
           <span>Privacy</span>
         </a>
       </nav>
+
+      <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">
+        <span class="theme-toggle-dot" aria-hidden="true"></span>
+        <span data-theme-label>Day paper</span>
+      </button>
 
       <p class="sidebar-note">Luna reflects on what you’ve written. It isn’t a therapist and doesn’t diagnose.</p>
     </aside>

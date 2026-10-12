@@ -1,5 +1,6 @@
 import { api, esc } from './api.js';
 import { bunny } from './mascot.js';
+import { wireThemeToggles, setTheme, currentTheme } from './theme.js';
 import * as dashboard from './views/dashboard.js';
 import * as journals from './views/journals.js';
 import * as ask from './views/ask.js';
@@ -74,6 +75,7 @@ async function render() {
   }
   fresh.classList.add('fade-in');
   viewEl.replaceChildren(fresh);
+  wireThemeToggles(fresh);
 }
 
 let lastView = currentRoute().name;
@@ -91,5 +93,7 @@ window.addEventListener('hashchange', () => {
 // Flush unsaved edits if the tab is closed.
 window.addEventListener('pagehide', () => cleanup?.());
 
+setTheme(currentTheme());
+wireThemeToggles();
 if (!location.hash) history.replaceState(null, '', '#/dashboard');
 render();
