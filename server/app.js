@@ -15,6 +15,8 @@ import { listTemplates } from './journal/templates.js';
 import * as notionSource from './notion/index.js';
 import { reflectOnEntry, getReflection, listReflections, deleteReflection, deleteAllReflections } from './insights/reflect.js';
 import { recurringThemes } from './insights/themes.js';
+import { ask } from './ask/index.js';
+import { listChats, getChat, deleteChat, deleteAllChats } from './ask/chats.js';
 
 const PUBLIC_DIR = fileURLToPath(new URL('../public/', import.meta.url));
 const MAX_BODY_BYTES = 256 * 1024;
@@ -98,6 +100,7 @@ const routes = [
     exportedAt: new Date().toISOString(),
     journal: await journal.exportAll(),
     reflections: await listReflections(),
+    chats: await Promise.all((await listChats()).map((c) => getChat(c.id))),
   })],
   ['GET', '/api/journal/templates', () => ({ templates: listTemplates() })],
   ['GET', '/api/journal/tags', async () => ({ tags: await journal.listTags() })],
@@ -144,6 +147,20 @@ const routes = [
     return { ok: true };
   }],
   ['GET', '/api/notion/entries/:id', ({ params }) => notionSource.getEntry(params.id)],
+
+  // Ask Luna
+  ['GET', '/api/chats', async () => ({ chats: await listChats() })],
+  ['POST', '/api/chats', ({ body }) => ask({ question: body.question })],
+  ['GET', '/api/chats/:id', ({ params }) => getChat(params.id)],
+  ['POST', '/api/chats/:id/messages', ({ params, body }) => ask({ chatId: params.id, question: body.question })],
+  ['DELETE', '/api/chats/:id', async ({ params }) => {
+    await deleteChat(params.id);
+    return { ok: true };
+  }],
+  ['DELETE', '/api/chats', async () => {
+    await deleteAllChats();
+    return { ok: true };
+  }],
 
   // Reflections & insights
   ['GET', '/api/reflections/:source/:id', async ({ params }) => {

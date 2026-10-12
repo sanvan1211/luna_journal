@@ -216,6 +216,12 @@ export async function exportAll() {
     .map((r) => toEntry(r));
 }
 
+// Live pages with their markdown, for Ask Luna's retrieval. Stays on the
+// server; only the few best matches are ever sent to the model.
+export async function pagesWithText() {
+  return (await all()).filter((r) => !r.deletedAt).map((r) => toEntry(r));
+}
+
 // --- Tags & search -------------------------------------------------------------------
 
 export async function listTags() {

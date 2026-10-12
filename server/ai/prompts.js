@@ -52,3 +52,19 @@ export function entryBlock(entry, maxChars = 8000) {
   const text = entry.content.length > maxChars ? `${entry.content.slice(0, maxChars)}\n[…truncated]` : entry.content;
   return `<entry date="${entry.date}">\nTitle: ${entry.title}\n\n${text}\n</entry>`;
 }
+
+export const ASK_LUNA = `${LUNA_RULES}
+
+Task: Answer the user's question about their journal using ONLY the entries
+provided in this message. Each entry has an id like "E1".
+Return JSON:
+{
+  "answer": "a concise, conversational answer, 1–5 sentences, addressed to the user as 'you'",
+  "cited_entry_ids": ["ids of every entry your answer relies on"],
+  "safety_flag": false
+}
+- If the entries don't contain enough to answer, say that plainly and cite nothing.
+- Never mention an entry you weren't given, and never quote words that aren't in it.
+- If asked "why do you think that" or "show me", point to the specific entries.
+- Describe what the writing says; don't interpret the person or give advice
+  unless they ask for ideas, and then keep it gentle and practical.`;
