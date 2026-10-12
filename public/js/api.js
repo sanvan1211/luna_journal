@@ -56,6 +56,7 @@ export const api = {
   notionSelection: () => request('GET', '/api/notion/selection'),
   selectNotionDatabase: (databaseId) => request('PUT', '/api/notion/selection', { databaseId }),
   disconnectNotionDatabase: () => request('DELETE', '/api/notion/selection'),
+  refreshNotion: () => request('POST', '/api/notion/refresh'),
   notionEntry: (id) => request('GET', `/api/notion/entries/${enc(id)}`),
 
   reflection: (source, id) => request('GET', `/api/reflections/${enc(source)}/${enc(id)}`),

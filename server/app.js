@@ -138,6 +138,11 @@ const routes = [
     notionSource.clearCache();
     return { ok: true };
   }],
+  // Forget the cached page list so new Notion pages show up right away.
+  ['POST', '/api/notion/refresh', () => {
+    notionSource.clearCache();
+    return { ok: true };
+  }],
   ['GET', '/api/notion/entries/:id', ({ params }) => notionSource.getEntry(params.id)],
 
   // Reflections & insights

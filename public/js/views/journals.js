@@ -50,7 +50,10 @@ function renderNotionList(root, entries, activeId, notion) {
   root.innerHTML = `
     <div class="list-head">
       <p class="list-note" data-db-name>Notion journal</p>
-      <button class="link-btn" type="button" data-change-db>Change</button>
+      <span>
+        <button class="link-btn" type="button" data-refresh-db>Refresh</button>
+        <button class="link-btn" type="button" data-change-db>Change</button>
+      </span>
     </div>
     ${notion.error ? `<p class="result result--err">${esc(notion.error)}</p>` : ''}
     ${entries.length ? '<input class="search" type="search" placeholder="Search titles" aria-label="Search entries by title" data-search>' : ''}
@@ -61,6 +64,10 @@ function renderNotionList(root, entries, activeId, notion) {
   api.notionSelection()
     .then(({ database }) => { if (database) root.querySelector('[data-db-name]').textContent = database.title; })
     .catch(() => {});
+  root.querySelector('[data-refresh-db]').addEventListener('click', async () => {
+    await api.refreshNotion().catch(() => {});
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+  });
   root.querySelector('[data-change-db]').addEventListener('click', async () => {
     await api.disconnectNotionDatabase();
     location.hash = '#/journals/notion';
