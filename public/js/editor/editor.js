@@ -139,6 +139,7 @@ export class BlockEditor {
       counters[b.indent] = b.type === 'numbered_list_item' ? (counters[b.indent] ?? 0) + 1 : 0;
       return this.rowHTML(b, counters[b.indent], hidden);
     }).join('');
+    this.root.classList.toggle('is-empty', this.blocks.length === 1 && !richLength(this.blocks[0].rich));
     this.root.innerHTML = html;
     if (focus) this.focus(focus.id, focus.offset, focus.end);
   }
@@ -248,6 +249,7 @@ export class BlockEditor {
     const b = this.blocks[this.index(row.dataset.id)];
     if (!b || b.type === 'divider') return;
     this.sync(b);
+    this.root.classList.toggle('is-empty', this.blocks.length === 1 && !richLength(b.rich));
     if (!e.isComposing && this.applyShortcut(b)) return;
     this.updateSlashMenu(b);
     this.emit();
