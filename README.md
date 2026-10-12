@@ -96,3 +96,16 @@ docs/prompts/     the original build, frontend, and AI-function specs
 - API keys stay on the server, never in the browser.
 - The server log records request paths and timings only, never journal text.
 - Reflections can be deleted any time from **Privacy & setup**. Notion can be disconnected there too.
+
+### Troubleshooting
+
+| You see | Try |
+| --- | --- |
+| "AI_PROVIDER is not set" | Copy `.env.example` to `.env`, fill in `AI_PROVIDER` and `AI_MODEL`, and restart. |
+| "ollama: couldn't reach provider (ECONNREFUSED)" | Ollama isn't running. Start the Ollama app, or run `ollama serve`, then use **Test connection** under Privacy & setup. |
+| "ollama: 404 model … not found" | Pull the model first, for example `ollama pull llama3.2`, and make sure `AI_MODEL` matches. |
+| "Notion couldn't find it" | Share the journal database with your integration in Notion (**⋯ → Connections**). |
+| "This entry was changed somewhere else" | The page was saved in another tab. Choose **Load latest**. Your text in this tab hasn't been saved over it. |
+| A page won't load after editing files by hand | Luna skips damaged files in `data/journal/` and logs their names. Fix or remove the named file. |
+
+Run `npm run check` (syntax) and `npm test` (unit and HTTP tests) before you push.
