@@ -4,6 +4,7 @@
 import { mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { log } from './log.js';
 
 // LUNA_DATA_DIR lets tests (or a custom setup) keep data somewhere else.
 const DATA_DIR = process.env.LUNA_DATA_DIR
@@ -51,7 +52,19 @@ export async function listRecords(collection) {
     throw err;
   }
   const ids = names.filter((n) => n.endsWith('.json')).map((n) => n.slice(0, -5)).filter(isSafeId);
-  const records = await Promise.all(ids.map((id) => readRecord(collection, id)));
+  const records = await Promise.all(ids.map(async (id) => {
+    try {
+      return await readRecord(collection, id);
+    } catch (err) {
+      // One damaged file shouldn't hide everything else. Log the file name
+      // only — never its contents.
+      if (err instanceof SyntaxError) {
+        log.error(`Skipping unreadable record ${collection}/${id}.json`);
+        return null;
+      }
+      throw err;
+    }
+  }));
   return records.filter(Boolean);
 }
 

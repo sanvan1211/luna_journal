@@ -87,3 +87,10 @@ test('tag list counts only live entries', async () => {
   const school = tags.find((t) => t.tag === 'School');
   assert.equal(school.count, 1);
 });
+
+test('a damaged file is skipped instead of breaking the whole list', async () => {
+  await writeFile(join(dir, 'journal', '00000000-0000-4000-8000-0000000000ff.json'), '{ not json');
+  const list = await journal.listEntries();
+  assert.ok(list.length > 0);
+  assert.ok(!list.some((e) => e.id.endsWith('ff')));
+});
