@@ -22,7 +22,11 @@ async function request(method, path, body, { keepalive = false } = {}) {
     throw new APIError('Can’t reach the Luna server. Is it running?', 0, 'offline');
   }
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new APIError(data.error || `Request failed (${res.status})`, res.status, data.code);
+  if (!res.ok) {
+    const err = new APIError(data.error || `Request failed (${res.status})`, res.status, data.code);
+    if (data.current) err.current = data.current;
+    throw err;
+  }
   return data;
 }
 
@@ -38,7 +42,14 @@ export const api = {
   createEntry: (data = {}) => request('POST', '/api/journal/entries', data),
   getEntry: (id) => request('GET', `/api/journal/entries/${enc(id)}`),
   updateEntry: (id, data, opts) => request('PUT', `/api/journal/entries/${enc(id)}`, data, opts),
-  deleteEntry: (id) => request('DELETE', `/api/journal/entries/${enc(id)}`),
+  trashEntry: (id) => request('DELETE', `/api/journal/entries/${enc(id)}`),
+  templates: () => request('GET', '/api/journal/templates'),
+  tags: () => request('GET', '/api/journal/tags'),
+  search: (q, tag) => request('GET', `/api/journal/search?q=${enc(q)}${tag ? `&tag=${enc(tag)}` : ''}`),
+  trash: () => request('GET', '/api/journal/trash'),
+  restoreEntry: (id) => request('POST', `/api/journal/trash/${enc(id)}/restore`),
+  purgeEntry: (id) => request('DELETE', `/api/journal/trash/${enc(id)}`),
+  emptyTrash: () => request('DELETE', '/api/journal/trash'),
 
   notionDatabases: () => request('GET', '/api/notion/databases'),
   notionSelection: () => request('GET', '/api/notion/selection'),

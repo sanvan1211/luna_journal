@@ -2,10 +2,13 @@
 // deleting something really deletes it — no hidden copies in a big blob.
 
 import { mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const DATA_DIR = fileURLToPath(new URL('../data/', import.meta.url));
+// LUNA_DATA_DIR lets tests (or a custom setup) keep data somewhere else.
+const DATA_DIR = process.env.LUNA_DATA_DIR
+  ? resolve(process.env.LUNA_DATA_DIR)
+  : fileURLToPath(new URL('../data/', import.meta.url));
 
 // Record ids become filenames, so only allow a safe alphabet.
 const SAFE_ID = /^[a-z0-9-]{1,80}$/;

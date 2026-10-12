@@ -10,6 +10,7 @@ import { getAIStatus, complete, AIConfigError, AIProviderError } from './ai/inde
 import { SUPPORT_RESOURCES } from './safety/resources.js';
 import { getNotionDatabaseId, setNotionDatabaseId } from './settings.js';
 import * as journal from './journal/index.js';
+import { listTemplates } from './journal/templates.js';
 import * as notionSource from './notion/index.js';
 import { reflectOnEntry, getReflection, listReflections, deleteReflection, deleteAllReflections } from './insights/reflect.js';
 import { recurringThemes } from './insights/themes.js';
@@ -90,14 +91,30 @@ const routes = [
   ['GET', '/api/entries', () => allEntries()],
 
   // Luna journal
+  ['GET', '/api/journal/templates', () => ({ templates: listTemplates() })],
+  ['GET', '/api/journal/tags', async () => ({ tags: await journal.listTags() })],
+  ['GET', '/api/journal/search', async ({ query }) => ({
+    results: await journal.searchEntries(query.get('q') ?? '', { tag: query.get('tag') || undefined }),
+  })],
   ['POST', '/api/journal/entries', ({ body }) => journal.createEntry(body)],
   ['GET', '/api/journal/entries/:id', ({ params }) => journal.getEntry(params.id)],
   ['PUT', '/api/journal/entries/:id', ({ params, body }) => journal.updateEntry(params.id, body)],
+  // Moves to the trash; reflections stay until the entry is deleted for good.
   ['DELETE', '/api/journal/entries/:id', async ({ params }) => {
-    const entry = await journal.getEntry(params.id);
-    await journal.deleteEntry(params.id);
-    await deleteReflection(entry);
+    await journal.trashEntry(params.id);
     return { ok: true };
+  }],
+  ['GET', '/api/journal/trash', async () => ({ entries: await journal.listTrash() })],
+  ['POST', '/api/journal/trash/:id/restore', ({ params }) => journal.restoreEntry(params.id)],
+  ['DELETE', '/api/journal/trash/:id', async ({ params }) => {
+    const rec = await journal.purgeEntry(params.id);
+    await deleteReflection({ source: 'luna', id: rec.id });
+    return { ok: true };
+  }],
+  ['DELETE', '/api/journal/trash', async () => {
+    const purged = await journal.emptyTrash();
+    await Promise.all(purged.map((r) => deleteReflection({ source: 'luna', id: r.id })));
+    return { ok: true, deleted: purged.length };
   }],
 
   // Notion
@@ -175,12 +192,12 @@ async function readJSONBody(req) {
   }
 }
 
-async function handleAPI(req, res, path) {
+async function handleAPI(req, res, path, query) {
   const route = matchRoute(req.method, path);
   if (!route.handler) return sendJSON(res, route.pathMatched ? 405 : 404, { error: route.pathMatched ? 'Method not allowed' : 'Not found' });
   try {
     const body = req.method === 'GET' ? {} : await readJSONBody(req);
-    sendJSON(res, 200, await route.handler({ req, body, params: route.params }));
+    sendJSON(res, 200, await route.handler({ req, body, params: route.params, query }));
   } catch (err) {
     if (err instanceof AIConfigError) return sendJSON(res, 503, { error: err.message, code: 'ai_not_configured' });
     if (err instanceof AIProviderError) {
@@ -189,7 +206,7 @@ async function handleAPI(req, res, path) {
     }
     if (err instanceof HttpError) {
       if (err.status >= 500) log.error(`Upstream error on ${path}`, err);
-      return sendJSON(res, err.status, { error: err.message, code: err.code });
+      return sendJSON(res, err.status, { error: err.message, code: err.code, ...(err.current ? { current: err.current } : {}) });
     }
     log.error(`Unhandled error on ${path}`, err);
     sendJSON(res, 500, { error: 'Something went wrong on Luna’s side.' });
@@ -219,9 +236,9 @@ async function serveStatic(res, path) {
 
 const server = http.createServer(async (req, res) => {
   const started = Date.now();
-  const { pathname } = new URL(req.url, 'http://localhost');
+  const { pathname, searchParams } = new URL(req.url, 'http://localhost');
   if (pathname.startsWith('/api/')) {
-    await handleAPI(req, res, pathname);
+    await handleAPI(req, res, pathname, searchParams);
   } else if (req.method === 'GET' || req.method === 'HEAD') {
     await serveStatic(res, pathname);
   } else {

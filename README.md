@@ -59,9 +59,17 @@ npm start              # http://127.0.0.1:3000
 
 With nothing configured, Luna still runs and shows honest setup states. It never shows sample entries or made-up AI output.
 
+Run `npm test` for the unit tests. They use a temporary data folder and never touch your journal.
+
 ### Two places to journal
 
-- **Luna journal:** write right in the app. It works like Notion, with `#` headings, `-` lists and `- [ ]` checkboxes. It autosaves and has an optional mood you choose yourself, plus Markdown export. Entries are stored as files in `data/` on your computer, and that folder is gitignored.
+- **Luna journal:** a Notion-style page editor built into the app. Entries are stored as files in `data/` on your computer, and that folder is gitignored.
+  - **Blocks:** text, three heading sizes, bulleted, numbered and to-do lists, toggles, quotes, callouts, code and dividers.
+  - **Typing:** type `/` for the block menu, or Markdown shortcuts (`#`, `-`, `1.`, `[]`, `>`, `"`, ```` ``` ````, `---`). Tab nests blocks, ⌘B/I/U/E and ⌘⇧S format text, and undo/redo works across blocks.
+  - **Arranging:** drag blocks by their handle, or use ⌘/ to turn a block into another type, duplicate it, move it or delete it.
+  - **Page properties:** an emoji icon, date, self-reported mood and tags, plus templates for new pages.
+  - **Search and trash:** full-text search with snippets. Deleted pages go to a trash you can restore from, and "delete forever" removes the file.
+  - **Saving:** pages autosave. If another tab saved first, Luna shows a warning instead of overwriting it. You can also export any page to Markdown.
 - **Notion:** connect a read-only Notion integration (`NOTION_TOKEN`), then pick your journal database in the app. Luna reads only that database, never edits it, and doesn't copy pages.
 
 On any entry, choose **Reflect with Luna** for a short summary, a few themes, and a question to write about next. Only that one entry is sent to the AI. A safety check runs first. If an entry suggests someone may be unsafe, Luna steps aside and shows real resources (988, Crisis Text Line, Safe2Say PA, trusted adults) instead of a reflection.
@@ -72,12 +80,14 @@ On any entry, choose **Reflect with Luna** for a short summary, a few themes, an
 server/
   index.js        routes, static files, security headers
   ai/             provider-agnostic AI service (anthropic | openai | ollama) + prompts
-  journal/        Luna's built-in journal (data/journal/*.json)
+  journal/        Luna's built-in journal: block model, templates, search, trash
   notion/         read-only Notion connector
   insights/       single-entry reflections, recurring themes with receipts
   safety/         safety check + verified support resources
   store.js        one-JSON-file-per-record storage under data/
 public/           HTML, CSS, and vanilla JS views (no framework)
+  js/editor/      the Notion-style block editor
+test/             node:test unit tests (`npm test`)
 docs/prompts/     the original build, frontend, and AI-function specs
 ```
 
