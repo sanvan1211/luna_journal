@@ -93,3 +93,11 @@ test('export includes every journal page and its markdown', async () => {
   assert.ok(data.journal.every((e) => typeof e.content === 'string' && Array.isArray(e.blocks)));
   assert.ok(Array.isArray(data.reflections));
 });
+
+test('unchanged static files return 304 with a matching ETag', async () => {
+  const first = await fetch(`${base}/css/styles.css`);
+  const etag = first.headers.get('etag');
+  assert.ok(etag);
+  const again = await fetch(`${base}/css/styles.css`, { headers: { 'if-none-match': etag } });
+  assert.equal(again.status, 304);
+});

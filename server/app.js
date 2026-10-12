@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -263,7 +264,14 @@ async function serveStatic(req, res, path) {
   }
   try {
     const data = await readFile(file);
+    // Content hash as ETag, so unchanged files come back as a tiny 304.
+    const etag = `"${createHash('sha1').update(data).digest('base64url')}"`;
+    if (req.headers['if-none-match'] === etag) {
+      res.writeHead(304, { etag, 'cache-control': 'no-cache' }).end();
+      return;
+    }
     res.writeHead(200, {
+      etag,
       ...SECURITY_HEADERS,
       'content-type': MIME[extname(file)] ?? 'application/octet-stream',
       'content-length': data.length,
