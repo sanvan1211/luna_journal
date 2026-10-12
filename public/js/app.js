@@ -76,6 +76,7 @@ async function render() {
   fresh.classList.add('fade-in');
   viewEl.replaceChildren(fresh);
   wireThemeToggles(fresh);
+  window.dispatchEvent(new Event('luna:rendered'));
 }
 
 let lastView = currentRoute().name;
@@ -87,6 +88,18 @@ window.addEventListener('hashchange', () => {
   if (changedView) {
     mainEl.focus({ preventScroll: true });
     window.scrollTo(0, 0);
+  }
+});
+
+// ⌘K / Ctrl+K: quick find, like Notion. Jumps to the journal and focuses search.
+document.addEventListener('keydown', (e) => {
+  if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'k') return;
+  e.preventDefault();
+  const focusSearch = () => document.querySelector('[data-search]')?.focus();
+  if (currentRoute().name === 'journals' && document.querySelector('[data-search]')) focusSearch();
+  else {
+    location.hash = '#/journals/luna';
+    window.addEventListener('luna:rendered', focusSearch, { once: true });
   }
 });
 

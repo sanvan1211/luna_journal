@@ -36,7 +36,7 @@ function renderSidebar(root, entries, activeId) {
       <a class="btn btn--ghost" href="#/journals/luna/templates" title="Start from a template">Templates</a>
     </div>
     ${entries.length ? `
-      <input class="search" type="search" placeholder="Search everything you’ve written" aria-label="Search journal entries" data-search>
+      <input class="search" type="search" placeholder="Search everything you’ve written  ⌘K" aria-label="Search journal entries" data-search>
       <div class="tag-filter" data-tag-filter></div>` : ''}
     <nav class="entry-groups" aria-label="Luna journal entries" data-results>
       ${entryLinks(entries, activeId, 'No pages yet.')}
