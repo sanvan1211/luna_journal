@@ -7,7 +7,7 @@ export async function render(el, { status }) {
     <div>
       <header class="page-head">
         <div>
-          <h1>Privacy &amp; setup</h1>
+          <h1>account &amp; privacy</h1>
           <p class="lede">What Luna is connected to, and exactly what it does with your writing.</p>
         </div>
       </header>
@@ -50,10 +50,11 @@ ANTHROPIC_API_KEY=...   # only the key for the provider you chose</pre>`}
 
         <section class="card span-3" aria-labelledby="data-title">
           <div class="card-head"><h2 id="data-title">Your data</h2></div>
-          <p class="card-text">When you ask Luna to reflect, it saves the summary, themes and question so they show up next time and on your dashboard. You can erase all of them. Your journal entries aren’t touched.</p>
+          <p class="card-text">Luna saves its reflections and your chats on this computer so you can come back to them. You can download everything, or erase reflections and chats at any time. Your journal pages aren’t touched.</p>
           <div class="card-actions">
             <button class="btn btn--ghost" type="button" data-export-all>Download all my data</button>
             <button class="btn btn--ghost" type="button" data-delete-reflections>Delete all reflections</button>
+            <button class="btn btn--ghost" type="button" data-delete-chats>Delete all chats</button>
           </div>
           <p class="result" data-reflections-result role="status"></p>
         </section>
@@ -110,6 +111,19 @@ ANTHROPIC_API_KEY=...   # only the key for the provider you chose</pre>`}
       setTimeout(() => URL.revokeObjectURL(a.href), 1000);
       out.className = 'result result--ok';
       out.textContent = `Downloaded ${data.journal.length} page${data.journal.length === 1 ? '' : 's'} and ${data.reflections.length} reflection${data.reflections.length === 1 ? '' : 's'}.`;
+    } catch (err) {
+      out.className = 'result result--err';
+      out.textContent = err.message;
+    }
+  });
+
+  el.querySelector('[data-delete-chats]').addEventListener('click', async () => {
+    if (!confirm('Delete every saved chat with Luna? Your journal pages stay as they are.')) return;
+    const out = el.querySelector('[data-reflections-result]');
+    try {
+      await api.deleteAllChats();
+      out.className = 'result result--ok';
+      out.textContent = 'All chats deleted.';
     } catch (err) {
       out.className = 'result result--err';
       out.textContent = err.message;
