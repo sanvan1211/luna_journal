@@ -24,6 +24,20 @@ function entriesBlock(entries) {
   }).join('\n\n');
 }
 
+// The model sometimes echoes the internal labels ("in entries E1 and E5").
+// The UI shows real citations, so strip those references from the prose.
+export function stripEntryIds(text) {
+  return text
+    .replace(/\s*\((?:entr(?:y|ies)\s+)?E\d+(?:\s*(?:,|and|&)\s*E\d+)*\)/gi, '')
+    .replace(/,?\s*(?:as\s+)?(?:(?:in|from|see)\s+)?entr(?:y|ies)\s+E\d+(?:\s*(?:,|and|&)\s*E\d+)*/gi, '')
+    .replace(/\bE\d+\b/g, '')
+    .replace(/\s+([.,;:!?])/g, '$1')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/^[\s,;:]+/, '')
+    .trim()
+    .replace(/^[a-z]/, (c) => c.toUpperCase());
+}
+
 const cite = (e) => ({ key: e.key, source: e.source, id: e.id, title: e.title, date: e.date });
 
 async function answer(question, history) {
@@ -51,7 +65,7 @@ async function answer(question, history) {
     json: true,
   });
 
-  const text = typeof json?.answer === 'string' ? json.answer.trim() : '';
+  const text = typeof json?.answer === 'string' ? stripEntryIds(json.answer) : '';
   if (!text) throw new AIProviderError('ask', 'the model’s answer was incomplete — try again');
   if (json.safety_flag === true) return { kind: 'support', text: SUPPORT_MESSAGE, citations: [] };
 

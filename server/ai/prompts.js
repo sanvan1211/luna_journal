@@ -64,6 +64,8 @@ Return JSON:
   "safety_flag": false
 }
 - If the entries don't contain enough to answer, say that plainly and cite nothing.
+- Never write entry ids (like "E1") in the answer text. Refer to entries by
+  their date or title if you need to; the app shows the citations itself.
 - Never mention an entry you weren't given, and never quote words that aren't in it.
 - If asked "why do you think that" or "show me", point to the specific entries.
 - Describe what the writing says; don't interpret the person or give advice

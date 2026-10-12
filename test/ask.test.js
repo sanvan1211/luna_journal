@@ -24,7 +24,7 @@ Object.assign(process.env, {
   LUNA_DATA_DIR: dir, AI_PROVIDER: 'ollama', AI_MODEL: 'test', OLLAMA_URL: `http://127.0.0.1:${fake.address().port}`,
 });
 const journal = await import('../server/journal/index.js');
-const { ask } = await import('../server/ask/index.js');
+const { ask, stripEntryIds } = await import('../server/ask/index.js');
 const { dateRange, keywords } = await import('../server/ask/retrieve.js');
 after(async () => { await new Promise((r) => fake.close(r)); await rm(dir, { recursive: true, force: true }); });
 
@@ -84,4 +84,13 @@ test('follow-ups stay in the same chat', async () => {
 test('empty or huge questions are refused', async () => {
   await assert.rejects(ask({ question: '  ' }), /Ask a question/);
   await assert.rejects(ask({ question: 'x'.repeat(501) }), /limited to 500/);
+});
+
+test('internal entry labels never reach the user', () => {
+  assert.equal(
+    stripEntryIds("You've been stressed about your exam, with mentions of not sleeping in entries E1 and E5. You also talked about school (E2)."),
+    "You've been stressed about your exam, with mentions of not sleeping. You also talked about school.",
+  );
+  assert.equal(stripEntryIds('See entry E3, it was a good day.'), 'It was a good day.');
+  assert.equal(stripEntryIds('Nothing to strip here.'), 'Nothing to strip here.');
 });

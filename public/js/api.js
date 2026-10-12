@@ -59,6 +59,14 @@ export const api = {
   refreshNotion: () => request('POST', '/api/notion/refresh'),
   notionEntry: (id) => request('GET', `/api/notion/entries/${enc(id)}`),
 
+  chats: () => request('GET', '/api/chats'),
+  chat: (id) => request('GET', `/api/chats/${enc(id)}`),
+  newChat: (question) => request('POST', '/api/chats', { question }),
+  sendMessage: (id, question) => request('POST', `/api/chats/${enc(id)}/messages`, { question }),
+  deleteChat: (id) => request('DELETE', `/api/chats/${enc(id)}`),
+  deleteAllChats: () => request('DELETE', '/api/chats'),
+  screen: (text) => request('POST', '/api/safety/screen', { text }),
+
   reflection: (source, id) => request('GET', `/api/reflections/${enc(source)}/${enc(id)}`),
   reflect: (source, id) => request('POST', `/api/reflections/${enc(source)}/${enc(id)}`),
   deleteAllReflections: () => request('DELETE', '/api/reflections'),
