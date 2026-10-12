@@ -1,5 +1,16 @@
 import { api, esc } from './api.js';
 
+/*
+ * "I advise you to not hide your feelings
+ *  Don't pretend to be okay when you're not okay
+ *  Don't pretend to be happy when you're sad
+ *  It'll only lead to your misery"
+ *    — XXXTENTACION, "Let's Pretend We're Numb"
+ *
+ * Why this panel exists: do not suffer in silence. Luna is a place to start,
+ * and the people listed here are where to go next.
+ */
+
 // Low-key "Need someone?" panel. Content comes from the server's verified list;
 // if that can't load we say so rather than guessing at contact details.
 export function supportPanel({ open = false, title = 'Need someone?' } = {}) {
