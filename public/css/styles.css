@@ -202,6 +202,7 @@ pre.env {
 .resource-list .contacts span { color: var(--text-faint); }
 .support .urgent { margin-top: 14px; font-size: .88rem; color: var(--text-muted); }
 .support .urgent strong { color: var(--text); }
+.support .verified { margin-top: 8px; font-size: .78rem; color: var(--text-faint); }
 
 /* --- Ask Luna -------------------------------------------------------------- */
 

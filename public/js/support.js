@@ -1,4 +1,4 @@
-import { api, esc } from './api.js';
+import { api, esc, formatDate } from './api.js';
 
 /*
  * "Don't pretend to be okay when you're not okay."
@@ -41,7 +41,8 @@ async function fill(body) {
             </p>` : ''}
           </li>`).join('')}
       </ul>
-      <p class="urgent"><strong>${esc(data.urgent.title)}:</strong> ${esc(data.urgent.body)}</p>`;
+      <p class="urgent"><strong>${esc(data.urgent.title)}:</strong> ${esc(data.urgent.body)}</p>
+      <p class="verified">Contact details last checked ${esc(formatDate(data.verified, { month: 'long', day: 'numeric', year: 'numeric' }))}.</p>`;
   } catch {
     body.innerHTML = `<p class="urgent"><strong>Couldn’t load the resource list.</strong> If you need to talk to someone now, call or text <a href="tel:988">988</a>.</p>`;
   }
