@@ -3,11 +3,18 @@ const COLORS = { night: '#0d1626', day: '#ece3d1' };
 
 export const currentTheme = () => (document.documentElement.dataset.theme === 'day' ? 'day' : 'night');
 
-export function setTheme(theme) {
+function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', COLORS[theme]);
-  try { localStorage.setItem('luna-theme', theme); } catch { /* not saved; still applied */ }
   syncToggles();
+}
+
+// Matches the browser chrome to the theme theme-init.js already applied.
+export const initTheme = () => applyTheme(currentTheme());
+
+export function setTheme(theme) {
+  applyTheme(theme);
+  try { localStorage.setItem('luna-theme', theme); } catch { /* not saved; still applied */ }
 }
 
 export function syncToggles(root = document) {
