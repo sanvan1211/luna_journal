@@ -10,6 +10,7 @@ import * as ollama from './providers/ollama.js';
 
 const providers = { anthropic, openai, ollama };
 const TIMEOUT_MS = 60_000;
+const RETRY_DELAY_MS = 1_000;
 
 export { AIConfigError, AIProviderError };
 
@@ -47,10 +48,28 @@ export async function complete({ system, messages, maxTokens = 1024, json = fals
   if (!status.configured) throw new AIConfigError(status.problem);
 
   const impl = providers[status.provider];
-  const signal = AbortSignal.timeout(TIMEOUT_MS);
   let result;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      result = await callOnce(impl, { system, messages, maxTokens, json });
+      break;
+    } catch (err) {
+      // Busy or briefly-down providers get one more try after a short pause.
+      const retryable = err instanceof AIProviderError && (err.status === 429 || err.status >= 500);
+      if (!retryable || attempt >= 2) throw err;
+      await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+    }
+  }
+
+  const out = { text: result.text, provider: status.provider, model: status.model };
+  if (json) out.json = parseJSON(result.text, impl.name);
+  return out;
+}
+
+async function callOnce(impl, { system, messages, maxTokens, json }) {
+  const signal = AbortSignal.timeout(TIMEOUT_MS);
   try {
-    result = await impl.complete(config.ai, { system, messages, maxTokens, json, signal });
+    return await impl.complete(config.ai, { system, messages, maxTokens, json, signal });
   } catch (err) {
     if (err instanceof AIProviderError) throw err;
     if (err.name === 'TimeoutError') throw new AIProviderError(impl.name, 'request timed out');
@@ -58,10 +77,6 @@ export async function complete({ system, messages, maxTokens = 1024, json = fals
     // transport error, not content.
     throw new AIProviderError(impl.name, `couldn't reach provider (${err.cause?.code ?? err.cause?.errors?.[0]?.code ?? err.message})`);
   }
-
-  const out = { text: result.text, provider: status.provider, model: status.model };
-  if (json) out.json = parseJSON(result.text, impl.name);
-  return out;
 }
 
 // Models sometimes wrap JSON in a code fence; tolerate that, but nothing looser.
