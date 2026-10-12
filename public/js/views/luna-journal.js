@@ -259,7 +259,10 @@ async function renderEditor(pane, id, status, listBody) {
   let saving = Promise.resolve();
 
   const setMeta = (e) => {
-    metaEl.textContent = `${e.wordCount} word${e.wordCount === 1 ? '' : 's'} · edited ${new Date(e.updatedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`;
+    // ~200 words a minute is a relaxed reading pace.
+    const minutes = Math.max(1, Math.round(e.wordCount / 200));
+    const reading = e.wordCount >= 100 ? ` · ${minutes} min read` : '';
+    metaEl.textContent = `${e.wordCount} word${e.wordCount === 1 ? '' : 's'}${reading} · edited ${new Date(e.updatedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`;
   };
   setMeta(entry);
 
