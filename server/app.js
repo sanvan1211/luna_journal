@@ -168,6 +168,38 @@ function matchRoute(method, path) {
   return { pathMatched };
 }
 
+// --- Request checks ---------------------------------------------------------
+// Luna listens on localhost, but any website open in the same browser could
+// still send requests to it. These checks stop that:
+//  - Host must be the address Luna is served on (blocks DNS-rebinding tricks).
+//  - A cross-site Origin is refused outright.
+//  - Bodies must be JSON, which browsers can't send cross-site without a
+//    CORS preflight that Luna never approves.
+
+const LOOPBACK = ['127.0.0.1', 'localhost', '[::1]'];
+const OPEN_HOSTS = ['0.0.0.0', '::'];
+
+function allowedHost(host) {
+  if (!host) return false;
+  // HOST=0.0.0.0 means the user chose to serve Luna on their network.
+  if (OPEN_HOSTS.includes(config.host)) return true;
+  const names = new Set([...LOOPBACK, config.host]);
+  return [...names].some((name) => host === name || host.startsWith(`${name}:`));
+}
+
+function checkRequest(req) {
+  const host = req.headers.host;
+  if (!allowedHost(host)) throw new HttpError(403, 'Unexpected Host header.', 'bad_host');
+  const origin = req.headers.origin;
+  if (origin && origin !== `http://${host}` && origin !== `https://${host}`) {
+    throw new HttpError(403, 'Cross-site requests aren’t allowed.', 'cross_site');
+  }
+  const hasBody = Number(req.headers['content-length'] ?? 0) > 0 || 'transfer-encoding' in req.headers;
+  if (hasBody && !/^application\/json\b/i.test(req.headers['content-type'] ?? '')) {
+    throw new HttpError(415, 'Send request bodies as application/json.', 'bad_content_type');
+  }
+}
+
 // --- Plumbing ---------------------------------------------------------------
 
 function sendJSON(res, status, body) {
@@ -196,6 +228,7 @@ async function handleAPI(req, res, path, query) {
   const route = matchRoute(req.method, path);
   if (!route.handler) return sendJSON(res, route.pathMatched ? 405 : 404, { error: route.pathMatched ? 'Method not allowed' : 'Not found' });
   try {
+    checkRequest(req);
     const body = req.method === 'GET' ? {} : await readJSONBody(req);
     sendJSON(res, 200, await route.handler({ req, body, params: route.params, query }));
   } catch (err) {
