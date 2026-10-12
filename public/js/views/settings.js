@@ -1,0 +1,119 @@
+import { api, esc } from '../api.js';
+
+export async function render(el, { status }) {
+  const { ai, notion } = status;
+
+  el.innerHTML = `
+    <div>
+      <header class="page-head">
+        <div>
+          <h1>Privacy &amp; setup</h1>
+          <p class="lede">What Luna is connected to, and exactly what it does with your writing.</p>
+        </div>
+      </header>
+
+      <div class="grid">
+        <section class="card span-2" aria-labelledby="ai-title">
+          <div class="card-head">
+            <h2 id="ai-title">AI provider</h2>
+            <span class="pill ${ai.configured ? 'pill--ok' : 'pill--todo'}">${ai.configured ? 'Configured' : 'Not configured'}</span>
+          </div>
+          ${ai.configured
+            ? `<p class="card-text">Luna is using <strong>${esc(ai.provider)}</strong> with model <code>${esc(ai.model)}</code>.</p>`
+            : `<p class="card-text"><strong>${esc(ai.problem)}.</strong> Add these to <code>.env</code> in the project folder and restart Luna:</p>
+               <pre class="env">AI_PROVIDER=anthropic   # or openai, or ollama (runs locally)
+AI_MODEL=your-model-name
+ANTHROPIC_API_KEY=...   # only the key for the provider you chose</pre>`}
+          <div class="card-actions">
+            <button class="btn btn--ghost" type="button" data-test-ai ${ai.configured ? '' : 'disabled'}>Test connection</button>
+          </div>
+          <p class="result" data-test-result role="status"></p>
+        </section>
+
+        <section class="card" aria-labelledby="notion-title">
+          <div class="card-head">
+            <h2 id="notion-title">Notion</h2>
+            <span class="pill ${notion.configured ? 'pill--ok' : 'pill--todo'}">${notion.configured ? 'Token found' : 'Not connected'}</span>
+          </div>
+          <p class="card-text">${!notion.configured
+            ? 'Follow the steps on the <a href="#/journals/notion">Journal → Notion</a> tab to connect.'
+            : notion.databaseSelected
+              ? 'Luna is reading one journal database, read-only.'
+              : 'Token found, but no journal database is selected.'}</p>
+          ${notion.databaseSelected ? `
+          <div class="card-actions">
+            <button class="btn btn--ghost" type="button" data-disconnect>Stop reading this database</button>
+          </div>` : ''}
+          ${notion.configured ? '<p class="card-sub notion-revoke">To revoke access entirely, remove the integration from your journal in Notion, or delete <code>NOTION_TOKEN</code> from <code>.env</code>.</p>' : ''}
+          <p class="result" data-notion-result role="status"></p>
+        </section>
+
+        <section class="card span-3" aria-labelledby="data-title">
+          <div class="card-head"><h2 id="data-title">Luna’s memory</h2></div>
+          <p class="card-text">When you ask Luna to reflect, it saves the summary, themes and question so they show up next time and on your dashboard. You can erase all of them. Your journal entries aren’t touched.</p>
+          <div class="card-actions">
+            <button class="btn btn--ghost" type="button" data-delete-reflections>Delete all reflections</button>
+          </div>
+          <p class="result" data-reflections-result role="status"></p>
+        </section>
+
+        <section class="card span-3" aria-labelledby="privacy-title">
+          <div class="card-head"><h2 id="privacy-title">How Luna handles your journal</h2></div>
+          <ul class="plain-list">
+            <li>API keys live only on the server, in <code>.env</code>. They’re never sent to this page.</li>
+            <li>When you ask for a reflection, only that one entry is sent to the AI — never your whole journal.</li>
+            <li>Entries you write in Luna are saved as files on this computer, in the project’s <code>data/</code> folder.</li>
+            <li>The server log records which pages were requested and nothing else. Journal text is never logged.</li>
+            <li>Notion stays the source of truth. Luna reads from it and never edits it.</li>
+            <li>Want nothing to leave your computer? Set <code>AI_PROVIDER=ollama</code> to use a local model.</li>
+          </ul>
+        </section>
+      </div>
+    </div>`;
+
+  el.querySelector('[data-disconnect]')?.addEventListener('click', async (e) => {
+    const button = e.currentTarget;
+    const out = el.querySelector('[data-notion-result]');
+    button.disabled = true;
+    try {
+      await api.disconnectNotionDatabase();
+      out.className = 'result result--ok';
+      out.textContent = 'Done. Luna no longer reads that database.';
+    } catch (err) {
+      out.className = 'result result--err';
+      out.textContent = err.message;
+      button.disabled = false;
+    }
+  });
+
+  el.querySelector('[data-delete-reflections]').addEventListener('click', async () => {
+    if (!confirm('Delete every saved reflection? Your journal entries stay as they are.')) return;
+    const out = el.querySelector('[data-reflections-result]');
+    try {
+      await api.deleteAllReflections();
+      out.className = 'result result--ok';
+      out.textContent = 'All reflections deleted.';
+    } catch (err) {
+      out.className = 'result result--err';
+      out.textContent = err.message;
+    }
+  });
+
+  const btn = el.querySelector('[data-test-ai]');
+  const out = el.querySelector('[data-test-result]');
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    out.className = 'result';
+    out.textContent = 'Checking…';
+    try {
+      const r = await api.testAI();
+      out.className = 'result result--ok';
+      out.textContent = `Connected to ${r.provider} · ${r.model} (${r.latencyMs} ms).`;
+    } catch (err) {
+      out.className = 'result result--err';
+      out.textContent = err.message;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}

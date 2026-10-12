@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0d1626">
+  <title>Luna</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/styles.css">
+  <script type="module" src="/js/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div class="shell">
+    <aside class="sidebar" aria-label="Luna">
+      <a class="brand" href="#/dashboard" aria-label="Luna home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">Luna</span>
+      </a>
+
+      <nav class="nav" aria-label="Main">
+        <a href="#/dashboard" data-route="dashboard">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h4A1.5 1.5 0 0 1 11 5.5v5A1.5 1.5 0 0 1 9.5 12h-4A1.5 1.5 0 0 1 4 10.5zM13 5.5A1.5 1.5 0 0 1 14.5 4h4A1.5 1.5 0 0 1 20 5.5v2A1.5 1.5 0 0 1 18.5 9h-4A1.5 1.5 0 0 1 13 7.5zM13 12.5a1.5 1.5 0 0 1 1.5-1.5h4a1.5 1.5 0 0 1 1.5 1.5v6a1.5 1.5 0 0 1-1.5 1.5h-4a1.5 1.5 0 0 1-1.5-1.5zM4 15.5A1.5 1.5 0 0 1 5.5 14h4a1.5 1.5 0 0 1 1.5 1.5v3A1.5 1.5 0 0 1 9.5 20h-4A1.5 1.5 0 0 1 4 18.5z"/></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="#/journals" data-route="journals">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 3.5h10.5A1.5 1.5 0 0 1 18 5v14.5a1 1 0 0 1-1 1H6.5A2.5 2.5 0 0 1 4 18V5.5a2 2 0 0 1 2-2zM4 18a2.5 2.5 0 0 1 2.5-2.5H18M8 7.5h6M8 10.5h4"/></svg>
+          <span>Journals</span>
+        </a>
+        <a href="#/ask" data-route="ask">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 5.5A1.5 1.5 0 0 1 6.5 4h11A1.5 1.5 0 0 1 19 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4 3.5V16h0.5A1.5 1.5 0 0 1 5 14.5z"/></svg>
+          <span>Ask Luna</span>
+        </a>
+        <a href="#/settings" data-route="settings">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3.5l6.5 2.5v5.5c0 4-2.8 7.4-6.5 8.5-3.7-1.1-6.5-4.5-6.5-8.5V6z"/></svg>
+          <span>Privacy</span>
+        </a>
+      </nav>
+
+      <p class="sidebar-note">Luna reflects on what you’ve written. It isn’t a therapist and doesn’t diagnose.</p>
+    </aside>
+
+    <main id="main" class="main" tabindex="-1">
+      <div id="view" class="view" aria-live="polite"></div>
+    </main>
+  </div>
+</body>
+</html>

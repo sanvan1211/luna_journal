@@ -43,3 +43,46 @@ It'll only lead to your misery_
 
 Do not suffer in silence. 
 
+
+---
+
+## Running Luna
+
+Requires Node 22+. There are no npm dependencies.
+
+```sh
+cp .env.example .env   # set AI_PROVIDER, AI_MODEL, and that provider's key
+npm start              # http://127.0.0.1:3000
+```
+
+`AI_PROVIDER=ollama` with a local model (e.g. `AI_MODEL=llama3.2`) keeps every word on your own computer, and you don't need an API key.
+
+With nothing configured, Luna still runs and shows honest setup states. It never shows sample entries or made-up AI output.
+
+### Two places to journal
+
+- **Luna journal:** write right in the app. It works like Notion, with `#` headings, `-` lists and `- [ ]` checkboxes. It autosaves and has an optional mood you choose yourself, plus Markdown export. Entries are stored as files in `data/` on your computer, and that folder is gitignored.
+- **Notion:** connect a read-only Notion integration (`NOTION_TOKEN`), then pick your journal database in the app. Luna reads only that database, never edits it, and doesn't copy pages.
+
+On any entry, choose **Reflect with Luna** for a short summary, a few themes, and a question to write about next. Only that one entry is sent to the AI. A safety check runs first. If an entry suggests someone may be unsafe, Luna steps aside and shows real resources (988, Crisis Text Line, Safe2Say PA, trusted adults) instead of a reflection.
+
+### Project layout
+
+```
+server/
+  index.js        routes, static files, security headers
+  ai/             provider-agnostic AI service (anthropic | openai | ollama) + prompts
+  journal/        Luna's built-in journal (data/journal/*.json)
+  notion/         read-only Notion connector
+  insights/       single-entry reflections, recurring themes with receipts
+  safety/         safety check + verified support resources
+  store.js        one-JSON-file-per-record storage under data/
+public/           HTML, CSS, and vanilla JS views (no framework)
+docs/prompts/     the original build, frontend, and AI-function specs
+```
+
+### Privacy
+
+- API keys stay on the server, never in the browser.
+- The server log records request paths and timings only, never journal text.
+- Reflections can be deleted any time from **Privacy & setup**. Notion can be disconnected there too.
