@@ -208,6 +208,13 @@ export async function emptyTrash() {
   return trashed;
 }
 
+// Everything in the Luna journal, for the user to keep (trash included, marked).
+export async function exportAll() {
+  return (await all())
+    .sort((a, b) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt))
+    .map((r) => toEntry(r));
+}
+
 // --- Tags & search -------------------------------------------------------------------
 
 export async function listTags() {

@@ -85,3 +85,11 @@ test('static files are served, and paths outside public/ are not', async () => {
   const escape = await fetch(`${base}/%2e%2e/server/config.js`);
   assert.notEqual(escape.status, 200);
 });
+
+test('export includes every journal page and its markdown', async () => {
+  const { data } = await json('/api/export');
+  assert.equal(data.app, 'Luna');
+  assert.ok(data.journal.length >= 2);
+  assert.ok(data.journal.every((e) => typeof e.content === 'string' && Array.isArray(e.blocks)));
+  assert.ok(Array.isArray(data.reflections));
+});

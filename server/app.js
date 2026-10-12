@@ -91,6 +91,13 @@ const routes = [
   ['GET', '/api/entries', () => allEntries()],
 
   // Luna journal
+  // Your data, all of it: journal pages (with markdown) and Luna's reflections.
+  ['GET', '/api/export', async () => ({
+    app: 'Luna',
+    exportedAt: new Date().toISOString(),
+    journal: await journal.exportAll(),
+    reflections: await listReflections(),
+  })],
   ['GET', '/api/journal/templates', () => ({ templates: listTemplates() })],
   ['GET', '/api/journal/tags', async () => ({ tags: await journal.listTags() })],
   ['GET', '/api/journal/search', async ({ query }) => ({
