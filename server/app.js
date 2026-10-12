@@ -9,6 +9,7 @@ import { log } from './log.js';
 import { HttpError, badRequest } from './errors.js';
 import { getAIStatus, complete, AIConfigError, AIProviderError } from './ai/index.js';
 import { SUPPORT_RESOURCES } from './safety/resources.js';
+import { phraseScreen } from './safety/check.js';
 import { getNotionDatabaseId, setNotionDatabaseId } from './settings.js';
 import * as journal from './journal/index.js';
 import { listTemplates } from './journal/templates.js';
@@ -79,6 +80,13 @@ const routes = [
   })],
 
   ['GET', '/api/support/resources', () => SUPPORT_RESOURCES],
+
+  // Deterministic crisis-phrase screen for the wellness check. No AI call,
+  // nothing stored or logged.
+  ['POST', '/api/safety/screen', ({ body }) => {
+    if (typeof body.text !== 'string' || body.text.length > 20_000) throw badRequest('Send the text to check.');
+    return { level: phraseScreen(body.text) };
+  }],
 
   // Confirms the AI provider works end to end. Sends no journal content.
   ['POST', '/api/ai/test', async () => {
