@@ -49,9 +49,10 @@ ANTHROPIC_API_KEY=...   # only the key for the provider you chose</pre>`}
         </section>
 
         <section class="card span-3" aria-labelledby="data-title">
-          <div class="card-head"><h2 id="data-title">Luna’s memory</h2></div>
+          <div class="card-head"><h2 id="data-title">Your data</h2></div>
           <p class="card-text">When you ask Luna to reflect, it saves the summary, themes and question so they show up next time and on your dashboard. You can erase all of them. Your journal entries aren’t touched.</p>
           <div class="card-actions">
+            <button class="btn btn--ghost" type="button" data-export-all>Download all my data</button>
             <button class="btn btn--ghost" type="button" data-delete-reflections>Delete all reflections</button>
           </div>
           <p class="result" data-reflections-result role="status"></p>
@@ -94,6 +95,24 @@ ANTHROPIC_API_KEY=...   # only the key for the provider you chose</pre>`}
       out.className = 'result result--err';
       out.textContent = err.message;
       button.disabled = false;
+    }
+  });
+
+  el.querySelector('[data-export-all]').addEventListener('click', async () => {
+    const out = el.querySelector('[data-reflections-result]');
+    try {
+      const data = await api.exportAll();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `luna-export-${data.exportedAt.slice(0, 10)}.json`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      out.className = 'result result--ok';
+      out.textContent = `Downloaded ${data.journal.length} page${data.journal.length === 1 ? '' : 's'} and ${data.reflections.length} reflection${data.reflections.length === 1 ? '' : 's'}.`;
+    } catch (err) {
+      out.className = 'result result--err';
+      out.textContent = err.message;
     }
   });
 

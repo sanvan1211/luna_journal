@@ -38,6 +38,7 @@ export const api = {
   testAI: () => request('POST', '/api/ai/test'),
 
   entries: () => request('GET', '/api/entries'),
+  exportAll: () => request('GET', '/api/export'),
 
   createEntry: (data = {}) => request('POST', '/api/journal/entries', data),
   getEntry: (id) => request('GET', `/api/journal/entries/${enc(id)}`),
