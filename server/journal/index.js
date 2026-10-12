@@ -17,6 +17,7 @@ const COLLECTION = 'journal';
 const MAX_TITLE = 200;
 const MAX_TAGS = 10;
 const MAX_TAG_LEN = 30;
+const MAX_QUERY = 200;
 export const MOODS = ['great', 'good', 'okay', 'low', 'rough'];
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -244,7 +245,9 @@ function snippet(text, idx, len, radius = 60) {
 // Simple, local full-text search over titles, tags and block text. Every word
 // in the query must appear somewhere in the entry.
 export async function searchEntries(query, { tag, limit = 30 } = {}) {
-  const words = String(query ?? '').toLowerCase().split(/\s+/).filter(Boolean).slice(0, 8);
+  const q = String(query ?? '');
+  if (q.length > MAX_QUERY) throw badRequest(`Search is limited to ${MAX_QUERY} characters.`);
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean).slice(0, 8);
   const tagKey = tag?.toLowerCase();
   const results = [];
   for (const r of await all()) {

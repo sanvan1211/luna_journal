@@ -94,3 +94,7 @@ test('a damaged file is skipped instead of breaking the whole list', async () =>
   assert.ok(list.length > 0);
   assert.ok(!list.some((e) => e.id.endsWith('ff')));
 });
+
+test('very long search queries are refused', async () => {
+  await assert.rejects(journal.searchEntries('x'.repeat(201)), /limited to 200/);
+});
