@@ -766,7 +766,9 @@ class Menu {
     this.keepFocus = keepFocus;
     this.onClose = onClose;
     this.active = 0;
+    this.anchor = anchor;
     this.el = document.createElement('div');
+    this.el.id = `blk-menu-${Math.random().toString(36).slice(2, 8)}`;
     this.el.className = 'blk-menu';
     this.el.setAttribute('role', 'menu');
     this.el.setAttribute('aria-label', title);
@@ -784,22 +786,32 @@ class Menu {
       const btn = e.target.closest('[data-i]');
       if (btn) this.choose(Number(btn.dataset.i));
     });
-    if (!keepFocus) this.focusActive();
+    if (keepFocus) {
+      // Focus stays in the text (like Notion), so tell assistive tech which
+      // option is highlighted.
+      anchor.setAttribute('aria-controls', this.el.id);
+      anchor.setAttribute('aria-expanded', 'true');
+      this.setActive(this.active);
+    } else {
+      this.focusActive();
+    }
   }
 
   update(items) {
     this.items = items;
+    this.active = Math.max(0, this.active);
     this.active = Math.min(this.active, items.length - 1);
     let section = null;
     this.el.innerHTML = items.map((it, i) => {
       const head = it.section && it.section !== section ? `<p class="blk-menu-section">${esc(it.section)}</p>` : '';
       section = it.section ?? section;
-      return `${head}<button type="button" role="menuitem" class="blk-menu-item${it.danger ? ' is-danger' : ''}${it.current ? ' is-current' : ''}" data-i="${i}" tabindex="-1" ${i === this.active ? 'data-active' : ''}>
+      return `${head}<button type="button" role="menuitem" id="${this.el.id}-${i}" class="blk-menu-item${it.danger ? ' is-danger' : ''}${it.current ? ' is-current' : ''}" data-i="${i}" tabindex="-1" ${i === this.active ? 'data-active' : ''}>
           <span class="blk-menu-icon" aria-hidden="true">${esc(it.icon)}</span>
           <span class="blk-menu-label">${esc(it.label)}</span>
           ${it.hint ? `<span class="blk-menu-hint">${esc(it.hint)}</span>` : ''}
         </button>`;
     }).join('');
+    if (this.keepFocus && this.anchor.hasAttribute('aria-controls')) this.setActive(this.active);
   }
 
   setActive(i) {
@@ -808,6 +820,7 @@ class Menu {
     const btn = this.el.querySelector(`[data-i="${this.active}"]`);
     btn?.scrollIntoView({ block: 'nearest' });
     if (!this.keepFocus) btn?.focus();
+    else if (btn) this.anchor.setAttribute('aria-activedescendant', btn.id);
   }
 
   focusActive() {
@@ -832,6 +845,11 @@ class Menu {
   close(restore = false) {
     if (!this.el.isConnected) return;
     this.el.remove();
+    if (this.keepFocus) {
+      this.anchor.removeAttribute('aria-activedescendant');
+      this.anchor.removeAttribute('aria-controls');
+      this.anchor.removeAttribute('aria-expanded');
+    }
     this.onClose(restore);
   }
 }
