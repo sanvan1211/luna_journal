@@ -77,6 +77,11 @@ export function renderMarkdown(src) {
 }
 
 export function toMarkdownFile(entry) {
-  const mood = entry.mood ? `Mood: ${entry.mood}\n` : '';
-  return `# ${entry.title || 'Untitled'}\n\nDate: ${entry.date}\n${mood}\n${entry.content ?? ''}\n`;
+  const meta = [
+    `Date: ${entry.date}`,
+    entry.mood ? `Mood: ${entry.mood}` : null,
+    entry.tags?.length ? `Tags: ${entry.tags.join(', ')}` : null,
+  ].filter(Boolean).join('\n');
+  const title = `${entry.icon ? `${entry.icon} ` : ''}${entry.title || 'Untitled'}`;
+  return `# ${title}\n\n${meta}\n\n${entry.content ?? ''}\n`;
 }
