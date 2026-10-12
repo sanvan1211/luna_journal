@@ -253,7 +253,7 @@ async function handleAPI(req, res, path, query) {
   }
 }
 
-async function serveStatic(res, path) {
+async function serveStatic(req, res, path) {
   // Every non-file route falls back to the SPA shell; the client router handles it.
   const rel = path === '/' || !extname(path) ? 'index.html' : decodeURIComponent(path).replace(/^\/+/, '');
   const file = normalize(join(PUBLIC_DIR, rel));
@@ -266,9 +266,11 @@ async function serveStatic(res, path) {
     res.writeHead(200, {
       ...SECURITY_HEADERS,
       'content-type': MIME[extname(file)] ?? 'application/octet-stream',
+      'content-length': data.length,
       'cache-control': 'no-cache',
     });
-    res.end(data);
+    // HEAD gets the same headers with no body.
+    res.end(req.method === 'HEAD' ? undefined : data);
   } catch {
     res.writeHead(404, { 'content-type': 'text/plain' }).end('Not found');
   }
@@ -282,7 +284,7 @@ export function createApp() {
     if (pathname.startsWith('/api/')) {
       await handleAPI(req, res, pathname, searchParams);
     } else if (req.method === 'GET' || req.method === 'HEAD') {
-      await serveStatic(res, pathname);
+      await serveStatic(req, res, pathname);
     } else {
       res.writeHead(405).end();
     }
