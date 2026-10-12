@@ -1,10 +1,7 @@
 import { api, esc } from './api.js';
 
 /*
- * "I advise you to not hide your feelings
- *  Don't pretend to be okay when you're not okay
- *  Don't pretend to be happy when you're sad
- *  It'll only lead to your misery"
+ * "Don't pretend to be okay when you're not okay."
  *    — XXXTENTACION, "Let's Pretend We're Numb"
  *
  * Why this panel exists: do not suffer in silence. Luna is a place to start,
