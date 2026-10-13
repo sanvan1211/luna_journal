@@ -1,5 +1,5 @@
-// Night paper (navy) ↔ Day paper (cream). Stored per browser.
-const COLORS = { night: '#0d1626', day: '#ece3d1' };
+// Night paper (near-black) ↔ Day paper (cream). Stored per browser.
+const COLORS = { night: '#08090b', day: '#ece3d1' };
 
 export const currentTheme = () => (document.documentElement.dataset.theme === 'day' ? 'day' : 'night');
 

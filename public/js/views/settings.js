@@ -61,7 +61,7 @@ ANTHROPIC_API_KEY=...   # only the key for the provider you chose</pre>`}
 
         <section class="card span-3" aria-labelledby="look-title">
           <div class="card-head"><h2 id="look-title">Paper</h2></div>
-          <p class="card-text">Night paper is navy; day paper is warm cream. This is remembered in this browser only.</p>
+          <p class="card-text">Night paper is near-black; day paper is warm cream. This is remembered in this browser only.</p>
           <div class="card-actions">
             <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">
               <span class="theme-toggle-dot" aria-hidden="true"></span>
