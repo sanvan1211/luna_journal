@@ -1,7 +1,7 @@
 import { state } from "../state.js";
 import { listEntries, listInsights, listMemory, deleteMemory, deleteAllInsights, deleteAccount } from "../data.js";
 import { bunny, emptyState } from "../bunny.js";
-import { esc, html, $, $$, fmtLong, download, toast, confirmDialog } from "../util.js";
+import { esc, html, $, $$, dayKey, fmtLong, download, toast, confirmDialog } from "../util.js";
 
 // Quote shown in "About Luna". Set to { text: "…", by: "…" } to show it; null hides it.
 const QUOTE = null;
@@ -127,7 +127,7 @@ export async function render(main) {
   $("[data-export-all]", page).addEventListener("click", async () => {
     const entries = (await listEntries()).slice().reverse();
     const md = entries.map((e) => `# ${e.title || "Untitled"}\n\n*${fmtLong(e.created_at)}${e.mood ? " · Mood: " + e.mood : ""}${(e.tags || []).length ? " · " + e.tags.map((t) => "#" + t).join(" ") : ""}*\n\n${e.content}`).join("\n\n---\n\n");
-    download(`luna-journal${state.demo ? "-sample" : ""}.md`, md + "\n");
+    download(`luna-journal${state.demo ? "-sample" : ""}-${dayKey(new Date())}.md`, md + "\n");
   });
 
   $("[data-del-account]", page).addEventListener("click", async () => {
