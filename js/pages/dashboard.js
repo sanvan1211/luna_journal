@@ -134,7 +134,7 @@ function renderCalendar(card, entries, wordsByDay) {
     card.innerHTML = `
       <div class="card-head" style="flex-wrap:wrap">
         <div><h2 id="cal-h">Calendar</h2>
-        <p class="muted small" style="margin:4px 0 0">Pick a day to see what you wrote. Arrow keys move between days.</p></div>
+        <p class="muted small" style="margin:4px 0 0">Pick a day to see what you wrote. Arrow keys move between days; Home and End jump to the ends of the month.</p></div>
         <div class="cal-nav">
           <button type="button" class="icon-btn" data-prev aria-label="Previous month"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12 5l-5 5 5 5"/></svg></button>
           <span class="cal-title" aria-live="polite">${fmtMonth(month)}</span>
@@ -215,6 +215,10 @@ function renderCalendar(card, entries, wordsByDay) {
       e.preventDefault();
       const d = new Date(selected); d.setDate(d.getDate() + step);
       select(d, true);
+    } else if (e.key === "Home" || e.key === "End") {
+      e.preventDefault();
+      const last = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+      select(new Date(month.getFullYear(), month.getMonth(), e.key === "Home" ? 1 : last), true);
     } else if (e.key === "PageUp" || e.key === "PageDown") {
       e.preventDefault();
       shiftMonth(e.key === "PageUp" ? -1 : 1);
