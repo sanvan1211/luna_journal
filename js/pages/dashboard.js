@@ -87,6 +87,8 @@ export async function render(main, route) {
           ${topTags.length ? `<div class="eyebrow" style="margin:4px 0 8px">Your tags</div><div class="chips">${topTags.map(([t, n]) => `<a class="chip chip-btn" href="#/journal?q=%23${encodeURIComponent(t)}" style="text-decoration:none">#${esc(t)} <span class="count">${n}</span></a>`).join("")}</div>` : ""}
         ` : `<p class="muted small" style="margin:0">Themes show up here as you tag entries and Luna looks for patterns.</p>`}
       </section>
+
+      <section class="card span-12" aria-labelledby="moods-h" data-moods></section>
     </div>
   </div>`);
   main.append(page);
@@ -95,6 +97,8 @@ export async function render(main, route) {
     b.dataset.see === "month"
       ? openEntryList("Entries this month", thisMonth)
       : openEntryList(`Your ${streak}-day streak`, streakEntries)));
+
+  renderMoods($("[data-moods]", page), entries);
 
   const calendar = renderCalendar($("[data-calendar]", page), entries, wordsByDay);
   // A square in "Last 5 weeks" opens that day in the calendar.
@@ -246,6 +250,40 @@ function renderCalendar(card, entries, wordsByDay) {
 }
 
 const parseDay = (k) => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };
+
+// ─────────────────────────── Moods you picked ───────────────────────────
+// Counts only the moods people chose on their own entries. Luna never assigns one.
+function renderMoods(card, entries) {
+  let range = 30;
+  function draw() {
+    const since = new Date(); since.setDate(since.getDate() - range);
+    const list = entries.filter((e) => e.mood && (range === 0 || new Date(e.created_at) >= since));
+    const groups = {};
+    list.forEach((e) => (groups[e.mood] ||= []).push(e));
+    const rows = Object.entries(groups).sort((a, b) => b[1].length - a[1].length);
+    const max = rows.length ? rows[0][1].length : 0;
+    card.innerHTML = `
+      <div class="card-head" style="flex-wrap:wrap">
+        <div><h2 id="moods-h">Moods you picked</h2>
+        <p class="muted small" style="margin:4px 0 0">Only the moods you chose on your entries. Luna never assigns one. Pick a mood to see its entries.</p></div>
+        <div class="seg" role="group" aria-label="Time range">
+          <button type="button" data-mrange="30" aria-pressed="${range === 30}">30 days</button>
+          <button type="button" data-mrange="0" aria-pressed="${range === 0}">All time</button>
+        </div>
+      </div>
+      ${rows.length ? `<div class="mood-bars">${rows.map(([mood, es]) => `
+        <button type="button" class="mood-bar" data-mood-row="${esc(mood)}" aria-label="${esc(mood)}: ${es.length} ${es.length === 1 ? "entry" : "entries"}. Show them">
+          <span class="m">${esc(mood)}</span>
+          <span class="track"><span class="fill" style="width:${Math.max(4, Math.round((es.length / max) * 100))}%"></span></span>
+          <span class="n">${es.length}</span>
+        </button>`).join("")}</div>`
+        : `<p class="muted small" style="margin:0">${range ? "No moods picked in the last 30 days." : "Pick a mood on an entry and it shows up here."}</p>`}`;
+    $$("[data-mrange]", card).forEach((b) => b.addEventListener("click", () => { range = +b.dataset.mrange; draw(); $(`[data-mrange="${range}"]`, card).focus(); }));
+    $$("[data-mood-row]", card).forEach((b) => b.addEventListener("click", () =>
+      openEntryList(`Entries where you picked “${b.dataset.moodRow}”`, groups[b.dataset.moodRow])));
+  }
+  draw();
+}
 
 // ─────────────────────────── Language trends chart ───────────────────────────
 function renderTrend(card, entries) {
