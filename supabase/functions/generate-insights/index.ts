@@ -1,4 +1,4 @@
-import { serve, json, loadEntries, formatEntries, claude, parseJSON, LUNA_RULES } from "../_shared/luna.ts";
+import { serve, json, loadEntries, formatEntries, claude, parseJSON, LUNA_RULES, pickModel } from "../_shared/luna.ts";
 
 type Raw = {
   insights?: { insight: string; explanation: string; confidence: string; supporting_entry_ids: string[] }[];
@@ -29,6 +29,7 @@ Rules: at most 2 insights. Each insight needs at least 2 supporting entries; use
 Never describe mental health, diagnoses, or a mood score. If there is no clear pattern, return "insights": [].`,
     formatEntries(entries),
     900,
+    pickModel(body.model),
   );
 
   const parsed = parseJSON<Raw>(reply) ?? {};

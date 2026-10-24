@@ -70,14 +70,19 @@ ${e.content}
 </entry>`).join("\n\n");
 }
 
-export async function claude(system: string, user: string, maxTokens = 600): Promise<string> {
+// Models the user can choose under Account → Model. Anything else gets the default.
+const MODELS: Record<string, string> = { fast: "claude-haiku-5-5", thoughtful: "claude-sonnet-5-5" };
+export const pickModel = (choice: unknown): string =>
+  MODELS[String(choice)] ?? Deno.env.get("LUNA_MODEL") ?? MODELS.fast;
+
+export async function claude(system: string, user: string, maxTokens = 600, model = pickModel(null)): Promise<string> {
   const key = Deno.env.get("ANTHROPIC_API_KEY");
   if (!key) throw new NotConfigured("ANTHROPIC_API_KEY is not set in Supabase secrets.");
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
     body: JSON.stringify({
-      model: Deno.env.get("LUNA_MODEL") ?? "claude-haiku-5-5",
+      model,
       max_tokens: maxTokens,
       system,
       messages: [{ role: "user", content: user }],

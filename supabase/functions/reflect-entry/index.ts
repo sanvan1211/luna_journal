@@ -1,4 +1,4 @@
-import { serve, json, loadEntries, formatEntries, claude, LUNA_RULES } from "../_shared/luna.ts";
+import { serve, json, loadEntries, formatEntries, claude, LUNA_RULES, pickModel } from "../_shared/luna.ts";
 
 serve(async ({ body, db }) => {
   const entries = await loadEntries(db, body, 200);
@@ -15,6 +15,7 @@ Task: reflect on ONE journal entry. Reply in plain text (no markdown, no heading
 3. One open, gentle question they could write about next.`,
     formatEntries([entry]),
     400,
+    pickModel(body.model),
   );
   return json({ reflection });
 });

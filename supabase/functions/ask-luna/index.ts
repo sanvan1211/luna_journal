@@ -1,4 +1,4 @@
-import { serve, json, loadEntries, formatEntries, claude, parseJSON, LUNA_RULES, Entry } from "../_shared/luna.ts";
+import { serve, json, loadEntries, formatEntries, claude, parseJSON, LUNA_RULES, Entry, pickModel } from "../_shared/luna.ts";
 
 const STOP = new Set("the a an and or but i me my we you it is was are to of in on for with about at what when did do does how have has had that this from be been am".split(" "));
 const toks = (s: string) => (s.toLowerCase().match(/[a-z']+/g) ?? []).filter((w) => w.length > 2 && !STOP.has(w));
@@ -34,6 +34,7 @@ If the entries don't contain the answer, say so honestly and return "citations":
 Refer to entries by date or title in the answer when it helps, never by id.`,
     `${history ? `Earlier in this conversation:\n${history}\n\n` : ""}Journal entries:\n${formatEntries(pool)}\n\nQuestion: ${question}`,
     700,
+    pickModel(body.model),
   );
 
   const parsed = parseJSON<{ answer: string; citations: string[] }>(reply);

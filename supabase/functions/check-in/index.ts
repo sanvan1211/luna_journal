@@ -1,4 +1,4 @@
-import { serve, json, claude, LUNA_RULES } from "../_shared/luna.ts";
+import { serve, json, claude, LUNA_RULES, pickModel } from "../_shared/luna.ts";
 
 serve(async ({ body }) => {
   const a = body.answers ?? {};
@@ -18,6 +18,7 @@ Task: the writer just finished a short emotional check-in. Reply in plain text, 
 acknowledge what they shared in their own words, notice the small thing that went okay, and offer one gentle, practical idea connected to what they said would help. No questions, no lists.`,
     lines.join("\n"),
     300,
+    pickModel(body.model),
   );
   return json({ reflection });
 });
