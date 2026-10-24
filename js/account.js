@@ -32,6 +32,7 @@ export function renderAccount() {
     <span class="chev">${ICON.chevron}</span>
     <span class="tab-label">Account</span>`;
   btn.title = who();
+  btn.setAttribute("aria-label", `Account menu: ${who()}, ${planLine()}`);
   if (menu) close(false);
 }
 
