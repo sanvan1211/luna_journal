@@ -4,7 +4,7 @@ import { createEditor } from "../editor.js";
 import { callAI, aiProblem, aiLoading } from "../ai.js";
 import { emptyState } from "../bunny.js";
 import { safetyNote } from "../support.js";
-import { esc, html, $, $$, debounce, fmtShort, fmtLong, fmtMonth, fmtTime, plain, download, slug, toast, confirmDialog } from "../util.js";
+import { esc, html, $, $$, debounce, fmtShort, fmtLong, fmtMonth, fmtTime, plain, download, slug, toast, confirmDialog, onPageKey, typing } from "../util.js";
 
 // How the sidebar groups entries. Remembered per browser; only a view preference.
 const GROUP_KEY = "luna-journal-group";
@@ -52,7 +52,7 @@ export async function render(main, route) {
   const el = html(`<div class="journal">
     <aside class="entry-sidebar" aria-label="Entries">
       <button type="button" class="btn btn-primary" data-new>${ICON.plus}New entry</button>
-      <div class="search">${ICON.search}<input class="input" type="search" placeholder="Search entries or #tags" aria-label="Search entries" value="${esc(query)}" /></div>
+      <div class="search">${ICON.search}<input class="input" type="search" placeholder="Search entries or #tags  ( / )" aria-label="Search entries" value="${esc(query)}" /></div>
       <div class="seg group-by" role="group" aria-label="Group entries by">
         ${Object.entries(GROUPS).map(([k, label]) => `<button type="button" data-group="${k}" aria-pressed="${groupBy === k}">${label}</button>`).join("")}
       </div>
@@ -109,6 +109,11 @@ export async function render(main, route) {
     try { const row = await createEntry(); location.hash = `#/journal/${row.id}`; }
     catch (err) { toast("Couldn't create an entry. " + err.message); b.disabled = false; }
   }));
+  // "/" jumps to search, like most apps with a search box.
+  onPageKey(el, (e) => {
+    if (e.key === "/" && !typing(e)) { e.preventDefault(); searchEl.focus(); }
+  });
+
   const drawerBtn = $("[data-drawer]", el);
   drawerBtn.addEventListener("click", () => {
     const open = el.classList.toggle("drawer-open");

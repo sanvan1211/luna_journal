@@ -50,6 +50,18 @@ export function plain(md = "") {
 }
 export const words = (s = "") => (s.toLowerCase().match(/[a-z']+/g) || []);
 
+/** Page-level keyboard shortcut that removes itself once `el` leaves the page. */
+export function onPageKey(el, fn) {
+  const handler = (e) => {
+    if (!el.isConnected) { document.removeEventListener("keydown", handler); return; }
+    fn(e);
+  };
+  document.addEventListener("keydown", handler);
+}
+
+/** True when the user is typing somewhere, so single-key shortcuts should stay out of the way. */
+export const typing = (e) => e.target.closest("input, textarea, select, [contenteditable=true]") || e.metaKey || e.ctrlKey || e.altKey;
+
 // ── Toast ──
 let toastTimer;
 export function toast(msg) {
