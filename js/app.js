@@ -3,24 +3,25 @@ import { resetDemoStore } from "./data.js";
 import { esc, html, $, $$, toast } from "./util.js";
 import { emptyState, loadingState } from "./bunny.js";
 
+import * as home from "./pages/home.js";
 import * as journal from "./pages/journal.js";
 import * as dashboard from "./pages/dashboard.js";
 import * as checkin from "./pages/checkin.js";
 import * as ask from "./pages/ask.js";
 import * as settings from "./pages/settings.js";
 
-const PAGES = { journal, dashboard, checkin, ask, settings };
-const TITLES = { journal: "Journal", dashboard: "Dashboard", checkin: "Check-in", ask: "Ask Luna", settings: "Privacy" };
+const PAGES = { home, journal, dashboard, checkin, ask, settings };
+const TITLES = { home: "Home", journal: "Journal", dashboard: "Dashboard", checkin: "Check-in", ask: "Ask Luna", settings: "Privacy" };
 
 const main = document.getElementById("main");
 let cleanup = null;
 let lastPage = null;
 
 function parseRoute() {
-  const raw = location.hash.replace(/^#\/?/, "") || "journal";
+  const raw = location.hash.replace(/^#\/?/, "") || "home";
   const [path, query = ""] = raw.split("?");
   const [page, id] = path.split("/");
-  return { page: PAGES[page] ? page : "journal", id: id || null, query: new URLSearchParams(query) };
+  return { page: PAGES[page] ? page : "home", id: id || null, query: new URLSearchParams(query) };
 }
 
 export function navigate(hash) {
@@ -142,13 +143,13 @@ function enterDemo() {
   resetDemoStore();
   setDemo(true);
   toast("Demo mode on: sample data only");
-  navigate("#/dashboard");
+  navigate("#/home");
 }
 function exitDemo() {
   setDemo(false);
   resetDemoStore();
   toast("Demo mode off");
-  navigate("#/journal");
+  navigate("#/home");
 }
 
 document.addEventListener("click", async (e) => {

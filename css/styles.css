@@ -337,6 +337,46 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 .divider { display: flex; align-items: center; gap: 12px; color: var(--faint); font-size: 13px; }
 .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 
+/* ───────────── Home ───────────── */
+.home {
+  --moon: #ebe3d3; --moon-ink: #16223a; --hill: #1c362f; --hill-text: #b9c9bf;
+  position: relative; overflow: hidden; min-height: 100vh;
+  display: grid; place-items: center; padding: 32px 16px 168px;
+}
+.demo-on .home { min-height: calc(100vh - 41px); }
+.home-moon {
+  position: absolute; left: 50%; top: 44%; transform: translate(-50%, -50%);
+  width: min(600px, 90vw, 78vh); aspect-ratio: 1; border-radius: 50%; background: var(--moon);
+}
+.home-hill {
+  position: absolute; left: -15%; right: -15%; bottom: 0; height: 30%; min-height: 150px;
+  background: var(--hill); border-radius: 50% 50% 0 0 / 46% 46% 0 0;
+}
+.home-center { position: relative; z-index: 1; width: min(500px, 100%); display: grid; justify-items: center; gap: 18px; text-align: center; margin-top: -9vh; }
+.home-center h1 { margin: 0 0 4px; color: var(--moon-ink); font: 500 clamp(26px, 4.2vw, 38px)/1.15 var(--serif); letter-spacing: -.01em; }
+.home-ask {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 6px 6px 6px 20px;
+}
+.home-ask:focus-within { border-color: var(--accent); }
+.home-ask input { flex: 1; min-width: 0; border: 0; background: none; padding: 8px 0; }
+.home-ask input::placeholder { color: var(--muted); }
+.home-ask input:focus { outline: none; box-shadow: none; }
+.home-send { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 0; display: grid; place-items: center; background: var(--accent); cursor: pointer; }
+.home-send:hover { background: #efd5a0; }
+.home-send svg { width: 18px; height: 18px; fill: none; stroke: var(--accent-ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.home-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.home-pill {
+  display: inline-flex; align-items: center; gap: 10px; padding: 11px 22px; border-radius: 999px; border: 0;
+  background: var(--bg); color: var(--text); font-weight: 600; font-size: 16px; text-decoration: none; cursor: pointer;
+}
+.home-pill:hover { background: var(--card-2); }
+.home-pill:disabled { opacity: .6; cursor: default; }
+.home-pill svg { width: 20px; height: 20px; fill: none; stroke: var(--accent); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.home-ground { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; display: grid; justify-items: center; gap: 6px; padding: 0 16px 18px; text-align: center; color: var(--hill-text); }
+.home-ground p { margin: 0; max-width: 52ch; }
+.bunny.home-bunny { width: 124px; }
+
 /* ───────────── Modal + toast ───────────── */
 .modal-backdrop { position: fixed; inset: 0; background: rgba(6, 12, 22, .72); display: grid; place-items: center; padding: 20px; z-index: 40; }
 .modal { background: var(--card); border-radius: var(--radius); width: min(620px, 100%); max-height: 85vh; overflow: auto; padding: 28px; border: 1px solid var(--line); }
@@ -362,11 +402,14 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
     border-right: 0; border-top: 1px solid var(--line); background: var(--bg);
   }
   .brand, .rail-foot { display: none; }
-  .nav-list { grid-template-columns: repeat(5, 1fr); width: 100%; }
+  .nav-list { grid-template-columns: repeat(6, 1fr); width: 100%; }
   .nav-list a { flex-direction: column; gap: 3px; padding: 8px 4px; font-size: 11px; }
   .main { padding-bottom: 76px; }
   .page { padding: 24px 16px 40px; }
   .page-head h1 { font-size: 28px; }
+  .home { min-height: calc(100vh - 76px); padding-bottom: 150px; }
+  .demo-on .home { min-height: calc(100vh - 117px); }
+  .home-moon { top: 42%; }
   .journal { grid-template-columns: 1fr; }
   .entry-sidebar { position: fixed; inset: 0 0 64px 0; height: auto !important; z-index: 15; background: var(--bg); transform: translateX(-100%); transition: transform .2s; border: 0; }
   .demo-on .entry-sidebar { top: 41px; }

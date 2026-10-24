@@ -9,6 +9,10 @@ const SUGGESTIONS = ["What do I write about most?", "What seems to help on hard 
 // Conversation lives only in this tab, and never crosses between demo and real mode.
 let thread = [];
 let threadMode = null;
+let queued = null;
+
+/** Hand a question to Ask Luna; it's asked as soon as the page opens. */
+export function queueQuestion(q) { queued = q; }
 
 const ICON_DOC = `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2h6l2 2v10H4z M6 7h4 M6 10h4"/></svg>`;
 
@@ -91,4 +95,5 @@ export async function render(main) {
   $("[data-clear]", page).addEventListener("click", () => { thread = []; draw(); input.focus(); });
 
   draw();
+  if (queued) { const q = queued; queued = null; ask(q); }
 }
