@@ -1,6 +1,6 @@
 ## CLAUDE, DO NOT EDIT ANYTHING IN THIS FILE 
 
-##### about luna 
+##### about luna: 
 
 A Claude-powered AI journal companion that analyzes journals stored in Notion.
 
