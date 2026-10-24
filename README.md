@@ -4,18 +4,30 @@ A private journal with AI reflection. Luna helps people understand what they've 
 
 Plain HTML, CSS, and JavaScript (no build step) + Supabase for auth, database, and AI Edge Functions.
 
+## What's inside
+
+- **Home:** a chat-style start page. Ask Luna a question, or start a new journal entry.
+- **Journal:** a block editor with autosave, an optional self-reported mood, and tags. Entries can be grouped by month, week, or day.
+- **Dashboard:** writing stats, an interactive calendar, journal language trends, and "Luna noticed" insights that always link to their entries.
+- **Check-in:** four gentle questions, which can be saved as an entry.
+- **Ask Luna:** answers from your own entries, with a link to every entry used.
+- **Account menu** (bottom left): choose the AI model, see your plan, open settings, and turn demo mode on or off.
+- **Settings & privacy:** delete Luna's memory, insights, or your whole account, and see exactly what gets sent to the AI.
+
 ```
-luna/
+luna_journal/
 ├── index.html
 ├── css/styles.css
 ├── js/
 │   ├── config.js          ← paste your Supabase URL + anon key here
 │   ├── app.js             router, sign-in, demo mode
+│   ├── account.js         account menu and model picker
 │   ├── state.js data.js ai.js editor.js markdown.js util.js bunny.js support.js demo.js
-│   └── pages/             journal, dashboard, checkin, ask, settings
-└── supabase/
-    ├── schema.sql         tables + Row-Level Security
-    └── functions/         reflect-entry, generate-insights, ask-luna, check-in, safety-check
+│   └── pages/             home, journal, dashboard, checkin, ask, settings
+├── supabase/
+│   ├── schema.sql         tables + Row-Level Security
+│   └── functions/         reflect-entry, generate-insights, ask-luna, check-in, safety-check
+└── legacy/                the earlier Node + Notion version (not deployed)
 ```
 
 ## Run it locally (Mac)
