@@ -94,7 +94,7 @@ export async function render(main) {
     memEl.innerHTML = `<ul class="memory-list">${memory.map((m) => `<li>
       <span class="type">${label[m.type] || esc(m.type)}</span>
       <span class="content">${esc(m.content)}</span>
-      <button type="button" class="icon-btn" data-del="${m.id}" aria-label="Forget: ${esc(m.content)}" title="Forget this">${TRASH}</button></li>`).join("")}</ul>`;
+      <button type="button" class="icon-btn danger" data-del="${m.id}" aria-label="Forget: ${esc(m.content)}" title="Forget this">${TRASH}</button></li>`).join("")}</ul>`;
     $$("[data-del]", memEl).forEach((b) => b.addEventListener("click", async () => {
       try {
         await deleteMemory(b.dataset.del);

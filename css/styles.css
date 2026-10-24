@@ -200,7 +200,7 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 @media (prefers-reduced-motion: reduce) { .loading .bunny .hop { animation: none; } * { transition: none !important; } }
 
 /* ───────────── Journal ───────────── */
-.journal { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+.journal { display: grid; grid-template-columns: 272px 1fr; min-height: 100vh; }
 .demo-on .journal { min-height: calc(100vh - 41px); }
 .entry-sidebar { border-right: 1px solid var(--line); padding: 28px 16px; display: flex; flex-direction: column; gap: 16px; position: sticky; top: 0; height: 100vh; overflow: auto; }
 .demo-on .entry-sidebar { top: 41px; height: calc(100vh - 41px); }
@@ -223,20 +223,35 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 .entry-link .d { display: block; font-size: 12px; color: var(--muted); }
 
 .editor-wrap { padding: 40px 56px 120px; max-width: 820px; width: 100%; margin: 0 auto; }
+@media (max-width: 1100px) and (min-width: 821px) {
+  .journal { grid-template-columns: 232px 1fr; }
+  .editor-wrap { padding: var(--s-8) var(--s-8) 120px; }
+}
 .editor-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
 .save-state { font-size: 13px; color: var(--faint); min-width: 64px; transition: color .2s; }
 .save-state.saved { color: var(--muted); }
 .save-state.err { color: var(--rose); }
 .entry-date { font-size: 13px; color: var(--muted); }
+.editor-meta { display: flex; align-items: baseline; gap: var(--s-3); }
+.editor-actions { display: flex; align-items: center; gap: var(--s-1); }
 .title-input {
-  width: 100%; border: 0; background: none; color: var(--text); padding: 0; margin: 6px 0 14px;
-  font: 500 38px/1.2 var(--serif); letter-spacing: -.01em;
+  display: block; width: 100%; border: 0; background: none; color: var(--text); padding: 0; margin: var(--s-2) 0 var(--s-3);
+  font: 500 clamp(28px, 3vw, 38px)/1.2 var(--serif); letter-spacing: -.01em; resize: none; overflow: hidden;
 }
+.entry-props { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s-2) var(--s-4); margin-bottom: var(--s-5); }
+.entry-props .tag-row { margin: 0; }
+.prop-btn {
+  display: inline-flex; align-items: center; gap: var(--s-2); padding: 4px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: none; color: var(--text); font-size: var(--fs-sm); cursor: pointer;
+}
+.prop-btn:hover, .prop-btn[aria-expanded="true"] { border-color: var(--faint); }
+.prop-label { color: var(--muted); }
+.mood-note { flex-basis: 100%; font-size: var(--fs-xs); color: var(--faint); margin-top: var(--s-1); }
+.tb-italic { font-family: var(--serif); font-size: var(--fs-md); }
 .title-input::placeholder { color: var(--faint); }
 .title-input:focus { outline: none; box-shadow: none; }
 
-.mood-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
-.mood-row .label { font-size: 13px; color: var(--muted); margin-right: 4px; }
+.mood-row { display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; margin: calc(-1 * var(--s-2)) 0 var(--s-5); padding: var(--s-3); border-radius: var(--radius-sm); background: var(--inset); }
 .mood-btn { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); background: none; color: var(--muted); cursor: pointer; font-size: 13px; }
 .mood-btn:hover { color: var(--text); border-color: #2d4466; }
 .mood-btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
@@ -419,7 +434,8 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 .memory-list .type { font-size: var(--fs-xs); font-weight: 500; color: var(--muted); width: 72px; flex: none; text-transform: capitalize; }
 .memory-list .content { flex: 1; min-width: 0; }
 .icon-btn { background: none; border: 0; color: var(--muted); width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; cursor: pointer; flex: none; }
-.icon-btn:hover { background: var(--card-2); color: var(--rose); }
+.icon-btn:hover { background: var(--card-2); color: var(--text); }
+.icon-btn.danger:hover { color: var(--rose); }
 .icon-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
 .plain { font-size: 15px; line-height: 1.65; }
 .plain h3 { font-size: 14px !important; margin: 18px 0 6px !important; }

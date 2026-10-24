@@ -58,7 +58,7 @@ export async function render(main, route) {
     <aside class="entry-sidebar" aria-label="Entries">
       <button type="button" class="btn btn-primary" data-new>${ICON.plus}New entry</button>
       <button type="button" class="btn btn-ghost" data-import>${ICON.importer}Import</button>
-      <div class="search">${ICON.search}<input class="input" type="search" placeholder="Search entries or #tags  ( / )" aria-label="Search entries" value="${esc(query)}" /></div>
+      <div class="search">${ICON.search}<input class="input" type="search" placeholder="Search or #tag" aria-label="Search entries" aria-keyshortcuts="/" title="Press / to search" value="${esc(query)}" /></div>
       <div class="seg group-by" role="group" aria-label="Group entries by">
         ${Object.entries(GROUPS).map(([k, label]) => `<button type="button" data-group="${k}" aria-pressed="${groupBy === k}">${label}</button>`).join("")}
       </div>
@@ -151,26 +151,33 @@ export async function render(main, route) {
   const entry = { ...current, tags: [...(current.tags || [])] };
   area.innerHTML = `
     <div class="editor-top">
-      <span class="entry-date">${fmtLong(entry.created_at)}</span>
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <div class="editor-meta">
+        <span class="entry-date">${fmtLong(entry.created_at)}</span>
         <span class="save-state saved" data-save aria-live="polite">Saved</span>
+      </div>
+      <div class="editor-actions">
         <button type="button" class="btn btn-sm" data-reflect>Reflect with Luna</button>
-        <button type="button" class="btn btn-sm btn-ghost" data-export>${ICON.down}Export .md</button>
-        <button type="button" class="icon-btn" data-delete aria-label="Delete this entry" title="Delete entry">${ICON.trash}</button>
+        <button type="button" class="icon-btn" data-export aria-label="Export as Markdown" title="Export as Markdown (.md)">${ICON.down}</button>
+        <button type="button" class="icon-btn danger" data-delete aria-label="Delete this entry" title="Delete entry">${ICON.trash}</button>
       </div>
     </div>
-    <div class="mood-row" role="group" aria-label="Mood, optional and chosen by you">
-      <span class="label">Mood <span class="small">(optional)</span></span>
-      ${MOODS.map((m) => `<button type="button" class="mood-btn" aria-pressed="${entry.mood === m}" data-mood="${esc(m)}">${esc(m)}</button>`).join("")}
+    <textarea class="title-input" rows="1" placeholder="Untitled" aria-label="Entry title" maxlength="140">${esc(entry.title)}</textarea>
+    <div class="entry-props">
+      <button type="button" class="prop-btn" data-mood-toggle aria-expanded="false" aria-controls="mood-options">
+        <span class="prop-label">Mood</span><span data-mood-value>${entry.mood ? esc(entry.mood) : "Add"}</span>
+      </button>
+      <div class="tag-row" data-tags></div>
     </div>
-    <input class="title-input" placeholder="Untitled" aria-label="Entry title" value="${esc(entry.title)}" maxlength="140" />
-    <div class="tag-row" data-tags></div>
+    <div class="mood-row" id="mood-options" role="group" aria-label="Mood, optional and chosen by you" hidden>
+      ${MOODS.map((m) => `<button type="button" class="mood-btn" aria-pressed="${entry.mood === m}" data-mood="${esc(m)}">${esc(m)}</button>`).join("")}
+      <span class="mood-note">Only you set this. Luna never guesses it.</span>
+    </div>
     <div class="toolbar" role="toolbar" aria-label="Formatting">
       <button type="button" data-fmt="h1" aria-label="Heading" title="Heading">H1</button>
       <button type="button" data-fmt="h2" aria-label="Subheading" title="Subheading">H2</button>
       <span class="sep"></span>
       <button type="button" data-fmt="bold" aria-label="Bold" title="Bold (Ctrl/Cmd+B)"><b>B</b></button>
-      <button type="button" data-fmt="italic" aria-label="Italic" title="Italic (Ctrl/Cmd+I)"><i style="font-family:var(--serif);font-size:15px">I</i></button>
+      <button type="button" data-fmt="italic" aria-label="Italic" title="Italic (Ctrl/Cmd+I)"><i class="tb-italic">I</i></button>
       <span class="sep"></span>
       <button type="button" data-fmt="bullet" aria-label="Bulleted list" title="Bulleted list">${ICON.list}</button>
       <button type="button" data-fmt="todo" aria-label="Checklist" title="Checklist">${ICON.check}</button>
@@ -213,10 +220,28 @@ export async function render(main, route) {
   titleEl.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); editor.focus(); } });
   if (!entry.title && !entry.content) titleEl.focus();
 
-  // mood (self-reported only)
+  // The title wraps instead of running off the edge.
+  const fitTitle = () => { titleEl.style.height = "auto"; titleEl.style.height = titleEl.scrollHeight + "px"; };
+  titleEl.addEventListener("input", () => {
+    if (titleEl.value.includes("\n")) titleEl.value = titleEl.value.replace(/\n+/g, " ");
+    fitTitle();
+  });
+  requestAnimationFrame(fitTitle);
+
+  // mood (self-reported only), tucked behind one button so it doesn't crowd the page
+  const moodToggle = $("[data-mood-toggle]", area), moodRow = $("#mood-options", area);
+  moodToggle.addEventListener("click", () => {
+    moodRow.hidden = !moodRow.hidden;
+    moodToggle.setAttribute("aria-expanded", String(!moodRow.hidden));
+    if (!moodRow.hidden) ($("[aria-pressed=true]", moodRow) || $("[data-mood]", moodRow)).focus();
+  });
   $$("[data-mood]", area).forEach((b) => b.addEventListener("click", () => {
     entry.mood = entry.mood === b.dataset.mood ? null : b.dataset.mood;
     $$("[data-mood]", area).forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.mood === entry.mood)));
+    $("[data-mood-value]", area).textContent = entry.mood || "Add";
+    moodRow.hidden = true;
+    moodToggle.setAttribute("aria-expanded", "false");
+    moodToggle.focus();
     queueSave();
   }));
 
