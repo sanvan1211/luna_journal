@@ -60,7 +60,7 @@ export function onPageKey(el, fn) {
 }
 
 /** True when the user is typing somewhere, so single-key shortcuts should stay out of the way. */
-export const typing = (e) => e.target.closest("input, textarea, select, [contenteditable=true]") || e.metaKey || e.ctrlKey || e.altKey;
+export const typing = (e) => Boolean(e.target.closest?.("input, textarea, select, [contenteditable=true]") || e.metaKey || e.ctrlKey || e.altKey);
 
 // ── Toast ──
 let toastTimer;
