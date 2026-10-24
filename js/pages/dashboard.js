@@ -105,8 +105,11 @@ function renderCalendar(card, entries, wordsByDay) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const byDay = {};
   entries.forEach((e) => (byDay[dayKey(e.created_at)] ||= []).push(e));
-  let selected = new Date(today);
-  let month = new Date(today.getFullYear(), today.getMonth(), 1);
+  // Open on today, or on the latest entry's day if nothing was written this month.
+  const latest = entries.length ? new Date(entries.reduce((a, e) => (e.created_at > a ? e.created_at : a), entries[0].created_at)) : null;
+  const thisMonthHasEntries = entries.some((e) => { const d = new Date(e.created_at); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth(); });
+  let selected = latest && !thisMonthHasEntries ? new Date(latest.getFullYear(), latest.getMonth(), latest.getDate()) : new Date(today);
+  let month = new Date(selected.getFullYear(), selected.getMonth(), 1);
 
   function draw(focus = false) {
     const first = new Date(month);
