@@ -43,6 +43,7 @@ a { color: var(--accent); }
 
 /* ───────────── Shell ───────────── */
 .shell { display: flex; min-height: 100vh; }
+.demo-on .shell { min-height: calc(100vh - 41px); }
 .rail {
   width: 220px; flex: none; position: sticky; top: 0; height: 100vh;
   display: flex; flex-direction: column; gap: 28px;
