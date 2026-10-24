@@ -2,7 +2,7 @@ import { state } from "../state.js";
 import { listEntries } from "../data.js";
 import { callAI, aiProblem } from "../ai.js";
 import { bunny, emptyState } from "../bunny.js";
-import { esc, html, $, $$, fmtShort } from "../util.js";
+import { esc, html, $, $$, fmtShort, toast } from "../util.js";
 
 export const SUGGESTIONS = ["What do I write about most?", "What seems to help on hard days?", "When did I last write about feeling proud?"];
 
@@ -67,8 +67,12 @@ export async function render(main) {
       if (m.role === "user") return `<div class="msg user">${esc(m.text)}</div>`;
       if (m.pending) return `<div class="msg luna loading"><div class="who">LUNA</div><div style="display:flex;align-items:center;gap:12px" role="status">${bunny("small")}<span class="muted">Reading your journal…</span></div></div>`;
       if (m.problem) return `<div class="msg luna"><div class="who">LUNA</div>${aiProblem(m.problem)}</div>`;
-      return `<div class="msg luna"><div class="who">LUNA</div><div class="body">${esc(m.text)}</div>${cites(m.citations)}${m.citations && !m.citations.some((id) => byId[id]) ? `<p class="small muted" style="margin:8px 0 0">No specific entries were cited for this answer.</p>` : ""}</div>`;
+      return `<div class="msg luna"><div class="who">LUNA<button type="button" class="link-btn small copy-btn" data-copy="${thread.indexOf(m)}">Copy</button></div><div class="body">${esc(m.text)}</div>${cites(m.citations)}${m.citations && !m.citations.some((id) => byId[id]) ? `<p class="small muted" style="margin:8px 0 0">No specific entries were cited for this answer.</p>` : ""}</div>`;
     }).join("");
+    $$("[data-copy]", threadEl).forEach((b) => b.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(thread[+b.dataset.copy].text); toast("Answer copied"); }
+      catch { toast("Couldn't copy. Select the text instead."); }
+    }));
     threadEl.lastElementChild && threadEl.lastElementChild.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
 
