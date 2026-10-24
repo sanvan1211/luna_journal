@@ -17,7 +17,10 @@ const groupLabel = {
     return `Week of ${fmtShort(s)}${s.getFullYear() !== new Date().getFullYear() ? ", " + s.getFullYear() : ""}`;
   },
   day: (d) => {
-    const x = new Date(d);
+    const x = new Date(d), today = new Date(), yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    if (x.toDateString() === today.toDateString()) return "Today";
+    if (x.toDateString() === yesterday.toDateString()) return "Yesterday";
     return x.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", ...(x.getFullYear() !== new Date().getFullYear() && { year: "numeric" }) });
   },
 };
