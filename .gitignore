@@ -1,7 +1,12 @@
-node_modules/
+js/config.local.js
 .env
 .env.*
 !.env.example
-# Luna's memory and caches — personal data, never committed.
+.dev.vars
+supabase/.temp/
+supabase/.branches/
+.wrangler/
+node_modules/
+# The legacy app's local journal data and caches: personal, never committed.
 data/
 .DS_Store

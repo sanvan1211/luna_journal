@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Luna — a private journal</title>
+  <meta name="description" content="Luna is a private journal that helps you understand what you've written. It is not a therapist and never diagnoses." />
+  <meta name="theme-color" content="#0f1b2d" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f1b2d'/%3E%3Cpath d='M20.5 7a9.5 9.5 0 1 0 4.5 14.6A8 8 0 0 1 20.5 7z' fill='%23e8c88a'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div id="demo-banner" class="demo-banner" role="status" hidden>
+    <span><strong>Sample data — not a real journal.</strong> Nothing you change here is saved.</span>
+    <button type="button" class="link-btn" data-action="exit-demo">Exit demo</button>
+  </div>
+
+  <div class="shell">
+    <nav class="rail" aria-label="Main">
+      <a class="brand" href="#/journal" aria-label="Luna home">
+        <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><path d="M20.5 7a9.5 9.5 0 1 0 4.5 14.6A8 8 0 0 1 20.5 7z" fill="currentColor"/></svg>
+        <span>Luna</span>
+      </a>
+      <ul class="nav-list">
+        <li><a href="#/journal" data-nav="journal"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3h8l3 3v11H5z M8 8h5 M8 11h5 M8 14h3" /></svg><span>Journal</span></a></li>
+        <li><a href="#/dashboard" data-nav="dashboard"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 17V9 M8 17V4 M13 17v-6 M18 17V7" /></svg><span>Dashboard</span></a></li>
+        <li><a href="#/checkin" data-nav="checkin"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M7 11.5c.8 1 1.8 1.5 3 1.5s2.2-.5 3-1.5 M7.5 8h0 M12.5 8h0" /></svg><span>Check-in</span></a></li>
+        <li><a href="#/ask" data-nav="ask"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14v9H8l-4 3v-3H3z" /></svg><span>Ask Luna</span></a></li>
+        <li><a href="#/settings" data-nav="settings"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2l6 2.5v5c0 4-2.7 6.7-6 8.5-3.3-1.8-6-4.5-6-8.5v-5z" /></svg><span>Privacy</span></a></li>
+      </ul>
+      <div class="rail-foot">
+        <label class="switch">
+          <input type="checkbox" id="demo-toggle" />
+          <span class="switch-track" aria-hidden="true"></span>
+          <span class="switch-label">Demo mode</span>
+        </label>
+        <div id="account-slot" class="account-slot"></div>
+      </div>
+    </nav>
+
+    <main id="main" class="main" tabindex="-1"></main>
+  </div>
+
+  <div id="modal-root"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,111 +1,69 @@
-# luna_journal
+# Luna
 
-<img width="250" height="250" alt="Screenshot 2026-09-21 at 19 29 03" src="https://github.com/user-attachments/assets/971d1974-fb77-4f82-a24c-6cd14cad64ef" />
+A private journal with AI reflection. Luna helps people understand what they've written. It is not a therapist and never diagnoses.
 
-^^ this is real life luna (she is a 4 year old holland lop rabbit) ^^ 
-
-Life Unraveled, Not Alone (LUNA)
-(Olivia Rodrigo reference)
-
-### A Claude-powered AI journal companion that analyzes journals stored in Notion.
-
-Sometimes it's hard to reach out to someone and talk face-to-face about what you're going through. Sometimes you don't know how to explain what you're feeling. And sometimes, you simply don't want to talk about it yet.
-
-That doesn't mean those thoughts aren't important. 
-
-Journaling gives you a place to put those thoughts into words. But over time, it can become difficult to look back through everything you've written and recognize the bigger picture.
-
-That's where Luna comes in.
-
-Luna connects to your journals in Notion and uses Claude to help you understand what you've written. It can organize your thoughts, recognize patterns that appear over time, and help you reflect on the experiences you're going through.
-
-Luna can also offer practical suggestions and encouragement when you need another perspective.
-
-### But Luna is not here to replace real people.
-
-Your friends, family, mentors, counselors, and the people you trust are still an important part of your life. Sometimes the most important thing you can do is talk to someone.
-
-Luna is simply another place to start.
-
-A place to put your thoughts into words, look back at where you've been, recognize patterns you might have missed, and figure out how you want to move forward. Maybe its the starting point to get your thoughts together before seeking help from an actual human.  
-
-And sometimes, you just need a little bunny sitting beside you while you figure things out. 🐰
-
-In the song _Lets Pretend We're Numb_ by XXXTENTACION, Jahseh says: 
-
-_I advise you to not hide your feelings...
-Don't pretend to be okay when you're not okay...
-Don't pretend to be happy when you're sad...
-It'll only lead to your misery_
-
-<img width="50" height="40" alt="Screenshot 2026-10-03 at 00 02 30" src="https://github.com/user-attachments/assets/5c52936d-1505-4264-8cfe-e2cecae095f2" />
-
-
-Do not suffer in silence. 
-
-
----
-
-## Running Luna
-
-Requires Node 22+. There are no npm dependencies.
-
-```sh
-cp .env.example .env   # set AI_PROVIDER, AI_MODEL, and that provider's key
-npm start              # http://127.0.0.1:3000
-```
-
-`AI_PROVIDER=ollama` with a local model (e.g. `AI_MODEL=llama3.2`) keeps every word on your own computer, and you don't need an API key.
-
-With nothing configured, Luna still runs and shows honest setup states. It never shows sample entries or made-up AI output.
-
-Run `npm test` for the unit tests. They use a temporary data folder and never touch your journal.
-
-### Two places to journal
-
-- **Luna journal:** a Notion-style page editor built into the app. Entries are stored as files in `data/` on your computer, and that folder is gitignored.
-  - **Blocks:** text, three heading sizes, bulleted, numbered and to-do lists, toggles, quotes, callouts, code and dividers.
-  - **Typing:** type `/` for the block menu, or Markdown shortcuts (`#`, `-`, `1.`, `[]`, `>`, `"`, ```` ``` ````, `---`). Tab nests blocks, ⌘B/I/U/E and ⌘⇧S format text, and undo/redo works across blocks.
-  - **Arranging:** drag blocks by their handle, or use ⌘/ to turn a block into another type, duplicate it, move it or delete it.
-  - **Page properties:** an emoji icon, date, self-reported mood and tags, plus templates for new pages.
-  - **Search and trash:** full-text search with snippets. Deleted pages go to a trash you can restore from, and "delete forever" removes the file.
-  - **Saving:** pages autosave. If another tab saved first, Luna shows a warning instead of overwriting it. You can also export any page to Markdown.
-- **Notion:** connect a read-only Notion integration (`NOTION_TOKEN`), then pick your journal database in the app. Luna reads only that database, never edits it, and doesn't copy pages.
-
-On any entry, choose **Reflect with Luna** for a short summary, a few themes, and a question to write about next. Only that one entry is sent to the AI. A safety check runs first. If an entry suggests someone may be unsafe, Luna steps aside and shows real resources (988, Crisis Text Line, Safe2Say PA, trusted adults) instead of a reflection.
-
-### Project layout
+Plain HTML, CSS, and JavaScript (no build step) + Supabase for auth, database, and AI Edge Functions.
 
 ```
-server/
-  index.js        routes, static files, security headers
-  ai/             provider-agnostic AI service (anthropic | openai | ollama) + prompts
-  journal/        Luna's built-in journal: block model, templates, search, trash
-  notion/         read-only Notion connector
-  insights/       single-entry reflections, recurring themes with receipts
-  safety/         safety check + verified support resources
-  store.js        one-JSON-file-per-record storage under data/
-public/           HTML, CSS, and vanilla JS views (no framework)
-  js/editor/      the Notion-style block editor
-test/             node:test unit tests (`npm test`)
-docs/prompts/     the original build, frontend, and AI-function specs
+luna/
+├── index.html
+├── css/styles.css
+├── js/
+│   ├── config.js          ← paste your Supabase URL + anon key here
+│   ├── app.js             router, sign-in, demo mode
+│   ├── state.js data.js ai.js editor.js markdown.js util.js bunny.js support.js demo.js
+│   └── pages/             journal, dashboard, checkin, ask, settings
+└── supabase/
+    ├── schema.sql         tables + Row-Level Security
+    └── functions/         reflect-entry, generate-insights, ask-luna, check-in, safety-check
 ```
 
-### Privacy
+## Run it locally (Mac)
 
-- API keys stay on the server, never in the browser.
-- The server log records request paths and timings only, never journal text.
-- Reflections can be deleted any time from **Privacy & setup**. Notion can be disconnected there too.
+```bash
+cd luna_journal              # the repo root
+python3 -m http.server 5173
+```
+Open http://localhost:5173. Without Supabase set up, you can still use **demo mode** with sample data.
 
-### Troubleshooting
+## Set up Supabase (about 15 minutes)
 
-| You see | Try |
-| --- | --- |
-| "AI_PROVIDER is not set" | Copy `.env.example` to `.env`, fill in `AI_PROVIDER` and `AI_MODEL`, and restart. |
-| "ollama: couldn't reach provider (ECONNREFUSED)" | Ollama isn't running. Start the Ollama app, or run `ollama serve`, then use **Test connection** under Privacy & setup. |
-| "ollama: 404 model … not found" | Pull the model first, for example `ollama pull llama3.2`, and make sure `AI_MODEL` matches. |
-| "Notion couldn't find it" | Share the journal database with your integration in Notion (**⋯ → Connections**). |
-| "This entry was changed somewhere else" | The page was saved in another tab. Choose **Load latest**. Your text in this tab hasn't been saved over it. |
-| A page won't load after editing files by hand | Luna skips damaged files in `data/journal/` and logs their names. Fix or remove the named file. |
+1. Create a project at supabase.com.
+2. **SQL Editor → New query →** paste `supabase/schema.sql` → **Run**.
+3. **Project Settings → API:** copy the Project URL and the `anon` public key into `js/config.js`.
+4. Optional for demos: **Authentication → Providers → Email**, turn off "Confirm email" so sign-up is instant.
+5. Deploy the AI functions with the Supabase CLI:
 
-Run `npm run check` (syntax) and `npm test` (unit and HTTP tests) before you push.
+```bash
+brew install supabase/tap/supabase
+cd luna_journal              # the repo root
+supabase login
+supabase init                 # say no to the VS Code prompts; it keeps the functions folder
+supabase link --project-ref YOUR_PROJECT_REF
+supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+supabase functions deploy reflect-entry generate-insights ask-luna check-in safety-check
+```
+
+Until the functions and key are set up, the app shows an honest "AI not configured" state. It never shows fake AI output.
+
+## Deploy to Cloudflare Pages
+
+Upload only the frontend files. `wrangler pages deploy .` would also publish `legacy/`, `supabase/`, and any local `.env` or journal data, because direct uploads ignore `.gitignore`.
+
+```bash
+rm -rf /tmp/luna-site && mkdir /tmp/luna-site
+cp -R index.html css js /tmp/luna-site/
+npx wrangler pages deploy /tmp/luna-site --project-name luna
+```
+Then add your Pages URL under Supabase **Authentication → URL Configuration → Site URL**.
+
+## Legacy app
+
+`legacy/` holds the earlier Node + Notion version of Luna, kept for reference. It is not part of the deployed site.
+
+## Privacy design
+
+- Row-Level Security: every row is readable only by its owner.
+- The AI key lives only in Supabase secrets; the browser never calls an AI API.
+- AI runs only when the user presses a button. Moods are self-reported only.
+- Demo mode uses a separate in-memory store and is never written to the database.
