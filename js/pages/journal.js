@@ -109,12 +109,17 @@ export async function render(main, route) {
     try { const row = await createEntry(); location.hash = `#/journal/${row.id}`; }
     catch (err) { toast("Couldn't create an entry. " + err.message); b.disabled = false; }
   }));
-  // "/" jumps to search, like most apps with a search box.
+  const drawerBtn = $("[data-drawer]", el);
+  // "/" jumps to search, like most apps with a search box. Escape closes the phone drawer.
   onPageKey(el, (e) => {
     if (e.key === "/" && !typing(e)) { e.preventDefault(); searchEl.focus(); }
+    if (e.key === "Escape" && el.classList.contains("drawer-open")) {
+      el.classList.remove("drawer-open");
+      drawerBtn.setAttribute("aria-expanded", "false");
+      drawerBtn.focus();
+    }
   });
 
-  const drawerBtn = $("[data-drawer]", el);
   drawerBtn.addEventListener("click", () => {
     const open = el.classList.toggle("drawer-open");
     drawerBtn.setAttribute("aria-expanded", String(open));
