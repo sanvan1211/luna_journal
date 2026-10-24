@@ -37,7 +37,8 @@ export async function render(main, route) {
     const w = wordsByDay[dayKey(d)] || 0;
     const lvl = w === 0 ? "" : w < 60 ? "w1" : w < 140 ? "w2" : "w3";
     const future = d > now;
-    return `<div class="${lvl} ${dayKey(d) === dayKey(now) ? "today" : ""}" ${future ? 'style="opacity:.35"' : ""} title="${fmtShort(d)}: ${w ? w + " words" : "no entry"}"></div>`;
+    const label = `${fmtShort(d)}: ${w ? w + " words" : "no entry"}`;
+    return `<button type="button" class="hc ${lvl} ${dayKey(d) === dayKey(now) ? "today" : ""}" data-heat="${dayKey(d)}" ${future ? 'style="opacity:.35"' : ""} title="${label}" aria-label="${label}. Show in calendar"></button>`;
   }).join("");
 
   // ───── themes: Luna's remembered themes + your most-used tags ─────
@@ -65,7 +66,7 @@ export async function render(main, route) {
       </section>
       <section class="card stat" aria-label="Last five weeks">
         <div class="eyebrow" style="margin-bottom:14px">Last 5 weeks</div>
-        <div class="heat" aria-hidden="true">${heatCells}</div>
+        <div class="heat" role="group" aria-label="Last five weeks, one square per day">${heatCells}</div>
         <div class="sr-only">${[...days].filter((k) => new Date(k) >= heatStart).length} days with entries in the last five weeks.</div>
       </section>
 
@@ -86,7 +87,9 @@ export async function render(main, route) {
   </div>`);
   main.append(page);
 
-  renderCalendar($("[data-calendar]", page), entries, wordsByDay);
+  const calendar = renderCalendar($("[data-calendar]", page), entries, wordsByDay);
+  // A square in "Last 5 weeks" opens that day in the calendar.
+  $$("[data-heat]", page).forEach((b) => b.addEventListener("click", () => calendar.show(parseDay(b.dataset.heat))));
   renderTrend($("[data-trend]", page), entries);
   renderNoticed($("[data-noticed]", page), entries, insights);
 
@@ -227,6 +230,10 @@ function renderCalendar(card, entries, wordsByDay) {
   }
 
   draw();
+  return {
+    /** Select a day and bring the calendar into view. */
+    show(d) { select(d, true); card.scrollIntoView({ behavior: "smooth", block: "center" }); },
+  };
 }
 
 const parseDay = (k) => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };

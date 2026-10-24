@@ -309,12 +309,13 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 .sample-tag { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink); background: var(--accent); padding: 2px 8px; border-radius: 999px; }
 
 .heat { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.heat div { height: 18px; border-radius: 4px; background: var(--inset); }
+.heat .hc { height: 18px; border: 0; padding: 0; border-radius: 4px; background: var(--inset); cursor: pointer; }
+.heat .hc:hover { box-shadow: inset 0 0 0 1px var(--muted); }
 .dash > .card.stat { align-self: stretch; }
-.heat div.w1 { background: #3b3a35; }
-.heat div.w2 { background: #8a7a55; }
-.heat div.w3 { background: var(--accent); }
-.heat div.today { box-shadow: inset 0 0 0 1.5px var(--text); }
+.heat .hc.w1 { background: #3b3a35; }
+.heat .hc.w2 { background: #8a7a55; }
+.heat .hc.w3 { background: var(--accent); }
+.heat .hc.today { box-shadow: inset 0 0 0 1.5px var(--text); }
 /* Calendar */
 .cal-nav { display: flex; align-items: center; gap: 6px; }
 .cal-nav .icon-btn:hover { color: var(--text); }
