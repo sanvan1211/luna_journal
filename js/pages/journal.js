@@ -4,7 +4,26 @@ import { createEditor } from "../editor.js";
 import { callAI, aiProblem, aiLoading } from "../ai.js";
 import { emptyState } from "../bunny.js";
 import { safetyNote } from "../support.js";
-import { esc, html, $, $$, debounce, fmtShort, fmtLong, fmtMonth, plain, download, slug, toast, confirmDialog } from "../util.js";
+import { esc, html, $, $$, debounce, fmtShort, fmtLong, fmtMonth, fmtTime, plain, download, slug, toast, confirmDialog } from "../util.js";
+
+// How the sidebar groups entries. Remembered per browser; only a view preference.
+const GROUP_KEY = "luna-journal-group";
+const GROUPS = { month: "Month", week: "Week", day: "Day" };
+const startOfWeek = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
+const groupLabel = {
+  month: (d) => fmtMonth(d),
+  week: (d) => {
+    const s = startOfWeek(d);
+    return `Week of ${fmtShort(s)}${s.getFullYear() !== new Date().getFullYear() ? ", " + s.getFullYear() : ""}`;
+  },
+  day: (d) => {
+    const x = new Date(d);
+    return x.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", ...(x.getFullYear() !== new Date().getFullYear() && { year: "numeric" }) });
+  },
+};
+function loadGroup() {
+  try { const g = localStorage.getItem(GROUP_KEY); return GROUPS[g] ? g : "month"; } catch { return "month"; }
+}
 
 export const MOODS = ["Calm", "Content", "Hopeful", "Proud", "Okay", "Tired", "Restless", "Stretched thin", "Unsure", "Low"];
 
@@ -21,6 +40,7 @@ const ICON = {
 export async function render(main, route) {
   let entries = await listEntries();
   let query = route.query.get("q") || "";
+  let groupBy = loadGroup();
   let current = route.id ? entries.find((e) => e.id === route.id) : entries[0];
 
   if (route.id && !current) {
@@ -33,6 +53,9 @@ export async function render(main, route) {
     <aside class="entry-sidebar" aria-label="Entries">
       <button type="button" class="btn btn-primary" data-new>${ICON.plus}New entry</button>
       <div class="search">${ICON.search}<input class="input" type="search" placeholder="Search entries or #tags" aria-label="Search entries" value="${esc(query)}" /></div>
+      <div class="seg group-by" role="group" aria-label="Group entries by">
+        ${Object.entries(GROUPS).map(([k, label]) => `<button type="button" data-group="${k}" aria-pressed="${groupBy === k}">${label}</button>`).join("")}
+      </div>
       <div data-list></div>
     </aside>
     <section aria-label="Entry">
@@ -61,19 +84,25 @@ export async function render(main, route) {
     if (!matches.length) { listEl.innerHTML = `<p class="small muted" style="padding:8px">Nothing matches “${esc(query)}”.</p>`; return; }
     const groups = new Map();
     matches.forEach((e) => {
-      const k = fmtMonth(e.created_at);
+      const k = groupLabel[groupBy](e.created_at);
       if (!groups.has(k)) groups.set(k, []);
       groups.get(k).push(e);
     });
-    listEl.innerHTML = [...groups].map(([month, list]) => `<div class="month-group">
-      <h4>${esc(month)}</h4>
+    listEl.innerHTML = [...groups].map(([label, list]) => `<div class="month-group">
+      <h4>${esc(label)} <span class="count">${list.length}</span></h4>
       <ul class="entry-list">${list.map((e) => `<li><a class="entry-link" href="#/journal/${e.id}" data-id="${e.id}" ${current && e.id === current.id ? 'aria-current="true"' : ""}>
         <span class="t">${esc(e.title || "Untitled")}</span>
-        <span class="d">${fmtShort(e.created_at)}${e.mood ? " · " + esc(e.mood) : ""}</span></a></li>`).join("")}</ul>
+        <span class="d">${groupBy === "day" ? fmtTime(e.created_at) : fmtShort(e.created_at)}${e.mood ? " · " + esc(e.mood) : ""}</span></a></li>`).join("")}</ul>
     </div>`).join("");
   }
   renderList();
   searchEl.addEventListener("input", () => { query = searchEl.value; renderList(); });
+  $$("[data-group]", el).forEach((b) => b.addEventListener("click", () => {
+    groupBy = b.dataset.group;
+    try { localStorage.setItem(GROUP_KEY, groupBy); } catch {}
+    $$("[data-group]", el).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    renderList();
+  }));
 
   $$("[data-new]", el).forEach((b) => b.addEventListener("click", async () => {
     b.disabled = true;

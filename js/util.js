@@ -34,6 +34,7 @@ export const dayKey = (d) => {
 export const fmtDate = (d) => new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 export const fmtShort = (d) => new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 export const fmtLong = (d) => new Date(d).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+export const fmtTime = (d) => new Date(d).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 export const fmtMonth = (d) => new Date(d).toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
 // ── Markdown → plain text (for previews, search, word counts) ──
