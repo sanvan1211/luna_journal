@@ -1,5 +1,7 @@
 ## CLAUDE, DO NOT EDIT ANYTHING IN THIS FILE 
 
+##### about luna 
+
 A Claude-powered AI journal companion that analyzes journals stored in Notion.
 
 Sometimes it's hard to reach out to someone and talk face-to-face about what you're going through. Sometimes you don't know how to explain what you're feeling. And sometimes, honestly, you just don't want to talk to anyone about it.
