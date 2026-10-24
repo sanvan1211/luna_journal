@@ -2,7 +2,7 @@ import { state } from "../state.js";
 import { listEntries, createEntry } from "../data.js";
 import { queueQuestion, SUGGESTIONS } from "./ask.js";
 import { bunny } from "../bunny.js";
-import { esc, html, $, $$, toast } from "../util.js";
+import { esc, html, $, $$, toast, onPageKey, typing } from "../util.js";
 
 const ICON = {
   chat: `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14v9H8l-4 3v-3H3z"/></svg>`,
@@ -53,6 +53,8 @@ export async function render(main) {
     queueQuestion(b.textContent);
     location.hash = "#/ask";
   }));
+
+  onPageKey(el, (e) => { if (e.key === "/" && !typing(e)) { e.preventDefault(); input.focus(); } });
 
   const newBtn = $("[data-new]", el);
   newBtn.addEventListener("click", async () => {
