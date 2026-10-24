@@ -120,4 +120,6 @@ export function initAccount() {
     if (menu && !e.target.closest(".account-menu, #account-btn")) close(false);
   });
   window.addEventListener("hashchange", () => close(false));
+  // The menu is placed differently on phones and desktops, so close it when the layout switches.
+  matchMedia("(max-width: 820px)").addEventListener("change", () => close(false));
 }
