@@ -40,6 +40,19 @@ export async function createEntry(fields = {}) {
   return must(await sb().from("entries").insert(base).select().single());
 }
 
+/** Imports many entries at once. Real journals only: sample data and imports never mix. */
+export async function importEntries(rows, onProgress = () => {}) {
+  if (state.demo) throw new Error("Turn off demo mode to import into your journal.");
+  let done = 0;
+  for (let i = 0; i < rows.length; i += 100) {
+    const chunk = rows.slice(i, i + 100).map(({ title, content, tags, created_at }) => ({ title, content, tags, mood: null, created_at, updated_at: created_at }));
+    must(await sb().from("entries").insert(chunk));
+    done += chunk.length;
+    onProgress(done);
+  }
+  return done;
+}
+
 export async function updateEntry(id, patch) {
   if (state.demo) {
     const row = D().entries.find((e) => e.id === id);
