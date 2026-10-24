@@ -3,6 +3,7 @@ import { listEntries, createEntry, updateEntry, deleteEntry } from "../data.js";
 import { createEditor } from "../editor.js";
 import { callAI, aiProblem, aiLoading } from "../ai.js";
 import { emptyState } from "../bunny.js";
+import { openImport } from "../import.js";
 import { safetyNote } from "../support.js";
 import { esc, html, $, $$, debounce, fmtShort, fmtLong, fmtMonth, fmtTime, plain, download, slug, toast, confirmDialog, onPageKey, typing } from "../util.js";
 
@@ -34,6 +35,7 @@ const ICON = {
   search: `<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="M13.5 13.5 17 17"/></svg>`,
   plus: `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg>`,
   trash: `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/></svg>`,
+  importer: `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9M6 8l4 4 4-4M4 14v3h12v-3"/></svg>`,
   down: `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v10M6 9l4 4 4-4M4 17h12"/></svg>`,
   list: `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5h10M7 10h10M7 15h10M3 5h0M3 10h0M3 15h0"/></svg>`,
   check: `<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="3"/><path d="M7 10l2 2 4-4"/></svg>`,
@@ -55,6 +57,7 @@ export async function render(main, route) {
   const el = html(`<div class="journal">
     <aside class="entry-sidebar" aria-label="Entries">
       <button type="button" class="btn btn-primary" data-new>${ICON.plus}New entry</button>
+      <button type="button" class="btn btn-ghost" data-import>${ICON.importer}Import</button>
       <div class="search">${ICON.search}<input class="input" type="search" placeholder="Search entries or #tags  ( / )" aria-label="Search entries" value="${esc(query)}" /></div>
       <div class="seg group-by" role="group" aria-label="Group entries by">
         ${Object.entries(GROUPS).map(([k, label]) => `<button type="button" data-group="${k}" aria-pressed="${groupBy === k}">${label}</button>`).join("")}
@@ -113,6 +116,9 @@ export async function render(main, route) {
     try { const row = await createEntry(); location.hash = `#/journal/${row.id}`; }
     catch (err) { toast("Couldn't create an entry. " + err.message); b.disabled = false; }
   }));
+  // Re-render the route once entries are imported.
+  $("[data-import]", el).addEventListener("click", () => openImport({ onDone: () => window.dispatchEvent(new HashChangeEvent("hashchange")) }));
+
   const drawerBtn = $("[data-drawer]", el);
   // "/" jumps to search, like most apps with a search box. Escape closes the phone drawer.
   onPageKey(el, (e) => {
