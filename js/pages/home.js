@@ -1,8 +1,8 @@
 import { state } from "../state.js";
 import { listEntries, createEntry } from "../data.js";
-import { queueQuestion } from "./ask.js";
+import { queueQuestion, SUGGESTIONS } from "./ask.js";
 import { bunny } from "../bunny.js";
-import { html, $, toast } from "../util.js";
+import { esc, html, $, $$, toast } from "../util.js";
 
 const ICON = {
   chat: `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14v9H8l-4 3v-3H3z"/></svg>`,
@@ -25,6 +25,9 @@ export async function render(main) {
         <input id="home-input" type="text" placeholder="Ask Luna about your journal…" maxlength="500" autocomplete="off" />
         <button type="submit" class="home-send" aria-label="Ask Luna">${ICON.send}</button>
       </form>
+      ${entries.length ? `<div class="home-suggest" role="group" aria-label="Suggested questions">
+        ${SUGGESTIONS.map((q) => `<button type="button" class="home-chip" data-suggest>${esc(q)}</button>`).join("")}
+      </div>` : ""}
       <div class="home-actions">
         <a class="home-pill" href="#/ask">${ICON.chat}<span>chat with luna</span></a>
         <button type="button" class="home-pill" data-new>${ICON.write}<span>new journal</span></button>
@@ -45,6 +48,11 @@ export async function render(main) {
     queueQuestion(q);
     location.hash = "#/ask";
   });
+
+  $$("[data-suggest]", el).forEach((b) => b.addEventListener("click", () => {
+    queueQuestion(b.textContent);
+    location.hash = "#/ask";
+  }));
 
   const newBtn = $("[data-new]", el);
   newBtn.addEventListener("click", async () => {

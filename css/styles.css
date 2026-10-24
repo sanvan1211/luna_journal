@@ -452,6 +452,12 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 .home-send { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 0; display: grid; place-items: center; background: var(--accent); cursor: pointer; }
 .home-send:hover { background: #efd5a0; }
 .home-send svg { width: 18px; height: 18px; fill: none; stroke: var(--accent-ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.home-suggest { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: -4px; }
+.home-chip {
+  border: 1px solid #cfc6b4; background: none; color: var(--moon-ink); border-radius: 999px;
+  padding: 6px 14px; font-size: 13px; cursor: pointer;
+}
+.home-chip:hover { background: #e2d9c7; }
 .home-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
 .home-pill {
   display: inline-flex; align-items: center; gap: 10px; padding: 11px 22px; border-radius: 999px; border: 0;
