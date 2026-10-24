@@ -1,6 +1,6 @@
 // Decides whether to gently show support resources. It never blocks writing, never
 // stores anything, and never labels the person. When unsure, it errs toward showing help.
-import { serve, json, claude, parseJSON, NotConfigured } from "../_shared/luna.ts";
+import { serve, json, claude, parseJSON, NotConfigured, Refused } from "../_shared/luna.ts";
 
 const URGENT = /\b(kill myself|end my life|want to die|wanna die|suicid\w*|self[- ]?harm\w*|hurt myself|cut myself|cutting myself|no reason to live|better off without me|overdose)\b/i;
 
@@ -24,6 +24,8 @@ Return ONLY JSON: {"level": "none" | "concern" | "urgent"}`,
     return json({ flagged: ok, level: ok ? level : "none" });
   } catch (err) {
     if (err instanceof NotConfigured) return json({ flagged: false, level: "none", ai: false });
+    // A declined safety read leans toward showing help, never toward hiding it.
+    if (err instanceof Refused) return json({ flagged: true, level: "concern" });
     throw err;
   }
 });

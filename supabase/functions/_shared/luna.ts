@@ -11,6 +11,7 @@ export const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
 export class NotConfigured extends Error {}
+export class Refused extends Error {}
 
 export type Entry = { id: string; title: string; content: string; mood: string | null; tags: string[]; created_at: string };
 
@@ -90,7 +91,7 @@ export async function claude(system: string, user: string, maxTokens = 600, mode
   });
   if (!res.ok) throw new Error(`Anthropic error ${res.status}: ${await res.text()}`);
   const data = await res.json();
-  if (data.stop_reason === "refusal") throw new Error("Claude declined this request");
+  if (data.stop_reason === "refusal") throw new Refused("Claude declined this request");
   const text = (data.content ?? []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("").trim();
   if (!text) throw new Error("Claude returned an empty reply");
   return text;
