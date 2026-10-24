@@ -76,6 +76,13 @@ const MODELS: Record<string, string> = { fast: "claude-haiku-5-5", thoughtful: "
 export const pickModel = (choice: unknown): string =>
   MODELS[String(choice)] ?? Deno.env.get("LUNA_MODEL") ?? MODELS.fast;
 
+// These models think by default, and thinking counts toward max_tokens. Luna's replies
+// are short and single-turn, so thinking is turned off and the budget goes to the answer.
+const THINKING_OFF: Record<string, unknown> = {
+  "claude-haiku-5-5": { type: "disabled" },
+  "claude-sonnet-5-5": { type: "between_tools" },
+};
+
 export async function claude(system: string, user: string, maxTokens = 600, model = pickModel(null)): Promise<string> {
   const key = Deno.env.get("ANTHROPIC_API_KEY");
   if (!key) throw new NotConfigured("ANTHROPIC_API_KEY is not set in Supabase secrets.");
@@ -85,6 +92,7 @@ export async function claude(system: string, user: string, maxTokens = 600, mode
     body: JSON.stringify({
       model,
       max_tokens: maxTokens,
+      ...(THINKING_OFF[model] ? { thinking: THINKING_OFF[model] } : {}),
       system,
       messages: [{ role: "user", content: user }],
     }),
