@@ -34,6 +34,7 @@ export async function render(main) {
           <textarea id="ask-input" rows="1" placeholder="Ask about your journal…" maxlength="500"></textarea>
           <button type="submit" class="btn btn-primary">Ask</button>
         </form>
+        <p class="small ask-count" data-count aria-live="polite" hidden></p>
         <p class="small muted" style="text-align:center;margin:10px 0 0">Luna answers only from your entries. It isn't a therapist and can be wrong.</p>
       </div>
     </div></div>`);
@@ -92,6 +93,14 @@ export async function render(main) {
   input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
   const resize = () => { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 160) + "px"; };
   input.addEventListener("input", resize);
+  const countEl = $("[data-count]", page);
+  const updateCount = () => {
+    const n = input.value.length;
+    countEl.hidden = n < 400; // only worth showing near the 500-character limit
+    countEl.textContent = `${n} / 500 characters`;
+  };
+  input.addEventListener("input", updateCount);
+  form.addEventListener("submit", updateCount);
   $("[data-clear]", page).addEventListener("click", () => { thread = []; draw(); input.focus(); });
 
   draw();
