@@ -47,7 +47,7 @@ a { color: var(--accent); }
 .rail {
   width: 220px; flex: none; position: sticky; top: 0; height: 100vh;
   display: flex; flex-direction: column; gap: 28px;
-  padding: 28px 16px 20px; border-right: 1px solid var(--line);
+  padding: 28px 16px 20px; border-right: 1px solid var(--line); z-index: 10;
 }
 .demo-on .rail { top: 41px; height: calc(100vh - 41px); }
 .brand { display: flex; align-items: center; gap: 10px; color: var(--accent); text-decoration: none; padding: 0 10px; }
@@ -61,9 +61,47 @@ a { color: var(--accent); }
 .nav-list a:hover { color: var(--text); background: var(--card); }
 .nav-list a[aria-current="page"] { color: var(--text); background: var(--card); }
 .nav-list a[aria-current="page"] svg { stroke: var(--accent); }
-.rail-foot { margin-top: auto; display: grid; gap: 14px; padding: 0 6px; }
-.account-slot { font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
-.account-slot .email { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rail-foot { margin-top: auto; position: relative; }
+
+/* Account button + menu */
+.account-btn {
+  width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; border-radius: var(--radius-sm);
+  background: none; color: var(--text); cursor: pointer; text-align: left;
+}
+.account-btn:hover, .account-btn[aria-expanded="true"] { background: var(--card); }
+.account-btn .avatar {
+  width: 32px; height: 32px; flex: none; border-radius: 50%; display: grid; place-items: center;
+  background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: 14px;
+}
+.account-btn .avatar svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
+.account-btn .who { display: grid; min-width: 0; flex: 1; line-height: 1.3; }
+.account-btn .name { font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-btn .plan { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-btn .chev svg { width: 16px; height: 16px; fill: none; stroke: var(--muted); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; display: block; }
+.account-btn .tab-label { display: none; }
+.account-menu {
+  position: absolute; left: 0; bottom: calc(100% + 8px); width: 280px; z-index: 30;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px;
+  box-shadow: 0 12px 32px rgba(4, 9, 18, .55);
+}
+.menu-head { padding: 8px 10px 10px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
+.menu-head .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu-label { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); font-weight: 600; padding: 8px 10px 4px; }
+.account-menu [role^="menuitem"] {
+  width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 0; border-radius: var(--radius-sm);
+  background: none; color: var(--text); font-size: 14px; text-align: left; text-decoration: none; cursor: pointer;
+}
+.account-menu [role^="menuitem"]:hover, .account-menu [role^="menuitem"]:focus-visible { background: var(--card-2); }
+.account-menu [role^="menuitem"] > svg { width: 18px; height: 18px; flex: none; fill: none; stroke: var(--muted); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.menu-text { flex: 1; display: grid; gap: 1px; min-width: 0; }
+.menu-check svg { width: 18px; height: 18px; fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: block; }
+[role="menuitemradio"][aria-checked="false"] .menu-check { visibility: hidden; }
+.menu-note { margin: 2px 10px 6px; font-size: 12px; color: var(--faint); line-height: 1.45; }
+.menu-sep { height: 1px; background: var(--line); margin: 6px 0; }
+.account-menu .tag { font-size: 11px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; }
+[role="menuitemcheckbox"] .switch-track { pointer-events: none; }
+[role="menuitemcheckbox"][aria-checked="true"] .switch-track { background: var(--accent); }
+[role="menuitemcheckbox"][aria-checked="true"] .switch-track::after { transform: translateX(14px); background: var(--accent-ink); }
 
 .main { flex: 1; min-width: 0; outline: none; }
 .main:focus-visible { box-shadow: none; }
@@ -437,8 +475,15 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
     flex-direction: row; padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); gap: 0; z-index: 20;
     border-right: 0; border-top: 1px solid var(--line); background: var(--bg);
   }
-  .brand, .rail-foot { display: none; }
-  .nav-list { grid-template-columns: repeat(6, 1fr); width: 100%; }
+  .brand, .nav-settings { display: none; }
+  .nav-list { grid-template-columns: repeat(5, 1fr); flex: 5; }
+  .rail-foot { flex: 1; margin: 0; position: static; }
+  .account-btn { flex-direction: column; justify-content: center; gap: 3px; padding: 6px 4px; height: 100%; color: var(--muted); font-size: 11px; font-weight: 500; }
+  .account-btn .avatar { width: 20px; height: 20px; font-size: 11px; }
+  .account-btn .avatar svg { width: 13px; height: 13px; }
+  .account-btn .who, .account-btn .chev { display: none; }
+  .account-btn .tab-label { display: block; }
+  .account-menu { left: auto; right: 8px; bottom: calc(100% + 8px); width: min(300px, calc(100vw - 16px)); max-height: calc(100vh - 140px); overflow: auto; }
   .nav-list a { flex-direction: column; gap: 3px; padding: 8px 4px; font-size: 11px; }
   .main { padding-bottom: 76px; }
   .page { padding: 24px 16px 40px; }

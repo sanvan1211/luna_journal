@@ -1,4 +1,5 @@
 import { state, initSupabase, loadDemoPref, loadModelPref, setDemo, subscribe } from "./state.js";
+import { initAccount, renderAccount } from "./account.js";
 import { resetDemoStore } from "./data.js";
 import { esc, html, $, $$, toast } from "./util.js";
 import { emptyState, loadingState } from "./bunny.js";
@@ -62,15 +63,7 @@ async function route() {
 function renderChrome() {
   document.body.classList.toggle("demo-on", state.demo);
   $("#demo-banner").hidden = !state.demo;
-  $("#demo-toggle").checked = state.demo;
-
-  const slot = $("#account-slot");
-  if (state.session) {
-    slot.innerHTML = `<span class="email" title="${esc(state.session.user.email)}">${esc(state.session.user.email)}</span>
-      <button type="button" class="link-btn small" data-action="signout" style="justify-self:start">Sign out</button>`;
-  } else {
-    slot.innerHTML = state.configured ? `<span>Not signed in</span>` : `<span>Supabase not connected</span>`;
-  }
+  renderAccount();
 }
 
 // ───────────── Screens shown before sign-in ─────────────
@@ -160,7 +153,6 @@ document.addEventListener("click", async (e) => {
 });
 document.addEventListener("click", (e) => { if (e.target.closest("[data-demo]")) enterDemo(); });
 
-$("#demo-toggle").addEventListener("change", (e) => (e.target.checked ? enterDemo() : exitDemo()));
 document.addEventListener("luna:demo-toggle", (e) => (e.detail ? enterDemo() : exitDemo()));
 
 subscribe((why) => { if (why === "auth") route(); });
@@ -171,6 +163,7 @@ window.addEventListener("hashchange", route);
   main.innerHTML = loadingState("Opening your journal…");
   loadDemoPref();
   loadModelPref();
+  initAccount();
   if (state.demo) resetDemoStore();
   await initSupabase();
   route();

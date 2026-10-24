@@ -32,15 +32,10 @@
         <li><a href="#/dashboard" data-nav="dashboard"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 17V9 M8 17V4 M13 17v-6 M18 17V7" /></svg><span>Dashboard</span></a></li>
         <li><a href="#/checkin" data-nav="checkin"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="M7 11.5c.8 1 1.8 1.5 3 1.5s2.2-.5 3-1.5 M7.5 8h0 M12.5 8h0" /></svg><span>Check-in</span></a></li>
         <li><a href="#/ask" data-nav="ask"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14v9H8l-4 3v-3H3z" /></svg><span>Ask Luna</span></a></li>
-        <li><a href="#/settings" data-nav="settings"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2l6 2.5v5c0 4-2.7 6.7-6 8.5-3.3-1.8-6-4.5-6-8.5v-5z" /></svg><span>Privacy</span></a></li>
+        <li class="nav-settings"><a href="#/settings" data-nav="settings"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2l6 2.5v5c0 4-2.7 6.7-6 8.5-3.3-1.8-6-4.5-6-8.5v-5z" /></svg><span>Privacy</span></a></li>
       </ul>
       <div class="rail-foot">
-        <label class="switch">
-          <input type="checkbox" id="demo-toggle" />
-          <span class="switch-track" aria-hidden="true"></span>
-          <span class="switch-label">Demo mode</span>
-        </label>
-        <div id="account-slot" class="account-slot"></div>
+        <button type="button" id="account-btn" class="account-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="account-menu"></button>
       </div>
     </nav>
 
