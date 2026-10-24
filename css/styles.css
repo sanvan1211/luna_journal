@@ -534,7 +534,9 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
   :root { --bg: #fff; --card: #fff; --text: #111; --muted: #444; --faint: #666; }
   body { background: #fff; color: #111; }
   .rail, .demo-banner, .entry-sidebar, .journal-mobile-bar, .toolbar, .editor-hint, .mood-row,
-  .editor-top div, .tag-row button, .toast, .skip-link, #modal-root, .reflection button { display: none !important; }
+  .editor-top div, .tag-row button, .tag-input, .toast, .skip-link, #modal-root, .reflection button { display: none !important; }
+  [data-blocks] *, .title-input, .entry-date { color: #111 !important; }
+  .tag-row .chip { background: none; border: 1px solid #999; color: #111; }
   .shell, .journal { display: block; min-height: 0; }
   .editor-wrap { padding: 0; max-width: none; }
   a { color: inherit; }
