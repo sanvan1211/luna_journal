@@ -525,7 +525,7 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 .qotd figcaption::before { content: "— "; }
 .home-bunny-spot { position: absolute; left: 50%; bottom: calc(max(30%, 150px) - 6px); transform: translateX(-50%); z-index: 1; line-height: 0; }
 .bunny.home-bunny { width: 150px; color: var(--bg); --bunny-cut: var(--moon); }
-@media (max-height: 780px) { .bunny.home-bunny { width: 116px; } }
+@media (max-height: 780px), (max-width: 520px) { .bunny.home-bunny { width: 112px; } }
 
 /* ───────────── Modal + toast ───────────── */
 .modal-backdrop { position: fixed; inset: 0; background: rgba(6, 12, 22, .72); display: grid; place-items: center; padding: 20px; z-index: 40; }
@@ -583,10 +583,10 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
   .main { padding-bottom: 76px; }
   .page { padding: 24px 16px 40px; }
   .page-head h1 { font-size: 28px; }
-  .summary { grid-template-columns: 1fr; }
+  .summary > div { padding: var(--s-4) var(--s-3); }
+  .summary-num { font-size: var(--fs-xl); }
   .setting { grid-template-columns: 1fr; padding: var(--s-6) 0; }
   .sent-list div { grid-template-columns: 1fr; gap: 0; }
-  .summary > div + div { border-left: 0; border-top: 1px solid var(--line); }
   .home { min-height: calc(100vh - 76px); padding-bottom: 150px; }
   .cal-cell { min-height: 42px; padding: 5px; }
   .demo-on .home { min-height: calc(100vh - 117px); }
