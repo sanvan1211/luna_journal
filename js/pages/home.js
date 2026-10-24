@@ -5,7 +5,7 @@ import { bunny } from "../bunny.js";
 import { html, $, toast, onPageKey, typing } from "../util.js";
 
 const ICON = {
-  chat: `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14v9H8l-4 3v-3H3z"/></svg>`,
+  dashboard: `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 17V9 M8 17V4 M13 17v-6 M18 17V7"/></svg>`,
   write: `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3h7l3 3v4M5 3v14h5M8 8h5M8 11h3"/><path d="M16.5 11.5l1.5 1.5-5 5h-1.5V16.5z"/></svg>`,
   send: `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 16V4M5 9l5-5 5 5"/></svg>`,
 };
@@ -26,7 +26,7 @@ export async function render(main) {
         <button type="submit" class="home-send" aria-label="Ask Luna">${ICON.send}</button>
       </form>
       <div class="home-actions">
-        <a class="home-pill" href="#/ask">${ICON.chat}<span>chat with luna</span></a>
+        <a class="home-pill" href="#/dashboard">${ICON.dashboard}<span>dashboard</span></a>
         <button type="button" class="home-pill" data-new>${ICON.write}<span>new journal</span></button>
       </div>
     </div>
