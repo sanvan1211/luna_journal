@@ -291,10 +291,16 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 
 /* ───────────── Dashboard ───────────── */
 .dash { display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
-.stat { grid-column: span 4; }
-.stat .num { font: 500 44px/1 var(--serif); margin: 14px 0 6px; }
-.stat-link { margin-top: 10px; padding: 0; }
-.stat .num small { font: 500 15px var(--ui); color: var(--muted); margin-left: 6px; }
+/* "This month at a glance": one strip instead of three separate cards */
+.summary { display: grid; grid-template-columns: repeat(3, 1fr); padding: 0; }
+.summary > div { padding: var(--s-5) var(--s-6); display: grid; align-content: start; gap: var(--s-1); }
+.summary > div + div { border-left: 1px solid var(--line); }
+.card .summary-label { font-size: var(--fs-sm); font-weight: 500; color: var(--muted); }
+.summary-num { margin: 0; font: 500 var(--fs-2xl)/1.1 var(--serif); }
+.summary-unit { font: 500 var(--fs-md) var(--ui); color: var(--muted); }
+.summary p.small, .summary .link-btn { margin: 0; justify-self: start; }
+.card .sub-label { margin: var(--s-4) 0 var(--s-2); font-size: var(--fs-sm); font-weight: 500; color: var(--muted); }
+.chip-btn { text-decoration: none; }
 .span-8 { grid-column: span 8; }
 .span-4 { grid-column: span 4; }
 .span-6 { grid-column: span 6; }
@@ -330,14 +336,6 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 .conf .dots i.on { background: var(--accent); }
 .sample-tag { font-size: var(--fs-xs); font-weight: 600; color: var(--accent); border: 1px solid currentColor; padding: 1px 8px; border-radius: var(--radius-pill); }
 
-.heat { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.heat .hc { height: 18px; border: 0; padding: 0; border-radius: 4px; background: var(--inset); cursor: pointer; }
-.heat .hc:hover { box-shadow: inset 0 0 0 1px var(--muted); }
-.dash > .card.stat { align-self: stretch; }
-.heat .hc.w1 { background: #3b3a35; }
-.heat .hc.w2 { background: #8a7a55; }
-.heat .hc.w3 { background: var(--accent); }
-.heat .hc.today { box-shadow: inset 0 0 0 1.5px var(--text); }
 /* Moods you picked */
 .mood-bars { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 6px 28px; }
 .mood-bar {
@@ -542,7 +540,6 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 
 /* ───────────── Responsive ───────────── */
 @media (max-width: 1000px) {
-  .stat { grid-column: span 6; }
   .span-8, .span-4, .span-6 { grid-column: span 12; }
   .cal { grid-template-columns: 1fr; }
 }
@@ -566,6 +563,8 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
   .main { padding-bottom: 76px; }
   .page { padding: 24px 16px 40px; }
   .page-head h1 { font-size: 28px; }
+  .summary { grid-template-columns: 1fr; }
+  .summary > div + div { border-left: 0; border-top: 1px solid var(--line); }
   .home { min-height: calc(100vh - 76px); padding-bottom: 150px; }
   .cal-cell { min-height: 42px; padding: 5px; }
   .demo-on .home { min-height: calc(100vh - 117px); }

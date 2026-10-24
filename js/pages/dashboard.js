@@ -33,15 +33,6 @@ export async function render(main, route) {
 
   const wordsByDay = {};
   entries.forEach((e) => { const k = dayKey(e.created_at); wordsByDay[k] = (wordsByDay[k] || 0) + words(plain(e.content)).length; });
-  const heatStart = startOfWeek(now); heatStart.setDate(heatStart.getDate() - 28);
-  const heatCells = Array.from({ length: 35 }, (_, i) => {
-    const d = new Date(heatStart); d.setDate(d.getDate() + i);
-    const w = wordsByDay[dayKey(d)] || 0;
-    const lvl = w === 0 ? "" : w < 60 ? "w1" : w < 140 ? "w2" : "w3";
-    const future = d > now;
-    const label = `${fmtShort(d)}: ${w ? w + " words" : "no entry"}`;
-    return `<button type="button" class="hc ${lvl} ${dayKey(d) === dayKey(now) ? "today" : ""}" data-heat="${dayKey(d)}" ${future ? 'style="opacity:.35"' : ""} title="${label}" aria-label="${label}. Show in calendar"></button>`;
-  }).join("");
 
   // ───── themes: Luna's remembered themes + your most-used tags ─────
   const tagCounts = {};
@@ -56,36 +47,36 @@ export async function render(main, route) {
       <a class="btn" href="#/checkin">Start a check-in</a>
     </header>
     <div class="dash">
-      <section class="card stat" aria-label="Entries this month">
-        <div class="eyebrow">Entries this month</div>
-        <div class="num">${thisMonth.length}</div>
-        <div class="muted small">${monthWords.toLocaleString()} words written</div>
-        ${thisMonth.length ? `<button type="button" class="link-btn small stat-link" data-see="month">See this month's entries</button>` : ""}
+      <section class="card summary span-12" aria-label="This month at a glance">
+        <div>
+          <h2 class="summary-label">Entries this month</h2>
+          <p class="summary-num">${thisMonth.length}</p>
+          ${thisMonth.length ? `<button type="button" class="link-btn small" data-see="month">See them</button>` : `<p class="small muted">None yet</p>`}
+        </div>
+        <div>
+          <h2 class="summary-label">Words this month</h2>
+          <p class="summary-num">${monthWords.toLocaleString()}</p>
+          <p class="small muted">${thisMonth.length ? `About ${Math.round(monthWords / thisMonth.length)} per entry` : "Across every entry you write"}</p>
+        </div>
+        <div>
+          <h2 class="summary-label">Writing streak</h2>
+          <p class="summary-num">${streak} <span class="summary-unit">${streak === 1 ? "day" : "days"}</span></p>
+          ${streak ? `<button type="button" class="link-btn small" data-see="streak">See the entries</button>` : `<p class="small muted">Write today to start one</p>`}
+        </div>
       </section>
-      <section class="card stat" aria-label="Writing streak">
-        <div class="eyebrow">Writing streak</div>
-        <div class="num">${streak}<small>${streak === 1 ? "day" : "days"}</small></div>
-        <div class="muted small">${streak ? "Days in a row with an entry" : "Write today to start one"}</div>
-        ${streak ? `<button type="button" class="link-btn small stat-link" data-see="streak">See the entries in this streak</button>` : ""}
-      </section>
-      <section class="card stat" aria-label="Last five weeks">
-        <div class="eyebrow" style="margin-bottom:14px">Last 5 weeks</div>
-        <div class="heat" role="group" aria-label="Last five weeks, one square per day">${heatCells}</div>
-        <div class="sr-only">${[...days].filter((k) => new Date(k) >= heatStart).length} days with entries in the last five weeks.</div>
-      </section>
+
+      <section class="card span-8 noticed" aria-labelledby="noticed-h" data-noticed></section>
+      <div class="span-4">${supportPanel()}</div>
 
       <section class="card span-12" aria-labelledby="cal-h" data-calendar></section>
 
       <section class="card span-8" aria-labelledby="trend-h" data-trend></section>
-      <div class="span-4">${supportPanel()}</div>
-
-      <section class="card span-8 noticed" aria-labelledby="noticed-h" data-noticed></section>
       <section class="card span-4" aria-labelledby="themes-h">
         <div class="card-head"><h2 id="themes-h">Recurring themes</h2></div>
         ${themes.length || topTags.length ? `
-          ${themes.length ? `<div class="chips" style="margin-bottom:14px">${themes.map((t) => `<span class="chip">${esc(t.content)}</span>`).join("")}</div>` : ""}
-          ${topTags.length ? `<div class="eyebrow" style="margin:4px 0 8px">Your tags</div><div class="chips">${topTags.map(([t, n]) => `<a class="chip chip-btn" href="#/journal?q=%23${encodeURIComponent(t)}" style="text-decoration:none">#${esc(t)} <span class="count">${n}</span></a>`).join("")}</div>` : ""}
-        ` : `<p class="muted small" style="margin:0">Themes show up here as you tag entries and Luna looks for patterns.</p>`}
+          ${themes.length ? `<div class="chips">${themes.map((t) => `<span class="chip">${esc(t.content)}</span>`).join("")}</div>` : ""}
+          ${topTags.length ? `<h3 class="sub-label">Your tags</h3><div class="chips">${topTags.map(([t, n]) => `<a class="chip chip-btn" href="#/journal?q=%23${encodeURIComponent(t)}">#${esc(t)} <span class="count">${n}</span></a>`).join("")}</div>` : ""}
+        ` : `<p class="muted small">Themes show up here as you tag entries and Luna looks for patterns.</p>`}
       </section>
 
       <section class="card span-12" aria-labelledby="moods-h" data-moods></section>
@@ -100,9 +91,7 @@ export async function render(main, route) {
 
   renderMoods($("[data-moods]", page), entries);
 
-  const calendar = renderCalendar($("[data-calendar]", page), entries, wordsByDay);
-  // A square in "Last 5 weeks" opens that day in the calendar.
-  $$("[data-heat]", page).forEach((b) => b.addEventListener("click", () => calendar.show(parseDay(b.dataset.heat))));
+  renderCalendar($("[data-calendar]", page), entries, wordsByDay);
   renderTrend($("[data-trend]", page), entries);
   renderNoticed($("[data-noticed]", page), entries, insights);
 
@@ -243,10 +232,6 @@ function renderCalendar(card, entries, wordsByDay) {
   }
 
   draw();
-  return {
-    /** Select a day and bring the calendar into view. */
-    show(d) { select(d, true); card.scrollIntoView({ behavior: "smooth", block: "center" }); },
-  };
 }
 
 const parseDay = (k) => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };
