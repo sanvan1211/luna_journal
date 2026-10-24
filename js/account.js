@@ -55,6 +55,8 @@ function open() {
     <a role="menuitem" href="#/dashboard?focus=support">${ICON.heart}<span class="menu-text">Get support</span></a>
     <button type="button" role="menuitemcheckbox" aria-checked="${state.demo}" data-demo-item>
       <span class="menu-text">Demo mode<span class="small muted">Sample data only</span></span><span class="switch-track" aria-hidden="true"></span></button>
+    ${!state.session && state.configured && state.demo ? `<div class="menu-sep" role="separator"></div>
+      <button type="button" role="menuitem" data-signin>${ICON.user}<span class="menu-text">Sign in or create an account</span></button>` : ""}
     ${state.session ? `<div class="menu-sep" role="separator"></div>
       <button type="button" role="menuitem" data-action="signout">${ICON.out}<span class="menu-text">Sign out</span></button>` : ""}
   </div>`);
@@ -71,6 +73,11 @@ function open() {
     const on = !state.demo;
     close(false);
     document.dispatchEvent(new CustomEvent("luna:demo-toggle", { detail: on }));
+  });
+  const signin = $("[data-signin]", menu);
+  signin && signin.addEventListener("click", () => {
+    close(false);
+    document.dispatchEvent(new CustomEvent("luna:demo-toggle", { detail: false })); // leaving demo shows the sign-in screen
   });
   $$("a[role=menuitem], [data-action=signout]", menu).forEach((a) => a.addEventListener("click", () => close(false)));
   menu.addEventListener("keydown", onKey);
