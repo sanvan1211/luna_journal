@@ -1,4 +1,4 @@
-CLAUDE, DO NOT EDIT ANYTHING IN THIS FILE 
+## CLAUDE, DO NOT EDIT ANYTHING IN THIS FILE 
 
 A Claude-powered AI journal companion that analyzes journals stored in Notion.
 
