@@ -528,3 +528,14 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 }
 .demo-mobile { display: none !important; }
 @media (min-width: 821px) { .mobile-only { display: none !important; } }
+
+/* ───────────── Print: just the entry, black on white ───────────── */
+@media print {
+  :root { --bg: #fff; --card: #fff; --text: #111; --muted: #444; --faint: #666; }
+  body { background: #fff; color: #111; }
+  .rail, .demo-banner, .entry-sidebar, .journal-mobile-bar, .toolbar, .editor-hint, .mood-row,
+  .editor-top div, .tag-row button, .toast, .skip-link, #modal-root, .reflection button { display: none !important; }
+  .shell, .journal { display: block; min-height: 0; }
+  .editor-wrap { padding: 0; max-width: none; }
+  a { color: inherit; }
+}
