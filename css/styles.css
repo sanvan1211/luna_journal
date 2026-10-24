@@ -65,6 +65,7 @@ a { color: var(--accent); }
 .account-slot .email { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .main { flex: 1; min-width: 0; outline: none; }
+.main:focus-visible { box-shadow: none; }
 .page { max-width: 1120px; margin: 0 auto; padding: 40px 40px 80px; }
 .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
 .page-head h1 { font: 500 34px/1.1 var(--serif); margin: 0; letter-spacing: -.01em; }
