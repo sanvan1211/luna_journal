@@ -40,6 +40,7 @@ a { color: var(--accent); }
 
 .skip-link { position: absolute; left: 12px; top: -48px; z-index: 50; background: var(--accent); color: var(--accent-ink); padding: 8px 14px; border-radius: 8px; text-decoration: none; font-weight: 600; }
 .skip-link:focus { top: 12px; }
+.noscript { margin: 0; padding: 14px 16px; background: var(--accent); color: var(--accent-ink); text-align: center; font-weight: 500; }
 
 /* ───────────── Shell ───────────── */
 .shell { display: flex; min-height: 100vh; }
