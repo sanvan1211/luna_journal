@@ -82,8 +82,10 @@ export function openModal(contentEl, { label = "Dialog", onClose } = {}) {
 
   const focusables = () => $$('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])', backdrop).filter((e) => !e.disabled);
   const close = () => {
+    if (!backdrop.isConnected) return;
     backdrop.remove();
     document.removeEventListener("keydown", onKey);
+    window.removeEventListener("hashchange", onNavigate);
     prev && prev.focus && prev.focus();
     onClose && onClose();
   };
@@ -97,7 +99,10 @@ export function openModal(contentEl, { label = "Dialog", onClose } = {}) {
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     }
   };
+  // A dialog belongs to the page that opened it.
+  const onNavigate = () => close();
   document.addEventListener("keydown", onKey);
+  window.addEventListener("hashchange", onNavigate);
   backdrop.addEventListener("mousedown", (e) => { if (e.target === backdrop) close(); });
   setTimeout(() => (focusables()[0] || backdrop.firstElementChild).focus(), 0);
   return close;
