@@ -182,7 +182,11 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 .state-inline strong { color: var(--text); font-weight: 600; }
 .state-inline.error { border-left: 3px solid var(--rose); }
 .state-inline.notcfg { border-left: 3px solid var(--faint); }
-.bunny { width: 96px; height: auto; }
+.bunny { width: 96px; height: auto; color: var(--accent); --bunny-cut: var(--bg); }
+.bunny .hop { fill: currentColor; }
+.bunny .cut { stroke: var(--bunny-cut); stroke-width: 2.4; }
+.bunny .eye { fill: var(--bunny-cut); }
+.card .bunny, .modal .bunny { --bunny-cut: var(--card); }
 .bunny.small { width: 56px; }
 .bunny .hop { transform-origin: 50% 100%; }
 .loading .bunny .hop { animation: hop 1.1s ease-in-out infinite; }
@@ -467,7 +471,8 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 .home-pill svg { width: 20px; height: 20px; fill: none; stroke: var(--accent); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .home-ground { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; display: grid; justify-items: center; gap: 6px; padding: 0 16px 18px; text-align: center; color: var(--hill-text); }
 .home-ground p { margin: 0; max-width: 52ch; }
-.bunny.home-bunny { width: 124px; }
+.home-bunny-spot { position: absolute; left: 50%; bottom: calc(max(30%, 150px) - 6px); transform: translateX(-50%); z-index: 1; line-height: 0; }
+.bunny.home-bunny { width: 150px; color: var(--bg); --bunny-cut: var(--moon); }
 
 /* ───────────── Modal + toast ───────────── */
 .modal-backdrop { position: fixed; inset: 0; background: rgba(6, 12, 22, .72); display: grid; place-items: center; padding: 20px; z-index: 40; }

@@ -55,8 +55,8 @@ export async function render(main) {
         <button type="button" class="home-pill" data-new>${ICON.write}<span>new journal</span></button>
       </div>
     </div>
+    <div class="home-bunny-spot">${bunny("home-bunny")}</div>
     <div class="home-ground">
-      ${bunny("home-bunny")}
       <p class="small">${state.demo ? "Sample data only. " : ""}Luna reads only your own entries. It isn't a therapist and never diagnoses.</p>
     </div>
   </div>`);
