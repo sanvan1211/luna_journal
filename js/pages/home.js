@@ -12,13 +12,13 @@ const ICON = {
 
 // Moon surface: a few soft seas and craters in flat, slightly darker creams.
 const MOON = `<svg class="moon-tex" viewBox="0 0 100 100" aria-hidden="true">
-  <g fill="#e0d6c3">
+  <g fill="#e3dac8">
     <path d="M17 31C19 22 30 17 38 21C44 24 43 33 36 36.5C29 40 20 39 17 31Z"/>
     <path d="M59 25C65 20 76 23 79 31C81 39 73 45 66 43C59 41 55 31 59 25Z"/>
     <path d="M36 53C43 48 54 50 57 57C59 63 51 68 44 66C37 64 32 57 36 53Z"/>
     <path d="M70 52C74 50 80 52 80 57C80 61 75 63 71 61C68 59 67 54 70 52Z"/>
   </g>
-  <g fill="#d9cfbb">
+  <g fill="#dcd2be">
     <circle cx="27" cy="49" r="3.2"/><circle cx="74" cy="66" r="4.4"/><circle cx="84" cy="27" r="2.2"/>
     <circle cx="50" cy="16" r="2.6"/><circle cx="18" cy="63" r="2.4"/><circle cx="58" cy="76" r="3"/>
     <circle cx="44" cy="37" r="1.4"/><circle cx="88" cy="46" r="1.6"/><circle cx="33" cy="72" r="1.8"/>
