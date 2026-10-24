@@ -6,6 +6,14 @@ export const state = {
   sb: null,          // Supabase client
   session: null,     // Supabase auth session
   demo: false,       // demo mode on/off
+  model: "fast",     // AI model choice: "fast" | "thoughtful" (see MODELS)
+};
+
+// What the user can pick under Account → Model. The Edge Functions map these keys
+// to model IDs and ignore anything else.
+export const MODELS = {
+  fast: { name: "Claude Haiku 5.5", blurb: "Fast, for everyday reflections" },
+  thoughtful: { name: "Claude Sonnet 5.5", blurb: "Slower, more thoughtful answers" },
 };
 
 const listeners = new Set();
@@ -40,4 +48,15 @@ export function setDemo(on) {
   state.demo = on;
   try { on ? localStorage.setItem(DEMO_KEY, "1") : localStorage.removeItem(DEMO_KEY); } catch {}
   emit("demo");
+}
+
+const MODEL_KEY = "luna-model";
+export function loadModelPref() {
+  try { const m = localStorage.getItem(MODEL_KEY); if (MODELS[m]) state.model = m; } catch {}
+}
+export function setModel(m) {
+  if (!MODELS[m]) return;
+  state.model = m;
+  try { localStorage.setItem(MODEL_KEY, m); } catch {}
+  emit("model");
 }

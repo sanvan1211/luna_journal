@@ -1,4 +1,4 @@
-import { state, initSupabase, loadDemoPref, setDemo, subscribe } from "./state.js";
+import { state, initSupabase, loadDemoPref, loadModelPref, setDemo, subscribe } from "./state.js";
 import { resetDemoStore } from "./data.js";
 import { esc, html, $, $$, toast } from "./util.js";
 import { emptyState, loadingState } from "./bunny.js";
@@ -170,6 +170,7 @@ window.addEventListener("hashchange", route);
 (async function boot() {
   main.innerHTML = loadingState("Opening your journal…");
   loadDemoPref();
+  loadModelPref();
   if (state.demo) resetDemoStore();
   await initSupabase();
   route();
