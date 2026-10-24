@@ -90,7 +90,10 @@ export async function claude(system: string, user: string, maxTokens = 600, mode
   });
   if (!res.ok) throw new Error(`Anthropic error ${res.status}: ${await res.text()}`);
   const data = await res.json();
-  return (data.content ?? []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("").trim();
+  if (data.stop_reason === "refusal") throw new Error("Claude declined this request");
+  const text = (data.content ?? []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("").trim();
+  if (!text) throw new Error("Claude returned an empty reply");
+  return text;
 }
 
 /** Pulls the first JSON object out of a model reply. */
