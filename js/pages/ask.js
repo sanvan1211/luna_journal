@@ -4,7 +4,7 @@ import { callAI, aiProblem } from "../ai.js";
 import { bunny, emptyState } from "../bunny.js";
 import { esc, html, $, $$, fmtShort, toast } from "../util.js";
 
-export const SUGGESTIONS = ["What do I write about most?", "What seems to help on hard days?", "When did I last write about feeling proud?"];
+const SUGGESTIONS = ["What do I write about most?", "What seems to help on hard days?", "When did I last write about feeling proud?"];
 
 // Conversation lives only in this tab, and never crosses between demo and real mode.
 let thread = [];
