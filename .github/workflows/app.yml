@@ -1,0 +1,20 @@
+name: App checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Syntax-check the browser JavaScript
+        run: |
+          for f in $(find js -name '*.js'); do
+            node --check --input-type=module < "$f" || { echo "Syntax error in $f"; exit 1; }
+          done
