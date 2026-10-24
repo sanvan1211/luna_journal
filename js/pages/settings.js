@@ -39,6 +39,7 @@ export async function render(main) {
         <h3>How it's handled</h3>
         <ul>
           <li>Requests go from your browser to Luna's server functions, which call Anthropic's Claude. Your browser never holds an AI key.</li>
+          <li>You pick the model under Account: Claude Haiku 5.5 (fast) or Claude Sonnet 5.5 (more thoughtful). Safety checks always use Haiku.</li>
           <li>Anthropic doesn't train its models on data sent through its API by default.</li>
           <li>A short safety check reads text you send for reflection, only to decide whether to show support resources.</li>
           <li>Your entries are stored in a database where only your account can read them. Luna never sells or shares them.</li>
