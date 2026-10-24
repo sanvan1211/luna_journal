@@ -1,9 +1,9 @@
 import { state } from "../state.js";
-import { listEntries, listInsights, listMemory, addDemoInsights } from "../data.js";
+import { listEntries, listInsights, listMemory, addDemoInsights, createEntry } from "../data.js";
 import { callAI, aiProblem, aiLoading } from "../ai.js";
 import { emptyState } from "../bunny.js";
 import { supportPanel } from "../support.js";
-import { esc, html, $, $$, dayKey, fmtShort, fmtDate, plain, words, openModal } from "../util.js";
+import { esc, html, $, $$, dayKey, fmtShort, fmtDate, fmtLong, fmtMonth, fmtTime, plain, words, openModal, toast } from "../util.js";
 
 // Word families for "Journal language trends". This describes LANGUAGE, not feelings.
 // Colors validated for color-blind separation on the card surface.
@@ -69,6 +69,8 @@ export async function render(main, route) {
         <div class="sr-only">${[...days].filter((k) => new Date(k) >= heatStart).length} days with entries in the last five weeks.</div>
       </section>
 
+      <section class="card span-12" aria-labelledby="cal-h" data-calendar></section>
+
       <section class="card span-8" aria-labelledby="trend-h" data-trend></section>
       <div class="span-4">${supportPanel()}</div>
 
@@ -84,6 +86,7 @@ export async function render(main, route) {
   </div>`);
   main.append(page);
 
+  renderCalendar($("[data-calendar]", page), entries, wordsByDay);
   renderTrend($("[data-trend]", page), entries);
   renderNoticed($("[data-noticed]", page), entries, insights);
 
@@ -93,6 +96,133 @@ export async function render(main, route) {
     s.focus({ preventScroll: true });
   }
 }
+
+// ─────────────────────────── Calendar ───────────────────────────
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const level = (w) => (w === 0 ? "" : w < 60 ? "w1" : w < 140 ? "w2" : "w3");
+
+function renderCalendar(card, entries, wordsByDay) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const byDay = {};
+  entries.forEach((e) => (byDay[dayKey(e.created_at)] ||= []).push(e));
+  let selected = new Date(today);
+  let month = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  function draw(focus = false) {
+    const first = new Date(month);
+    const daysIn = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+    const lead = (first.getDay() + 6) % 7; // Monday-first
+    const inMonth = entries.filter((e) => { const d = new Date(e.created_at); return d.getFullYear() === month.getFullYear() && d.getMonth() === month.getMonth(); });
+    const daysWritten = new Set(inMonth.map((e) => dayKey(e.created_at))).size;
+    const isCurrent = month.getFullYear() === today.getFullYear() && month.getMonth() === today.getMonth();
+
+    const cells = [];
+    for (let i = 0; i < lead; i++) cells.push(`<span class="cal-pad" aria-hidden="true"></span>`);
+    for (let n = 1; n <= daysIn; n++) {
+      const d = new Date(month.getFullYear(), month.getMonth(), n);
+      const k = dayKey(d), list = byDay[k] || [], w = wordsByDay[k] || 0;
+      const sel = k === dayKey(selected);
+      const label = `${fmtLong(d)}: ${list.length ? `${list.length} ${list.length === 1 ? "entry" : "entries"}, ${w} words` : "no entries"}`;
+      cells.push(`<button type="button" class="cal-cell ${level(w)} ${k === dayKey(today) ? "today" : ""} ${d > today ? "future" : ""}"
+        data-day="${k}" aria-label="${esc(label)}" aria-pressed="${sel}" tabindex="${sel ? 0 : -1}">
+        <span class="n">${n}</span>${list.length ? `<span class="dots" aria-hidden="true">${"<i></i>".repeat(Math.min(list.length, 3))}</span>` : ""}</button>`);
+    }
+
+    card.innerHTML = `
+      <div class="card-head" style="flex-wrap:wrap">
+        <div><h2 id="cal-h">Calendar</h2>
+        <p class="muted small" style="margin:4px 0 0">Pick a day to see what you wrote. Arrow keys move between days.</p></div>
+        <div class="cal-nav">
+          <button type="button" class="icon-btn" data-prev aria-label="Previous month"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12 5l-5 5 5 5"/></svg></button>
+          <span class="cal-title" aria-live="polite">${fmtMonth(month)}</span>
+          <button type="button" class="icon-btn" data-next aria-label="Next month"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></button>
+          <button type="button" class="btn btn-sm btn-ghost" data-today ${isCurrent && dayKey(selected) === dayKey(today) ? "disabled" : ""}>Today</button>
+        </div>
+      </div>
+      <div class="cal">
+        <div>
+          <div class="cal-grid" role="group" aria-label="${esc(fmtMonth(month))}">
+            ${WEEKDAYS.map((d) => `<span class="cal-wd" aria-hidden="true">${d}</span>`).join("")}
+            ${cells.join("")}
+          </div>
+          <div class="cal-foot">
+            <span class="muted small">${inMonth.length} ${inMonth.length === 1 ? "entry" : "entries"} on ${daysWritten} ${daysWritten === 1 ? "day" : "days"} in ${esc(month.toLocaleDateString(undefined, { month: "long" }))}</span>
+            <span class="cal-key small muted" aria-hidden="true">Fewer words <i></i><i class="w1"></i><i class="w2"></i><i class="w3"></i> More</span>
+          </div>
+        </div>
+        <div class="cal-day" data-panel aria-live="polite"></div>
+      </div>`;
+
+    $("[data-prev]", card).addEventListener("click", () => shiftMonth(-1));
+    $("[data-next]", card).addEventListener("click", () => shiftMonth(1));
+    $("[data-today]", card).addEventListener("click", () => select(new Date(today), true));
+    $$("[data-day]", card).forEach((b) => b.addEventListener("click", () => select(parseDay(b.dataset.day))));
+    $(".cal-grid", card).addEventListener("keydown", onKey);
+    drawPanel();
+    if (focus) { const b = $(`[data-day="${dayKey(selected)}"]`, card); b && b.focus(); }
+  }
+
+  function drawPanel() {
+    const k = dayKey(selected), list = byDay[k] || [];
+    const panel = $("[data-panel]", card);
+    panel.innerHTML = `<h3>${esc(fmtLong(selected))}</h3>` + (list.length
+      ? list.map((e) => `<a class="mini-entry" href="#/journal/${e.id}" style="text-decoration:none;color:inherit">
+          <span class="t">${esc(e.title || "Untitled")}</span>
+          <span class="small muted">${fmtTime(e.created_at)}${e.mood ? " · " + esc(e.mood) : ""}</span>
+          <span class="x">${esc(plain(e.content).slice(0, 180))}</span></a>`).join("")
+      : `<p class="muted small" style="margin:0">${selected > today ? "This day hasn't happened yet." : "No entry on this day."}</p>
+         ${k === dayKey(today) ? `<button type="button" class="btn btn-primary btn-sm" data-write style="margin-top:12px">Write today's entry</button>` : ""}`);
+    const write = $("[data-write]", panel);
+    write && write.addEventListener("click", async () => {
+      write.disabled = true;
+      try { const row = await createEntry(); location.hash = `#/journal/${row.id}`; }
+      catch (err) { toast("Couldn't create an entry. " + err.message); write.disabled = false; }
+    });
+  }
+
+  function select(d, focus = false) {
+    selected = d;
+    if (d.getFullYear() !== month.getFullYear() || d.getMonth() !== month.getMonth()) {
+      month = new Date(d.getFullYear(), d.getMonth(), 1);
+      draw(true);
+      return;
+    }
+    // Same month: update in place so the focused day button survives.
+    const k = dayKey(d);
+    $$("[data-day]", card).forEach((b) => {
+      const on = b.dataset.day === k;
+      b.setAttribute("aria-pressed", String(on));
+      b.tabIndex = on ? 0 : -1;
+      if (on && focus) b.focus();
+    });
+    $("[data-today]", card).disabled = k === dayKey(today);
+    drawPanel();
+  }
+
+  function shiftMonth(delta) {
+    month = new Date(month.getFullYear(), month.getMonth() + delta, 1);
+    const last = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+    selected = new Date(month.getFullYear(), month.getMonth(), Math.min(selected.getDate(), last));
+    draw();
+  }
+
+  function onKey(e) {
+    const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[e.key];
+    if (step) {
+      e.preventDefault();
+      const d = new Date(selected); d.setDate(d.getDate() + step);
+      select(d, true);
+    } else if (e.key === "PageUp" || e.key === "PageDown") {
+      e.preventDefault();
+      shiftMonth(e.key === "PageUp" ? -1 : 1);
+      $(`[data-day="${dayKey(selected)}"]`, card).focus();
+    }
+  }
+
+  draw();
+}
+
+const parseDay = (k) => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };
 
 // ─────────────────────────── Language trends chart ───────────────────────────
 function renderTrend(card, entries) {
