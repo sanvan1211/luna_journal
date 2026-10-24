@@ -426,22 +426,35 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 .suggestions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 14px; }
 
 /* ───────────── Settings ───────────── */
-.settings { display: grid; gap: 20px; max-width: 760px; }
+.settings { max-width: 960px; }
+/* One row per setting: name and description on the left, controls on the right. */
+.setting { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: var(--s-4) var(--s-10); padding: var(--s-8) 0; border-top: 1px solid var(--line); }
+.setting:first-child { border-top: 0; padding-top: 0; }
+.setting > header h2 { margin: 0; font-size: var(--fs-md); font-weight: 600; }
+.setting > header p { margin: var(--s-1) 0 0; font-size: var(--fs-sm); color: var(--muted); }
+.sent-list { margin: 0 0 var(--s-2); display: grid; gap: var(--s-2); }
+.sent-list div { display: grid; grid-template-columns: 170px 1fr; gap: var(--s-3); }
+.sent-list dt { font-weight: 600; color: var(--text); }
+.sent-list dd { margin: 0; color: var(--muted); }
+.data-rows { border: 1px solid var(--line); border-radius: var(--radius); }
+.data-row { display: flex; justify-content: space-between; align-items: center; gap: var(--s-4); padding: var(--s-4) var(--s-5); flex-wrap: wrap; }
+.data-row + .data-row { border-top: 1px solid var(--line); }
+.data-row p { margin: 2px 0 0; font-size: var(--fs-sm); color: var(--muted); }
+.data-row.danger strong { color: var(--rose); }
 .memory-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .memory-list li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--inset); }
-.memory-list .type { font-size: var(--fs-xs); font-weight: 500; color: var(--muted); width: 72px; flex: none; text-transform: capitalize; }
+.memory-list .type { font-size: var(--fs-xs); font-weight: 500; color: var(--muted); width: 72px; flex: none; }
 .memory-list .content { flex: 1; min-width: 0; }
 .icon-btn { background: none; border: 0; color: var(--muted); width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; cursor: pointer; flex: none; }
 .icon-btn:hover { background: var(--card-2); color: var(--text); }
 .icon-btn.danger:hover { color: var(--rose); }
 .icon-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
-.plain { font-size: 15px; line-height: 1.65; }
-.plain h3 { font-size: 14px !important; margin: 18px 0 6px !important; }
-.plain ul { margin: 6px 0 0; padding-left: 20px; color: var(--muted); }
+.plain { font-size: var(--fs-md); line-height: 1.65; }
+.plain h3 { font-size: var(--fs-sm); font-weight: 600; color: var(--text); margin: var(--s-5) 0 var(--s-2); }
+.plain h3:first-child { margin-top: 0; }
+.plain ul { margin: 0; padding-left: var(--s-5); color: var(--muted); }
 .plain li { margin: 4px 0; }
-.danger-zone { border: 1px solid #4a3240; }
 .row-between { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
-.row-between + .row-between { border-top: 1px solid var(--line); padding-top: 16px; margin-top: 16px; }
 
 /* ───────────── Auth ───────────── */
 .auth { max-width: 420px; margin: 8vh auto 0; }
@@ -452,9 +465,9 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 
 /* About Luna (settings) */
-.about { display: grid; gap: 16px; }
-.about-head { display: flex; align-items: center; gap: 14px; }
-.about-head .bunny { width: 52px; flex: none; }
+.about > header .bunny { width: 56px; display: block; margin-bottom: var(--s-3); }
+.about-body { display: grid; gap: var(--s-4); }
+.about-body > p { margin: 0; color: var(--muted); }
 .about-quote { margin: 0; padding: 4px 0 4px 18px; border-left: 2px solid var(--accent); }
 .about-quote blockquote { margin: 0; font: italic 400 19px/1.5 var(--serif); color: var(--text); }
 .about-quote figcaption { margin-top: 6px; font-size: 13px; color: var(--muted); }
@@ -564,6 +577,8 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
   .page { padding: 24px 16px 40px; }
   .page-head h1 { font-size: 28px; }
   .summary { grid-template-columns: 1fr; }
+  .setting { grid-template-columns: 1fr; padding: var(--s-6) 0; }
+  .sent-list div { grid-template-columns: 1fr; gap: 0; }
   .summary > div + div { border-left: 0; border-top: 1px solid var(--line); }
   .home { min-height: calc(100vh - 76px); padding-bottom: 150px; }
   .cal-cell { min-height: 42px; padding: 5px; }

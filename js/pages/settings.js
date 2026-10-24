@@ -16,70 +16,71 @@ export async function render(main) {
     <header class="page-head"><div><h1>Settings &amp; privacy</h1><p>What Luna keeps, what it sends, and how to remove it.</p></div></header>
     <div class="settings">
 
-      <section class="card" aria-labelledby="mem-h">
-        <div class="card-head"><div><h2 id="mem-h">Luna's memory</h2>
-          <p class="muted small" style="margin:4px 0 0">Short notes Luna keeps so it can understand your journal over time. Delete anything you don't want it to remember.</p></div></div>
+      <section class="setting" aria-labelledby="mem-h">
+        <header><h2 id="mem-h">Luna's memory</h2>
+          <p>Short notes Luna keeps so it can understand your journal over time. Delete anything you don't want it to remember.</p></header>
         <div data-memory></div>
       </section>
 
-      <section class="card" aria-labelledby="ins-h">
-        <div class="row-between">
-          <div><h2 id="ins-h">Insights</h2><p class="muted small" style="margin:4px 0 0" data-ins-count></p></div>
-          <button type="button" class="btn btn-danger btn-sm" data-del-insights>Delete all insights</button>
+      <section class="setting" aria-labelledby="ins-h">
+        <header><h2 id="ins-h">Insights</h2><p data-ins-count></p></header>
+        <div><button type="button" class="btn btn-danger btn-sm" data-del-insights>Delete all insights</button></div>
+      </section>
+
+      <section class="setting" aria-labelledby="ai-h">
+        <header><h2 id="ai-h">What gets sent to the AI</h2>
+          <p>Only what you ask for, only when you press a button. Nothing is analyzed in the background.</p></header>
+        <div class="plain">
+          <h3>When you press…</h3>
+          <dl class="sent-list">
+            <div><dt>Reflect with Luna</dt><dd>That one entry's title and text.</dd></div>
+            <div><dt>Look for patterns</dt><dd>Your recent entries: title, text, date, tags, and the mood you picked.</dd></div>
+            <div><dt>Ask Luna</dt><dd>Your question and the entries most related to it.</dd></div>
+            <div><dt>Check-in reflection</dt><dd>Only your check-in answers.</dd></div>
+          </dl>
+          <h3>How it's handled</h3>
+          <ul>
+            <li>Requests go from your browser to Luna's server functions, which call Anthropic's Claude. Your browser never holds an AI key.</li>
+            <li>You pick the model under Account: Claude Haiku 5.5 (fast) or Claude Sonnet 5.5 (more thoughtful). Safety checks always use Haiku.</li>
+            <li>Anthropic doesn't train its models on data sent through its API by default.</li>
+            <li>A short safety check reads text you send for reflection, only to decide whether to show support resources.</li>
+            <li>Your entries are stored in a database where only your account can read them. Luna never sells or shares them.</li>
+            <li>Moods are only what you choose. Luna never assigns a mood or a score.</li>
+          </ul>
         </div>
       </section>
 
-      <section class="card plain" aria-labelledby="ai-h">
-        <h2 id="ai-h">What gets sent to the AI</h2>
-        <p class="muted" style="margin:8px 0 0">Luna only sends your writing to the AI when you press a button that asks for it. Nothing is analyzed in the background.</p>
-        <h3>When you press…</h3>
-        <ul>
-          <li><strong style="color:var(--text)">Reflect with Luna:</strong> that one entry's title and text.</li>
-          <li><strong style="color:var(--text)">Look for patterns:</strong> your recent entries (title, text, date, tags, and the mood you picked).</li>
-          <li><strong style="color:var(--text)">Ask Luna:</strong> your question and the entries most related to it.</li>
-          <li><strong style="color:var(--text)">Check-in reflection:</strong> only your check-in answers.</li>
-        </ul>
-        <h3>How it's handled</h3>
-        <ul>
-          <li>Requests go from your browser to Luna's server functions, which call Anthropic's Claude. Your browser never holds an AI key.</li>
-          <li>You pick the model under Account: Claude Haiku 5.5 (fast) or Claude Sonnet 5.5 (more thoughtful). Safety checks always use Haiku.</li>
-          <li>Anthropic doesn't train its models on data sent through its API by default.</li>
-          <li>A short safety check reads text you send for reflection, only to decide whether to show support resources.</li>
-          <li>Your entries are stored in a database where only your account can read them. Luna never sells or shares them.</li>
-          <li>Moods are only what you choose. Luna never assigns a mood or a score.</li>
-        </ul>
+      <section class="setting" aria-labelledby="demo-h">
+        <header><h2 id="demo-h">Demo mode</h2><p>A clearly labeled sample journal, kept fully separate from your real entries.</p></header>
+        <div><label class="switch"><input type="checkbox" data-demo-switch ${state.demo ? "checked" : ""} /><span class="switch-track" aria-hidden="true"></span><span class="switch-label">${state.demo ? "On" : "Off"}</span></label></div>
       </section>
 
-      <section class="card" aria-labelledby="demo-h">
-        <div class="row-between">
-          <div><h2 id="demo-h">Demo mode</h2><p class="muted small" style="margin:4px 0 0">Load a clearly labeled sample journal. It's kept fully separate from your real entries.</p></div>
-          <label class="switch"><input type="checkbox" data-demo-switch ${state.demo ? "checked" : ""} /><span class="switch-track" aria-hidden="true"></span><span class="switch-label">${state.demo ? "On" : "Off"}</span></label>
+      <section class="setting" aria-labelledby="acct-h">
+        <header><h2 id="acct-h">Your data</h2>
+          <p>${state.session ? `Signed in as ${esc(state.session.user.email)}.` : "Everything you write belongs to you."}</p></header>
+        <div class="data-rows">
+          <div class="data-row">
+            <div><strong>Download all entries</strong><p>One Markdown file with everything you've written.</p></div>
+            <button type="button" class="btn btn-sm" data-export-all>Download .md</button>
+          </div>
+          <div class="data-row danger">
+            <div><strong>Delete account</strong><p>Permanently deletes your account, entries, insights, and Luna's memory.</p></div>
+            <button type="button" class="btn btn-danger btn-sm" data-del-account ${state.demo ? "disabled title=\"Not available in demo mode\"" : ""}>Delete account and all data</button>
+          </div>
         </div>
       </section>
 
-      <section class="card danger-zone" aria-labelledby="acct-h">
-        <h2 id="acct-h" style="margin-bottom:14px">Your data</h2>
-        <div class="row-between">
-          <div><strong>Download all entries</strong><p class="muted small" style="margin:2px 0 0">One Markdown file with everything you've written.</p></div>
-          <button type="button" class="btn btn-sm" data-export-all>Download .md</button>
+      <section class="setting about" aria-labelledby="about-h">
+        <header>${bunny("small")}<h2 id="about-h">About Luna</h2><p>A private journal that helps you understand what you've written.</p></header>
+        <div class="about-body">
+          <p>Luna is a place to write and then look back. It can point out patterns in your own words, always with the entries behind them, and answer questions about your journal. Luna is not a therapist and never diagnoses. If things feel heavy, support is always one tap away.</p>
+          ${QUOTE ? `<figure class="about-quote"><blockquote>“${esc(QUOTE.text)}”</blockquote><figcaption>${esc(QUOTE.by)}</figcaption></figure>` : ""}
+          <dl class="about-facts">
+            <div><dt>Built for</dt><dd>Congressional App Challenge</dd></div>
+            <div><dt>Made with</dt><dd>HTML, CSS, JavaScript, Supabase, and Claude by Anthropic</dd></div>
+            <div><dt>Mascot</dt><dd>Luna, a Holland Lop</dd></div>
+          </dl>
         </div>
-        <div class="row-between">
-          <div><strong>Delete account</strong><p class="muted small" style="margin:2px 0 0">Permanently deletes your account, entries, insights, and Luna's memory.</p></div>
-          <button type="button" class="btn btn-danger btn-sm" data-del-account ${state.demo ? "disabled title=\"Not available in demo mode\"" : ""}>Delete account and all data</button>
-        </div>
-        ${state.session ? `<p class="small muted" style="margin:16px 0 0">Signed in as ${esc(state.session.user.email)}</p>` : ""}
-      </section>
-
-      <section class="card about" aria-labelledby="about-h">
-        <div class="about-head">${bunny("small")}
-          <div><h2 id="about-h">About Luna</h2><p class="muted small" style="margin:4px 0 0">A private journal that helps you understand what you've written.</p></div></div>
-        <p class="muted" style="margin:0">Luna is a place to write and then look back. It can point out patterns in your own words, always with the entries behind them, and answer questions about your journal. Luna is not a therapist and never diagnoses. If things feel heavy, support is always one tap away.</p>
-        ${QUOTE ? `<figure class="about-quote"><blockquote>“${esc(QUOTE.text)}”</blockquote><figcaption>${esc(QUOTE.by)}</figcaption></figure>` : ""}
-        <dl class="about-facts">
-          <div><dt>Built for</dt><dd>Congressional App Challenge</dd></div>
-          <div><dt>Made with</dt><dd>HTML, CSS, JavaScript, Supabase, and Claude by Anthropic</dd></div>
-          <div><dt>Mascot</dt><dd>Luna, a Holland Lop</dd></div>
-        </dl>
       </section>
     </div></div>`);
   main.append(page);
