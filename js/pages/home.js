@@ -2,7 +2,7 @@ import { state } from "../state.js";
 import { listEntries, createEntry } from "../data.js";
 import { queueQuestion } from "./ask.js";
 import { bunny } from "../bunny.js";
-import { html, $, toast, onPageKey, typing } from "../util.js";
+import { esc, html, $, toast, onPageKey, typing } from "../util.js";
 
 const ICON = {
   dashboard: `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 17V9 M8 17V4 M13 17v-6 M18 17V7"/></svg>`,
@@ -35,6 +35,24 @@ const TUFTS = [[14, 34, 1], [22, 58, .8], [29, 30, .9], [36, 70, 1.1], [43, 44, 
 const tufts = () => TUFTS.map(([x, y, s]) =>
   `<svg class="tuft" viewBox="0 0 14 10" style="left:${x}%;top:${y}%;width:${Math.round(14 * s)}px"><path d="M2 10Q2.5 5.5.8 2.5M6 10Q6 4 7.5.5M10 10Q10.5 6 13 3.5"/></svg>`).join("");
 
+// Quote of the day: short lines from public-domain writing, one per day.
+const QUOTES = [
+  ["“Hope” is the thing with feathers that perches in the soul.", "Emily Dickinson"],
+  ["I'm not afraid of storms, for I'm learning how to sail my ship.", "Louisa May Alcott, Little Women"],
+  ["Adopt the pace of nature: her secret is patience.", "Ralph Waldo Emerson"],
+  ["We are all in the gutter, but some of us are looking at the stars.", "Oscar Wilde"],
+  ["Rest is not idleness.", "John Lubbock"],
+  ["The best way out is always through.", "Robert Frost"],
+  ["Write it on your heart that every day is the best day in the year.", "Ralph Waldo Emerson"],
+  ["I dwell in Possibility.", "Emily Dickinson"],
+  ["Nothing can bring you peace but yourself.", "Ralph Waldo Emerson"],
+  ["Be not afraid of growing slowly; be afraid only of standing still.", "Chinese proverb"],
+];
+function quoteOfTheDay(d = new Date()) {
+  const day = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 864e5);
+  return QUOTES[day % QUOTES.length];
+}
+
 export async function render(main) {
   const entries = await listEntries();
   const greeting = entries.length ? "Hey, welcome back to Luna" : "Hey, welcome to Luna";
@@ -57,6 +75,7 @@ export async function render(main) {
     </div>
     <div class="home-bunny-spot">${bunny("home-bunny")}</div>
     <div class="home-ground">
+      ${(([text, by]) => `<figure class="qotd"><blockquote>${esc(text)}</blockquote><figcaption>${esc(by)}</figcaption></figure>`)(quoteOfTheDay())}
       <p class="small">${state.demo ? "Sample data only. " : ""}Luna reads only your own entries. It isn't a therapist and never diagnoses.</p>
     </div>
   </div>`);
