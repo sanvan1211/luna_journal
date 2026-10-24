@@ -27,7 +27,9 @@ export async function render(main, route) {
   let streak = 0;
   const cursor = new Date(now);
   if (!days.has(dayKey(cursor))) cursor.setDate(cursor.getDate() - 1); // today not written yet doesn't break it
-  while (days.has(dayKey(cursor))) { streak++; cursor.setDate(cursor.getDate() - 1); }
+  const streakDays = new Set();
+  while (days.has(dayKey(cursor))) { streak++; streakDays.add(dayKey(cursor)); cursor.setDate(cursor.getDate() - 1); }
+  const streakEntries = entries.filter((e) => streakDays.has(dayKey(e.created_at)));
 
   const wordsByDay = {};
   entries.forEach((e) => { const k = dayKey(e.created_at); wordsByDay[k] = (wordsByDay[k] || 0) + words(plain(e.content)).length; });
@@ -58,11 +60,13 @@ export async function render(main, route) {
         <div class="eyebrow">Entries this month</div>
         <div class="num">${thisMonth.length}</div>
         <div class="muted small">${monthWords.toLocaleString()} words written</div>
+        ${thisMonth.length ? `<button type="button" class="link-btn small stat-link" data-see="month">See this month's entries</button>` : ""}
       </section>
       <section class="card stat" aria-label="Writing streak">
         <div class="eyebrow">Writing streak</div>
         <div class="num">${streak}<small>${streak === 1 ? "day" : "days"}</small></div>
         <div class="muted small">${streak ? "Days in a row with an entry" : "Write today to start one"}</div>
+        ${streak ? `<button type="button" class="link-btn small stat-link" data-see="streak">See the entries in this streak</button>` : ""}
       </section>
       <section class="card stat" aria-label="Last five weeks">
         <div class="eyebrow" style="margin-bottom:14px">Last 5 weeks</div>
@@ -86,6 +90,11 @@ export async function render(main, route) {
     </div>
   </div>`);
   main.append(page);
+
+  $$("[data-see]", page).forEach((b) => b.addEventListener("click", () =>
+    b.dataset.see === "month"
+      ? openEntryList("Entries this month", thisMonth)
+      : openEntryList(`Your ${streak}-day streak`, streakEntries)));
 
   const calendar = renderCalendar($("[data-calendar]", page), entries, wordsByDay);
   // A square in "Last 5 weeks" opens that day in the calendar.

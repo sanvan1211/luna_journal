@@ -272,6 +272,7 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 .dash { display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
 .stat { grid-column: span 4; }
 .stat .num { font: 500 44px/1 var(--serif); margin: 14px 0 6px; }
+.stat-link { margin-top: 10px; padding: 0; }
 .stat .num small { font: 500 15px var(--ui); color: var(--muted); margin-left: 6px; }
 .span-8 { grid-column: span 8; }
 .span-4 { grid-column: span 4; }
