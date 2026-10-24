@@ -551,7 +551,7 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 .import-list li span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .import-note { color: var(--accent); margin: 10px 0; }
 .import-preview .btn { margin-top: 6px; }
-.mini-entry { padding: 14px 16px; border-radius: var(--radius-sm); background: var(--inset); display: grid; gap: 4px; }
+.mini-entry { padding: 14px 16px; border-radius: var(--radius-sm); background: var(--inset); display: grid; gap: 4px; text-decoration: none; color: inherit; }
 .mini-entry + .mini-entry { margin-top: 10px; }
 .mini-entry .t { font-weight: 600; }
 .mini-entry .x { color: var(--muted); font: 400 15px/1.55 var(--serif); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
@@ -604,6 +604,33 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 }
 .demo-mobile { display: none !important; }
 @media (min-width: 821px) { .mobile-only { display: none !important; } }
+
+/* ───────────── Small pieces used by the page templates ───────────── */
+.auth-narrow { max-width: 560px; }
+.steps-list { margin: 0; padding-left: var(--s-5); line-height: 1.8; }
+.card-roomy { padding: var(--s-8); }
+.card-inset { background: var(--inset); }
+.start-wrap { justify-content: flex-start; flex-wrap: wrap; }
+.lede { margin: var(--s-2) 0 var(--s-3); font: 400 17px/1.6 var(--serif); }
+.table-wrap { overflow: auto; margin-top: var(--s-3); }
+.tip-title { font-weight: 600; margin-bottom: 6px; }
+.data-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.data-table th { padding: 6px; text-align: left; color: var(--muted); font-weight: 500; }
+.data-table td { padding: 6px; border-top: 1px solid var(--line); }
+.data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Utilities, all on the spacing scale. Kept last so they win over component defaults. */
+.m-0 { margin: 0; }
+.mt-1 { margin-top: var(--s-1); } .mt-2 { margin-top: var(--s-2); } .mt-3 { margin-top: var(--s-3); } .mt-4 { margin-top: var(--s-4); } .mt-5 { margin-top: var(--s-5); }
+.mb-0 { margin-bottom: 0; } .mb-2 { margin-bottom: var(--s-2); } .mb-3 { margin-bottom: var(--s-3); } .mb-4 { margin-bottom: var(--s-4); } .mb-5 { margin-bottom: var(--s-5); }
+.p-2 { padding: var(--s-2); }
+.hstack { display: flex; align-items: center; }
+.stack { display: grid; gap: var(--s-3); }
+.gap-2 { gap: var(--s-2); } .gap-3 { gap: var(--s-3); }
+.wrap { flex-wrap: wrap; }
+.center { text-align: center; }
+.self-center { align-self: center; }
+.text-strong { color: var(--text); }
 
 /* ───────────── Print: just the entry, black on white ───────────── */
 @media print {

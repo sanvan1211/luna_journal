@@ -21,8 +21,8 @@ export async function render(main) {
   main.innerHTML = "";
   const page = html(`<div class="page"><div class="checkin">
     <header class="page-head"><div><h1>Check-in</h1><p>Four gentle questions, one at a time. Skip anything.</p></div></header>
-    <div class="card" data-card style="padding:32px"></div>
-    <div style="margin-top:20px">${supportMini()}</div>
+    <div class="card-roomy card" data-card></div>
+    <div class="mt-5">${supportMini()}</div>
   </div></div>`);
   main.append(page);
   const card = $("[data-card]", page);
@@ -31,15 +31,15 @@ export async function render(main) {
     const s = STEPS[step];
     card.innerHTML = `
       <div class="progress" aria-hidden="true">${STEPS.map((_, i) => `<i class="${i <= step ? "on" : ""}"></i>`).join("")}</div>
-      <p class="eyebrow" style="margin:0 0 10px">Question ${step + 1} of ${STEPS.length}</p>
+      <p class="m-0 mb-2 eyebrow">Question ${step + 1} of ${STEPS.length}</p>
       <h2 class="question" id="q" tabindex="-1">${esc(s.q)}</h2>
-      <p class="muted" style="margin:0">${esc(s.help)}</p>
+      <p class="m-0 muted">${esc(s.help)}</p>
       ${s.kind === "words"
         ? `<div class="word-grid" role="group" aria-labelledby="q">${WORDS.map((w) => `<button type="button" aria-pressed="${answers.arriving.includes(w)}" data-word="${esc(w)}">${esc(w)}</button>`).join("")}</div>`
-        : `<textarea class="textarea" style="margin-top:18px" aria-labelledby="q" maxlength="2000">${esc(answers[s.id])}</textarea>`}
+        : `<textarea class="mt-4 textarea" aria-labelledby="q" maxlength="2000">${esc(answers[s.id])}</textarea>`}
       <div class="step-actions">
         <button type="button" class="btn btn-ghost" data-back ${step === 0 ? "disabled" : ""}>Back</button>
-        <div style="display:flex;gap:8px">
+        <div class="hstack gap-2">
           <button type="button" class="btn btn-ghost" data-skip>Skip</button>
           <button type="button" class="btn btn-primary" data-next>${step === STEPS.length - 1 ? "Finish" : "Next"}</button>
         </div>
@@ -85,17 +85,17 @@ export async function render(main) {
       <div class="progress" aria-hidden="true">${STEPS.map(() => `<i class="on"></i>`).join("")}</div>
       <div data-safety></div>
       <h2 class="question" id="q" tabindex="-1">Thanks for checking in</h2>
-      <p class="muted" style="margin:0 0 20px">Here's what you shared. Nothing is saved unless you choose to.</p>
+      <p class="m-0 mb-5 muted">Here's what you shared. Nothing is saved unless you choose to.</p>
       <dl class="summary-list">
         ${answers.arriving.length ? `<div><dt>How you're arriving</dt><dd>${esc(answers.arriving.join(", "))}</dd></div>` : ""}
         ${STEPS.slice(1).filter((s) => answers[s.id].trim()).map((s) => `<div><dt>${esc(s.q)}</dt><dd>${esc(answers[s.id].trim())}</dd></div>`).join("")}
       </dl>
-      <div class="step-actions" style="justify-content:flex-start;flex-wrap:wrap">
+      <div class="start-wrap step-actions">
         <button type="button" class="btn btn-primary" data-save>Save as journal entry</button>
         <button type="button" class="btn" data-reflect>Get a reflection from Luna</button>
         <button type="button" class="btn btn-ghost" data-restart>Start over</button>
       </div>
-      <div data-out style="margin-top:20px" aria-live="polite"></div>`;
+      <div data-out class="mt-5" aria-live="polite"></div>`;
     $("#q", card).focus();
 
     const out = $("[data-out]", card);
@@ -130,10 +130,10 @@ export async function render(main) {
       const r = await callAI("check-in", { answers });
       btn.disabled = false;
       if (!r.ok) { out.innerHTML = aiProblem(r); return; }
-      out.innerHTML = `<div class="card" style="background:var(--inset)">
+      out.innerHTML = `<div class="card-inset card">
         <div class="eyebrow">Luna's reflection</div>
-        <p class="reflection-body" style="margin:10px 0 0">${esc(r.data.reflection || "")}</p>
-        <p class="small muted" style="margin:14px 0 0">A reflection on what you wrote, not advice or a diagnosis.</p></div>`;
+        <p class="mt-2 reflection-body">${esc(r.data.reflection || "")}</p>
+        <p class="mt-3 small muted">A reflection on what you wrote, not advice or a diagnosis.</p></div>`;
     });
   }
 

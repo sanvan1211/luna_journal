@@ -35,7 +35,7 @@ export async function render(main) {
           <button type="submit" class="btn btn-primary">Ask</button>
         </form>
         <p class="small ask-count" data-count aria-live="polite" hidden></p>
-        <p class="small muted" style="text-align:center;margin:10px 0 0">Luna answers only from your entries. It isn't a therapist and can be wrong.</p>
+        <p class="center mt-2 small muted">Luna answers only from your entries. It isn't a therapist and can be wrong.</p>
       </div>
     </div></div>`);
   main.append(page);
@@ -65,9 +65,9 @@ export async function render(main) {
     }
     threadEl.innerHTML = thread.map((m) => {
       if (m.role === "user") return `<div class="msg user">${esc(m.text)}</div>`;
-      if (m.pending) return `<div class="msg luna loading"><div class="who">Luna</div><div style="display:flex;align-items:center;gap:12px" role="status">${bunny("small")}<span class="muted">Reading your journal…</span></div></div>`;
+      if (m.pending) return `<div class="msg luna loading"><div class="who">Luna</div><div class="hstack gap-3" role="status">${bunny("small")}<span class="muted">Reading your journal…</span></div></div>`;
       if (m.problem) return `<div class="msg luna"><div class="who">Luna</div>${aiProblem(m.problem)}</div>`;
-      return `<div class="msg luna"><div class="who">Luna<button type="button" class="link-btn small copy-btn" data-copy="${thread.indexOf(m)}">Copy</button></div><div class="body">${esc(m.text)}</div>${cites(m.citations)}${m.citations && !m.citations.some((id) => byId[id]) ? `<p class="small muted" style="margin:8px 0 0">No specific entries were cited for this answer.</p>` : ""}</div>`;
+      return `<div class="msg luna"><div class="who">Luna<button type="button" class="link-btn small copy-btn" data-copy="${thread.indexOf(m)}">Copy</button></div><div class="body">${esc(m.text)}</div>${cites(m.citations)}${m.citations && !m.citations.some((id) => byId[id]) ? `<p class="mt-2 small muted">No specific entries were cited for this answer.</p>` : ""}</div>`;
     }).join("");
     $$("[data-copy]", threadEl).forEach((b) => b.addEventListener("click", async () => {
       try { await navigator.clipboard.writeText(thread[+b.dataset.copy].text); toast("Answer copied"); }

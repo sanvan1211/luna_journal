@@ -73,13 +73,13 @@ function authScreen() {
     <div class="card">
       <div>
         <h1>Welcome to Luna</h1>
-        <p class="muted" style="margin:6px 0 0">A private journal that helps you understand what you've written.</p>
+        <p class="mt-1 muted">A private journal that helps you understand what you've written.</p>
       </div>
       <div class="seg" role="group" aria-label="Account">
         <button type="button" data-mode="signin" aria-pressed="true">Sign in</button>
         <button type="button" data-mode="signup" aria-pressed="false">Create account</button>
       </div>
-      <form novalidate style="display:grid;gap:14px">
+      <form novalidate class="stack">
         <label class="field">Email<input class="input" type="email" name="email" autocomplete="email" required /></label>
         <label class="field">Password<input class="input" type="password" name="password" autocomplete="current-password" minlength="8" required /></label>
         <div data-msg role="alert" class="small"></div>
@@ -87,7 +87,7 @@ function authScreen() {
       </form>
       <div class="divider">or</div>
       <button class="btn" type="button" data-demo>Try it with sample data</button>
-      <p class="small muted" style="margin:0">Your entries are private to your account. Luna is not a therapist and never diagnoses.</p>
+      <p class="m-0 small muted">Your entries are private to your account. Luna is not a therapist and never diagnoses.</p>
     </div></div></div>`);
 
   const form = $("form", el), msg = $("[data-msg]", el), submit = $("button[type=submit]", form);
@@ -117,11 +117,11 @@ function authScreen() {
 }
 
 function setupScreen() {
-  return html(`<div class="page"><div class="auth" style="max-width:560px">
+  return html(`<div class="page"><div class="auth-narrow auth">
     <div class="card">
       <h1>Connect Supabase</h1>
-      <p class="muted" style="margin:0">Luna stores journals in your Supabase project. Add your project URL and anon key to <code>js/config.js</code>, then reload.</p>
-      <ol class="muted small" style="margin:0;padding-left:20px;line-height:1.8">
+      <p class="m-0 muted">Luna stores journals in your Supabase project. Add your project URL and anon key to <code>js/config.js</code>, then reload.</p>
+      <ol class="steps-list muted small">
         <li>Create a project at supabase.com</li>
         <li>Run <code>supabase/schema.sql</code> in the SQL editor</li>
         <li>Copy the URL and anon key from Project Settings → API</li>

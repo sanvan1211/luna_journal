@@ -137,9 +137,9 @@ function renderCalendar(card, entries, wordsByDay) {
     }
 
     card.innerHTML = `
-      <div class="card-head" style="flex-wrap:wrap">
+      <div class="wrap card-head">
         <div><h2 id="cal-h">Calendar</h2>
-        <p class="muted small" style="margin:4px 0 0">Pick a day to see what you wrote. Arrow keys move between days; Home and End jump to the ends of the month.</p></div>
+        <p class="mt-1 muted small">Pick a day to see what you wrote. Arrow keys move between days; Home and End jump to the ends of the month.</p></div>
         <div class="cal-nav">
           <button type="button" class="icon-btn" data-prev aria-label="Previous month"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12 5l-5 5 5 5"/></svg></button>
           <span class="cal-title" aria-live="polite">${fmtMonth(month)}</span>
@@ -174,12 +174,12 @@ function renderCalendar(card, entries, wordsByDay) {
     const k = dayKey(selected), list = byDay[k] || [];
     const panel = $("[data-panel]", card);
     panel.innerHTML = `<h3>${esc(fmtLong(selected))}</h3>` + (list.length
-      ? list.map((e) => `<a class="mini-entry" href="#/journal/${e.id}" style="text-decoration:none;color:inherit">
+      ? list.map((e) => `<a class="mini-entry" href="#/journal/${e.id}">
           <span class="t">${esc(e.title || "Untitled")}</span>
           <span class="small muted">${fmtTime(e.created_at)}${e.mood ? " · " + esc(e.mood) : ""}</span>
           <span class="x">${esc(plain(e.content).slice(0, 180))}</span></a>`).join("")
-      : `<p class="muted small" style="margin:0">${selected > today ? "This day hasn't happened yet." : "No entry on this day."}</p>
-         ${k === dayKey(today) ? `<button type="button" class="btn btn-primary btn-sm" data-write style="margin-top:12px">Write today's entry</button>` : ""}`);
+      : `<p class="m-0 muted small">${selected > today ? "This day hasn't happened yet." : "No entry on this day."}</p>
+         ${k === dayKey(today) ? `<button type="button" class="mt-3 btn btn-primary btn-sm" data-write>Write today's entry</button>` : ""}`);
     const write = $("[data-write]", panel);
     write && write.addEventListener("click", async () => {
       write.disabled = true;
@@ -248,9 +248,9 @@ function renderMoods(card, entries) {
     const rows = Object.entries(groups).sort((a, b) => b[1].length - a[1].length);
     const max = rows.length ? rows[0][1].length : 0;
     card.innerHTML = `
-      <div class="card-head" style="flex-wrap:wrap">
+      <div class="wrap card-head">
         <div><h2 id="moods-h">Moods you picked</h2>
-        <p class="muted small" style="margin:4px 0 0">Only the moods you chose on your entries. Luna never assigns one. Pick a mood to see its entries.</p></div>
+        <p class="mt-1 muted small">Only the moods you chose on your entries. Luna never assigns one. Pick a mood to see its entries.</p></div>
         <div class="seg" role="group" aria-label="Time range">
           <button type="button" data-mrange="30" aria-pressed="${range === 30}">30 days</button>
           <button type="button" data-mrange="0" aria-pressed="${range === 0}">All time</button>
@@ -262,7 +262,7 @@ function renderMoods(card, entries) {
           <span class="track"><span class="fill" style="width:${Math.max(4, Math.round((es.length / max) * 100))}%"></span></span>
           <span class="n">${es.length}</span>
         </button>`).join("")}</div>`
-        : `<p class="muted small" style="margin:0">${range ? "No moods picked in the last 30 days." : "Pick a mood on an entry and it shows up here."}</p>`}`;
+        : `<p class="m-0 muted small">${range ? "No moods picked in the last 30 days." : "Pick a mood on an entry and it shows up here."}</p>`}`;
     $$("[data-mrange]", card).forEach((b) => b.addEventListener("click", () => { range = +b.dataset.mrange; draw(); $(`[data-mrange="${range}"]`, card).focus(); }));
     $$("[data-mood-row]", card).forEach((b) => b.addEventListener("click", () =>
       openEntryList(`Entries where you picked “${b.dataset.moodRow}”`, groups[b.dataset.moodRow])));
@@ -297,9 +297,9 @@ function renderTrend(card, entries) {
     const data = buckets();
     const hasData = data.some((b) => b.total);
     card.innerHTML = `
-      <div class="card-head" style="flex-wrap:wrap">
+      <div class="wrap card-head">
         <div><h2 id="trend-h">Journal language trends</h2>
-        <p class="muted small" style="margin:4px 0 0">How often each kind of word appears, per 100 words you wrote each week.</p></div>
+        <p class="mt-1 muted small">How often each kind of word appears, per 100 words you wrote each week.</p></div>
         <div class="seg" role="group" aria-label="Time range">
           <button type="button" data-range="8" aria-pressed="${range === 8}">8 weeks</button>
           <button type="button" data-range="26" aria-pressed="${range === 26}">6 months</button>
@@ -309,8 +309,8 @@ function renderTrend(card, entries) {
         ${SERIES.map((s) => `<button type="button" class="legend-btn" data-series="${s.key}" aria-pressed="${visible.has(s.key)}"><span class="sw" style="background:${s.color}"></span>${s.label}</button>`).join("")}
       </div>
       <div data-plot></div>
-      <div class="row-between" style="margin-top:12px">
-        <p class="chart-note" style="margin:0">This counts words. It isn't a measure of how you feel. Click a week to see its entries.</p>
+      <div class="mt-3 row-between">
+        <p class="m-0 chart-note">This counts words. It isn't a measure of how you feel. Click a week to see its entries.</p>
         <button type="button" class="link-btn small" data-table>${showTable ? "Hide table" : "View as table"}</button>
       </div>
       <div data-tablewrap></div>`;
@@ -333,9 +333,9 @@ function renderTrend(card, entries) {
     plot.append(lineChart(data, SERIES.filter((s) => visible.has(s.key))));
 
     if (showTable) {
-      $("[data-tablewrap]", card).innerHTML = `<div style="overflow:auto;margin-top:12px"><table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead><tr><th style="text-align:left;padding:6px;color:var(--muted);font-weight:500">Week of</th><th style="text-align:right;padding:6px;color:var(--muted);font-weight:500">Words</th>${SERIES.map((s) => `<th style="text-align:right;padding:6px;color:var(--muted);font-weight:500">${s.label}</th>`).join("")}</tr></thead>
-        <tbody>${data.map((b) => `<tr style="border-top:1px solid var(--line)"><td style="padding:6px">${fmtShort(b.start)}</td><td style="text-align:right;padding:6px">${b.total}</td>${SERIES.map((s) => `<td style="text-align:right;padding:6px">${b.vals[s.key] ?? "—"}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+      $("[data-tablewrap]", card).innerHTML = `<div class="table-wrap"><table class="data-table">
+        <thead><tr><th>Week of</th><th class="num">Words</th>${SERIES.map((s) => `<th class="num">${s.label}</th>`).join("")}</tr></thead>
+        <tbody>${data.map((b) => `<tr><td>${fmtShort(b.start)}</td><td class="num">${b.total}</td>${SERIES.map((s) => `<td class="num">${b.vals[s.key] ?? "—"}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
     }
   }
   draw();
@@ -397,9 +397,9 @@ function lineChart(data, series) {
     tip.hidden = false;
     tip.style.left = `${Math.min(Math.max(px * scale, 90), rect.width - 90)}px`;
     tip.style.top = `${T * scale}px`;
-    tip.innerHTML = `<div style="font-weight:600;margin-bottom:6px">Week of ${fmtShort(b.start)}</div>
+    tip.innerHTML = `<div class="tip-title">Week of ${fmtShort(b.start)}</div>
       ${b.total ? series.map((s) => `<div class="row"><span><i class="sw" style="background:${s.color}"></i>${s.label}</span><span>${b.vals[s.key]}</span></div>`).join("") : `<div class="muted">No entries</div>`}
-      <div class="muted small" style="margin-top:6px">${b.list.length} ${b.list.length === 1 ? "entry" : "entries"} · ${b.total} words</div>`;
+      <div class="mt-1 muted small">${b.list.length} ${b.list.length === 1 ? "entry" : "entries"} · ${b.total} words</div>`;
     live.textContent = `Week of ${fmtShort(b.start)}: ` + (b.total ? series.map((s) => `${s.label} ${b.vals[s.key]}`).join(", ") : "no entries");
   }
   function hide() { active = -1; tip.hidden = true; vline.setAttribute("visibility", "hidden"); }
@@ -446,16 +446,16 @@ function renderNoticed(card, entries, insights) {
       const lvl = { low: 1, medium: 2, high: 3 }[ins.confidence] || 1;
       const supporting = entries.filter((e) => (ins.supporting_entry_ids || []).includes(e.id));
       card.innerHTML = head + extra + `
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div class="hstack gap-3 wrap">
           ${state.demo ? `<span class="sample-tag">Sample</span>` : ""}
           <span class="conf" title="How sure Luna is, based on how many entries support this"><span class="dots">${[1, 2, 3].map((n) => `<i class="${n <= lvl ? "on" : ""}"></i>`).join("")}</span>${esc(ins.confidence)} confidence</span>
           <span class="muted small">${fmtDate(ins.created_at)}</span>
         </div>
         <p class="insight">${esc(ins.insight)}</p>
-        <p class="muted" style="margin:0">${esc(ins.explanation)}</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+        <p class="m-0 muted">${esc(ins.explanation)}</p>
+        <div class="hstack gap-3 wrap mt-1">
           <button type="button" class="btn btn-primary btn-sm" data-show ${supporting.length ? "" : "disabled"}>Show me the entries (${supporting.length})</button>
-          ${list.length > 1 ? `<span class="muted small" style="align-self:center">${list.length - 1} earlier ${list.length - 1 === 1 ? "insight" : "insights"} in Privacy settings</span>` : ""}
+          ${list.length > 1 ? `<span class="self-center muted small">${list.length - 1} earlier ${list.length - 1 === 1 ? "insight" : "insights"} in Privacy settings</span>` : ""}
         </div>`;
       const btn = $("[data-show]", card);
       btn && btn.addEventListener("click", () => openEntryList("Entries behind this insight", supporting, ins.insight));
@@ -467,11 +467,11 @@ function renderNoticed(card, entries, insights) {
     card.innerHTML = head + aiLoading("Luna is reading across your entries…");
     $("[data-generate]", card).disabled = true;
     const r = await callAI("generate-insights", {});
-    if (!r.ok) { show(insights, `<div style="margin-bottom:14px">${aiProblem(r)}</div>`); return; }
+    if (!r.ok) { show(insights, `<div class="mb-3">${aiProblem(r)}</div>`); return; }
     const fresh = r.data.insights || [];
     if (state.demo) addDemoInsights(fresh);
     insights = state.demo ? await listInsights() : [...fresh, ...insights];
-    if (!fresh.length) { show(insights, `<div class="state-inline notcfg" style="margin-bottom:14px"><div><strong>No clear pattern yet.</strong> Luna only shares a pattern when several entries support it.</div></div>`); return; }
+    if (!fresh.length) { show(insights, `<div class="mb-3 state-inline notcfg"><div><strong>No clear pattern yet.</strong> Luna only shares a pattern when several entries support it.</div></div>`); return; }
     show(insights);
   }
 
@@ -481,8 +481,8 @@ function renderNoticed(card, entries, insights) {
 function openEntryList(title, list, subtitle = "") {
   const el = html(`<div>
     <h2>${esc(title)}</h2>
-    ${subtitle ? `<p class="muted" style="margin:0 0 16px">${esc(subtitle)}</p>` : `<p class="muted" style="margin:0 0 16px">${list.length} ${list.length === 1 ? "entry" : "entries"}</p>`}
-    ${list.map((e) => `<a class="mini-entry" href="#/journal/${e.id}" style="text-decoration:none;color:inherit">
+    ${subtitle ? `<p class="m-0 mb-4 muted">${esc(subtitle)}</p>` : `<p class="m-0 mb-4 muted">${list.length} ${list.length === 1 ? "entry" : "entries"}</p>`}
+    ${list.map((e) => `<a class="mini-entry" href="#/journal/${e.id}">
       <span class="t">${esc(e.title || "Untitled")}</span>
       <span class="small muted">${fmtDate(e.created_at)}${e.mood ? " · " + esc(e.mood) : ""}</span>
       <span class="x">${esc(plain(e.content).slice(0, 260))}</span></a>`).join("")}

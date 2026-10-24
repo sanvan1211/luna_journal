@@ -86,8 +86,8 @@ export async function render(main, route) {
       if (q.startsWith("#")) return (e.tags || []).some((t) => t.toLowerCase() === q.slice(1));
       return (e.title + " " + plain(e.content) + " " + (e.tags || []).join(" ")).toLowerCase().includes(q);
     });
-    if (!entries.length) { listEl.innerHTML = `<p class="small muted" style="padding:8px">No entries yet.</p>`; return; }
-    if (!matches.length) { listEl.innerHTML = `<p class="small muted" style="padding:8px">Nothing matches “${esc(query)}”.</p>`; return; }
+    if (!entries.length) { listEl.innerHTML = `<p class="p-2 small muted">No entries yet.</p>`; return; }
+    if (!matches.length) { listEl.innerHTML = `<p class="p-2 small muted">Nothing matches “${esc(query)}”.</p>`; return; }
     const summary = q ? `${matches.length} of ${entries.length} ${entries.length === 1 ? "entry" : "entries"}` : `${entries.length} ${entries.length === 1 ? "entry" : "entries"}`;
     const groups = new Map();
     matches.forEach((e) => {
@@ -311,7 +311,7 @@ export async function render(main, route) {
       <div class="card-head"><span class="eyebrow">Luna's reflection</span>
         <button type="button" class="btn btn-ghost btn-sm" data-close>Hide</button></div>
       <div class="reflection-body">${esc(r.data.reflection || "")}</div>
-      <p class="small muted" style="margin:16px 0 0">Luna reflects on what you wrote. It isn't advice or a diagnosis, and it can be wrong.</p>
+      <p class="mt-4 small muted">Luna reflects on what you wrote. It isn't advice or a diagnosis, and it can be wrong.</p>
     </div>`;
     $("[data-close]", reflEl).addEventListener("click", () => (reflEl.innerHTML = ""));
   });

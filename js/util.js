@@ -114,7 +114,7 @@ export function confirmDialog({ title, body, confirmLabel = "Confirm", danger = 
     const el = html(`<div>
       <h2>${esc(title)}</h2>
       <p class="muted">${body}</p>
-      ${requireText ? `<label class="field" style="margin-top:14px">Type <strong style="color:var(--text)">${esc(requireText)}</strong> to confirm<input class="input" data-confirm-text autocomplete="off" /></label>` : ""}
+      ${requireText ? `<label class="mt-3 field">Type <strong class="text-strong">${esc(requireText)}</strong> to confirm<input class="input" data-confirm-text autocomplete="off" /></label>` : ""}
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" data-no>Cancel</button>
         <button type="button" class="btn ${danger ? "btn-danger" : "btn-primary"}" data-yes ${requireText ? "disabled" : ""}>${esc(confirmLabel)}</button>

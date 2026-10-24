@@ -106,8 +106,8 @@ function onKey(e) {
 function showPlan() {
   const el = html(`<div>
     <h2>Your plan</h2>
-    <p class="muted">You're on <strong style="color:var(--text)">Luna Free</strong>. Everything in Luna is free right now: unlimited entries, the dashboard, check-ins, and Luna's AI with either model.</p>
-    <p class="muted" style="margin-bottom:0">There's no paid plan yet, so there's nothing to buy.</p>
+    <p class="muted">You're on <strong class="text-strong">Luna Free</strong>. Everything in Luna is free right now: unlimited entries, the dashboard, check-ins, and Luna's AI with either model.</p>
+    <p class="mb-0 muted">There's no paid plan yet, so there's nothing to buy.</p>
     <div class="modal-actions"><button type="button" class="btn" data-close>Close</button></div>
   </div>`);
   const closeModal = openModal(el, { label: "Your plan" });
