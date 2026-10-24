@@ -200,6 +200,7 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 .month-group h4 .count { color: var(--faint); font-weight: 500; letter-spacing: 0; margin-left: 4px; }
 .group-by { display: flex; }
 .group-by button { flex: 1; }
+.list-summary { margin: 12px 8px 0; font-size: 12px; color: var(--faint); }
 .entry-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .entry-link {
   display: block; width: 100%; text-align: left; padding: 9px 10px; border-radius: var(--radius-sm);

@@ -85,13 +85,14 @@ export async function render(main, route) {
     });
     if (!entries.length) { listEl.innerHTML = `<p class="small muted" style="padding:8px">No entries yet.</p>`; return; }
     if (!matches.length) { listEl.innerHTML = `<p class="small muted" style="padding:8px">Nothing matches “${esc(query)}”.</p>`; return; }
+    const summary = q ? `${matches.length} of ${entries.length} ${entries.length === 1 ? "entry" : "entries"}` : `${entries.length} ${entries.length === 1 ? "entry" : "entries"}`;
     const groups = new Map();
     matches.forEach((e) => {
       const k = groupLabel[groupBy](e.created_at);
       if (!groups.has(k)) groups.set(k, []);
       groups.get(k).push(e);
     });
-    listEl.innerHTML = [...groups].map(([label, list]) => `<div class="month-group">
+    listEl.innerHTML = `<p class="list-summary" aria-live="polite">${summary}</p>` + [...groups].map(([label, list]) => `<div class="month-group">
       <h4>${esc(label)} <span class="count">${list.length}</span></h4>
       <ul class="entry-list">${list.map((e) => `<li><a class="entry-link" href="#/journal/${e.id}" data-id="${e.id}" ${current && e.id === current.id ? 'aria-current="true"' : ""}>
         <span class="t">${esc(e.title || "Untitled")}</span>
