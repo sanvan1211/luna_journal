@@ -58,6 +58,16 @@ supabase functions deploy reflect-entry generate-insights ask-luna check-in safe
 
 Until the functions and key are set up, the app shows an honest "AI not configured" state. It never shows fake AI output.
 
+### Choosing the AI model
+
+Each person picks a model in the account menu: **Claude Haiku 5.5** (fast, the default) or **Claude Sonnet 5.5** (slower, more thoughtful). The functions accept only those two. Safety checks always use the default model. To change the default for everyone, set a secret:
+
+```bash
+supabase secrets set LUNA_MODEL=claude-sonnet-5-5
+```
+
+After changing anything in `supabase/functions/`, deploy again with the same `supabase functions deploy …` command.
+
 ## Deploy to Cloudflare Pages
 
 Upload only the frontend files. `wrangler pages deploy .` would also publish `legacy/`, `supabase/`, and any local `.env` or journal data, because direct uploads ignore `.gitignore`.
