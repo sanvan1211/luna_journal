@@ -29,6 +29,12 @@ const MOON = `<svg class="moon-tex" viewBox="0 0 100 100" aria-hidden="true">
   </g>
 </svg>`;
 
+// Light grass on the hill: [left %, top %, size] inside the hill, kept clear of its curved edge.
+const TUFTS = [[14, 34, 1], [22, 58, .8], [29, 30, .9], [36, 70, 1.1], [43, 44, .7], [51, 26, .9], [57, 62, 1],
+  [64, 38, .8], [71, 72, .9], [78, 30, 1.1], [85, 52, .8], [19, 82, .9], [62, 86, .8], [47, 80, 1]];
+const tufts = () => TUFTS.map(([x, y, s]) =>
+  `<svg class="tuft" viewBox="0 0 14 10" style="left:${x}%;top:${y}%;width:${Math.round(14 * s)}px"><path d="M2 10Q2.5 5.5.8 2.5M6 10Q6 4 7.5.5M10 10Q10.5 6 13 3.5"/></svg>`).join("");
+
 export async function render(main) {
   const entries = await listEntries();
   const greeting = entries.length ? "Hey, welcome back to Luna" : "Hey, welcome to Luna";
@@ -36,7 +42,7 @@ export async function render(main) {
   main.innerHTML = "";
   const el = html(`<div class="home">
     <div class="home-moon" aria-hidden="true">${MOON}</div>
-    <div class="home-hill" aria-hidden="true"></div>
+    <div class="home-hill" aria-hidden="true">${tufts()}</div>
     <div class="home-center">
       <h1>${greeting}</h1>
       <form class="home-ask">
