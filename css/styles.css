@@ -410,6 +410,19 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 .divider { display: flex; align-items: center; gap: 12px; color: var(--faint); font-size: 13px; }
 .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 
+/* About Luna (settings) */
+.about { display: grid; gap: 16px; }
+.about-head { display: flex; align-items: center; gap: 14px; }
+.about-head .bunny { width: 52px; flex: none; }
+.about-quote { margin: 0; padding: 4px 0 4px 18px; border-left: 2px solid var(--accent); }
+.about-quote blockquote { margin: 0; font: italic 400 19px/1.5 var(--serif); color: var(--text); }
+.about-quote figcaption { margin-top: 6px; font-size: 13px; color: var(--muted); }
+.about-quote figcaption::before { content: "— "; }
+.about-facts { margin: 0; display: grid; gap: 8px; padding-top: 14px; border-top: 1px solid var(--line); }
+.about-facts div { display: grid; grid-template-columns: 110px 1fr; gap: 12px; font-size: 14px; }
+.about-facts dt { color: var(--faint); }
+.about-facts dd { margin: 0; color: var(--muted); }
+
 /* ───────────── Home ───────────── */
 .home {
   --moon: #ebe3d3; --moon-ink: #16223a; --hill: #1c362f; --hill-text: #b9c9bf;

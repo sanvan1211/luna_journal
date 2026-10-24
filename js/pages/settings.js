@@ -1,7 +1,10 @@
 import { state } from "../state.js";
 import { listEntries, listInsights, listMemory, deleteMemory, deleteAllInsights, deleteAccount } from "../data.js";
-import { emptyState } from "../bunny.js";
+import { bunny, emptyState } from "../bunny.js";
 import { esc, html, $, $$, fmtLong, download, toast, confirmDialog } from "../util.js";
+
+// Quote shown in "About Luna". Set to { text: "…", by: "…" } to show it; null hides it.
+const QUOTE = null;
 
 const TRASH = `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/></svg>`;
 
@@ -65,6 +68,18 @@ export async function render(main) {
           <button type="button" class="btn btn-danger btn-sm" data-del-account ${state.demo ? "disabled title=\"Not available in demo mode\"" : ""}>Delete account and all data</button>
         </div>
         ${state.session ? `<p class="small muted" style="margin:16px 0 0">Signed in as ${esc(state.session.user.email)}</p>` : ""}
+      </section>
+
+      <section class="card about" aria-labelledby="about-h">
+        <div class="about-head">${bunny("small")}
+          <div><h2 id="about-h">About Luna</h2><p class="muted small" style="margin:4px 0 0">A private journal that helps you understand what you've written.</p></div></div>
+        <p class="muted" style="margin:0">Luna is a place to write and then look back. It can point out patterns in your own words, always with the entries behind them, and answer questions about your journal. Luna is not a therapist and never diagnoses. If things feel heavy, support is always one tap away.</p>
+        ${QUOTE ? `<figure class="about-quote"><blockquote>“${esc(QUOTE.text)}”</blockquote><figcaption>${esc(QUOTE.by)}</figcaption></figure>` : ""}
+        <dl class="about-facts">
+          <div><dt>Built for</dt><dd>Congressional App Challenge</dd></div>
+          <div><dt>Made with</dt><dd>HTML, CSS, JavaScript, Supabase, and Claude by Anthropic</dd></div>
+          <div><dt>Mascot</dt><dd>Luna, a Holland Lop</dd></div>
+        </dl>
       </section>
     </div></div>`);
   main.append(page);
