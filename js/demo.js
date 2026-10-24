@@ -40,7 +40,7 @@ Honestly stressed, but less than last time. Going to plan the morning so I'm not
 `Ran a **21:48** at practice. Coach said my pacing finally looks steady.
 
 I always feel lighter after a run. Talked with Jordan the whole cooldown and laughed more than I have all week.`),
-    E("demo-04", 3, "Quiet Sunday", "Calm", ["home"],
+    E("demo-04", 3, "Quiet day at home", "Calm", ["home"],
 `Slept in, made pancakes with my little brother, and read for an hour. Didn't open a single tab of college stuff and I don't feel guilty about it. I want more days that feel like this.`),
     E("demo-05", 6, "Essay draft is not it", "Stretched thin", ["college"],
 `Third draft of the Common App essay and it still sounds like I'm trying to impress someone.
