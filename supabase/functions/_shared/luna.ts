@@ -1,5 +1,6 @@
 // Shared helpers for Luna's Edge Functions (Deno).
 import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { splitByDate } from "./date-split.js";
 
 export const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -17,8 +18,8 @@ export type Entry = { id: string; title: string; content: string; mood: string |
 
 // Text limits. One entry can carry up to ENTRY_CHARS to the model; a whole request carries at most
 // TOTAL_CHARS of entry text, which keeps Luna inside the AI provider's free daily token budget.
-export const ENTRY_CHARS = 8000;
-export const TOTAL_CHARS = 24000;
+export const ENTRY_CHARS = 12000;
+export const TOTAL_CHARS = 30000;
 const clipEntry = (content: unknown) => {
   const text = String(content ?? "");
   return { content: text.slice(0, ENTRY_CHARS), cut: text.length > ENTRY_CHARS };
@@ -72,12 +73,23 @@ export async function loadEntries(db: SupabaseClient, body: any, limit = 40): Pr
   return (data ?? []).map((e) => ({ ...e, ...clipEntry(e.content) }));
 }
 
+/** An entry that marks days inline ("10.22- … 10.23- …") becomes one dated section per day,
+ *  so the model sees each day separately. Sections keep the entry's id for citations. */
+export function splitDays(entries: Entry[]): Entry[] {
+  return entries.flatMap((e) => {
+    const { before, days } = splitByDate(e.content, { now: new Date(e.created_at) });
+    if (!days.length) return [e];
+    const parts = days.map((d, i) => ({ ...e, content: d.text, created_at: d.created_at, cut: i === days.length - 1 ? e.cut : false }));
+    return before ? [{ ...e, content: before, cut: false }, ...parts] : parts;
+  });
+}
+
 /** Keeps entries in the order given (most relevant or newest first) until TOTAL_CHARS is used up.
  *  The entry that crosses the line is cut to fit; anything after it is left out. */
 export function withinBudget(entries: Entry[], total = TOTAL_CHARS): Entry[] {
   const out: Entry[] = [];
   let used = 0;
-  for (const e of entries) {
+  for (const e of splitDays(entries)) {
     const room = total - used;
     if (room <= 0) break;
     out.push(e.content.length > room ? { ...e, content: e.content.slice(0, room), cut: true } : e);
