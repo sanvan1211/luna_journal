@@ -70,6 +70,18 @@ supabase secrets set LUNA_MODEL=claude-sonnet-5-5
 
 After changing anything in `supabase/functions/`, deploy again with the same `supabase functions deploy …` command.
 
+## Sign in with Google
+
+Email and password always work. "Continue with Google" works once you do these steps. Until then, the button says Google sign-in isn't turned on. The Client Secret goes only into the Supabase dashboard, never into this repo.
+
+1. **Google Cloud Console → APIs & Services → Credentials → Create credentials → OAuth client ID → Web application.**
+2. Under **Authorized redirect URIs**, add `https://mhygsrifrklsrfxbcmvq.supabase.co/auth/v1/callback`.
+3. **Supabase → Authentication → Sign In / Providers → Google:** turn it on, paste the Client ID and Client Secret, and **Save**.
+4. **Supabase → Authentication → URL Configuration:** set **Site URL** to your Vercel URL, and add `http://localhost:5173` and your Vercel URL to **Redirect URLs**.
+5. **Google Cloud Console → OAuth consent screen:** add yourself (and anyone testing) as a **test user**, or publish the app so judges don't see an "unverified app" warning.
+
+Google sign-in returns to Luna as `?code=…` (Supabase's PKCE flow), so it doesn't clash with Luna's `#/` page links. Luna removes the code from the address bar and opens your journal.
+
 ## Deploy to Cloudflare Pages
 
 Upload only the frontend files. `wrangler pages deploy .` would also publish `legacy/`, `supabase/`, and any local `.env` or journal data, because direct uploads ignore `.gitignore`.

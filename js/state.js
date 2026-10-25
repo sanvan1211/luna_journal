@@ -6,6 +6,7 @@ export const state = {
   // Why Supabase isn't usable, for the setup screen: null when it's fine, otherwise
   // { reason: "empty" | "cdn" | "unreachable", error }
   connection: null,
+  authError: null,   // an error Supabase sent back from Google sign-in, shown once on the sign-in screen
   sb: null,          // Supabase client
   session: null,     // Supabase auth session
   demo: false,       // demo mode on/off
@@ -44,9 +45,14 @@ export async function initSupabase() {
     return fail("cdn", err);
   }
   try {
-    state.sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
-    const { data } = await state.sb.auth.getSession();
+    // PKCE returns from Google as ?code=… in the query string, so it never collides with the #/route hash.
+    state.sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { flowType: "pkce", detectSessionInUrl: true, persistSession: true, autoRefreshToken: true },
+    });
+    const returning = oauthReturnParams();
+    const { data } = await state.sb.auth.getSession(); // also exchanges ?code=… for a session
     state.session = data.session;
+    if (returning) finishOAuthReturn(returning);
     state.sb.auth.onAuthStateChange((_event, session) => {
       const changed = (session && session.user.id) !== (state.session && state.session.user.id);
       state.session = session;
@@ -65,6 +71,53 @@ export async function initSupabase() {
       console.error("Could not reach Supabase", err);
       return fail("unreachable", err);
     }
+  }
+}
+
+const AUTH_PARAMS = ["code", "state", "error", "error_code", "error_description"];
+
+// What Google sign-in left in the URL, if anything. Errors can come back in the query or in the hash.
+function oauthReturnParams() {
+  const query = new URLSearchParams(location.search);
+  const hash = new URLSearchParams(location.hash.replace(/^#\/?/, ""));
+  const fromHash = hash.has("error") || hash.has("error_description");
+  if (!AUTH_PARAMS.some((k) => query.has(k)) && !fromHash) return null;
+  return { query, error: query.get("error_description") || query.get("error") || (fromHash && (hash.get("error_description") || hash.get("error"))) || null };
+}
+
+// Removes ?code and other auth params, then opens the journal (signed in) or shows why it didn't work.
+function finishOAuthReturn({ query, error }) {
+  if (!state.session) {
+    state.authError = error || "Google sign-in didn't finish. Please try again.";
+    console.error("Google sign-in failed", state.authError);
+  }
+  AUTH_PARAMS.forEach((k) => query.delete(k));
+  const rest = query.toString();
+  history.replaceState(null, "", `${location.pathname}${rest ? `?${rest}` : ""}${state.session ? "#/journal" : ""}`);
+}
+
+const GOOGLE_OFF = "Google sign-in isn't turned on for this project yet. Use email and password instead.";
+
+/** Sends the browser to Google. Resolves with { error } only if it couldn't start. */
+export async function signInWithGoogle() {
+  // A disabled provider fails on Supabase's own page after the redirect, so check first.
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/settings`, { headers: { apikey: SUPABASE_ANON_KEY } });
+    if (res.ok && (await res.json()).external?.google === false) return { error: GOOGLE_OFF };
+  } catch (err) {
+    console.error("Couldn't check whether Google sign-in is on", err);
+  }
+  try {
+    const { error } = await state.sb.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin + window.location.pathname },
+    });
+    if (!error) return {};
+    console.error("Google sign-in failed", error);
+    return { error: /provider is not enabled|unsupported provider/i.test(error.message) ? GOOGLE_OFF : error.message };
+  } catch (err) {
+    console.error("Google sign-in failed", err);
+    return { error: err.message || String(err) };
   }
 }
 

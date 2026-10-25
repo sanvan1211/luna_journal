@@ -464,6 +464,8 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 .seg-lg { display: flex; padding: 4px; }
 .seg-lg button { flex: 1; padding: 10px 12px; font-size: var(--fs-md); font-weight: 600; }
 .error-text { color: var(--rose); overflow-wrap: anywhere; }
+.btn-google { width: 100%; gap: 10px; }
+.btn-google svg { width: 18px; height: 18px; stroke: none; flex: none; }
 .divider { display: flex; align-items: center; gap: 12px; color: var(--faint); font-size: 13px; }
 .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 

@@ -22,6 +22,12 @@ const AI_HANDLING = {
 };
 const AI_CREDIT = { anthropic: "Claude by Anthropic", ollama: "open models running in Ollama", huggingface: "open models on Hugging Face", groq: "open models on Groq" };
 
+// How this account signs in, from Supabase's app_metadata.provider.
+const signInMethod = (user) => {
+  const p = user.app_metadata?.provider || "email";
+  return { google: "Google", email: "Email" }[p] || p[0].toUpperCase() + p.slice(1);
+};
+
 // Quote shown in "About Luna". Set to { text: "…", by: "…" } to show it; null hides it.
 const QUOTE = null;
 
@@ -75,7 +81,7 @@ export async function render(main) {
 
       <section class="setting" aria-labelledby="acct-h">
         <header><h2 id="acct-h">Your data</h2>
-          <p>${state.session ? `Signed in as ${esc(state.session.user.email)}.` : "Everything you write belongs to you."}</p></header>
+          <p>${state.session ? `Signed in as ${esc(state.session.user.email)} <span class="chip" data-signin-method>${esc(signInMethod(state.session.user))}</span>` : "Everything you write belongs to you."}</p></header>
         <div class="data-rows">
           <div class="data-row">
             <div><strong>Download all entries</strong><p>One Markdown file with everything you've written.</p></div>
