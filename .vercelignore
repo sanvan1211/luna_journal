@@ -1,0 +1,10 @@
+# Only the static app (index.html, css/, js/) belongs on Vercel. Everything else stays local.
+legacy/
+supabase/
+scripts/
+data/
+secrets.local*
+.env
+.env.*
+control.md
+.github/

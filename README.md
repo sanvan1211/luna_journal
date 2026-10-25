@@ -34,9 +34,11 @@ luna_journal/
 
 ```bash
 cd luna_journal              # the repo root
-python3 -m http.server 5173
+npm run dev
 ```
 Open http://localhost:5173. Without Supabase set up, you can still use **demo mode** with sample data.
+
+`npm run dev` needs Node.js but no `npm install`. It serves the app with caching turned off, so a normal reload always picks up changes to `js/config.js`. Don't use `python3 -m http.server`: browsers can cache its files, and a stale `config.js` makes Luna say Supabase isn't connected. If that happens anyway, hard refresh with Cmd/Ctrl+Shift+R.
 
 ## Set up Supabase (about 15 minutes)
 
@@ -78,6 +80,10 @@ cp -R index.html css js /tmp/luna-site/
 npx wrangler pages deploy /tmp/luna-site --project-name luna
 ```
 Then add your Pages URL under Supabase **Authentication → URL Configuration → Site URL**.
+
+## Deploy to Vercel
+
+Import the repo in Vercel with no build command and the repo root as the output. `vercel.json` sends `Cache-Control: no-cache` for `index.html`, `js/`, and `css/`, so config and code changes show up right away. `.vercelignore` keeps `legacy/`, `supabase/`, and any secrets out of the upload. Add the Vercel URL to Supabase's Site URL as above.
 
 ## Legacy app
 

@@ -461,6 +461,9 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 .auth .card { display: grid; gap: 16px; padding: 32px; }
 .auth h1 { font: 500 30px/1.2 var(--serif); margin: 0; }
 .auth .tabs { display: flex; gap: 4px; }
+.seg-lg { display: flex; padding: 4px; }
+.seg-lg button { flex: 1; padding: 10px 12px; font-size: var(--fs-md); font-weight: 600; }
+.error-text { color: var(--rose); overflow-wrap: anywhere; }
 .divider { display: flex; align-items: center; gap: 12px; color: var(--faint); font-size: 13px; }
 .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 
@@ -626,6 +629,7 @@ label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); fon
 .p-2 { padding: var(--s-2); }
 .hstack { display: flex; align-items: center; }
 .stack { display: grid; gap: var(--s-3); }
+.stack-tight { display: grid; gap: var(--s-2); }
 .gap-2 { gap: var(--s-2); } .gap-3 { gap: var(--s-3); }
 .wrap { flex-wrap: wrap; }
 .center { text-align: center; }

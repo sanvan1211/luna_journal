@@ -3,6 +3,9 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY, AI_PROVIDER } from "./config.js";
 
 export const state = {
   configured: Boolean(SUPABASE_URL && SUPABASE_ANON_KEY),
+  // Why Supabase isn't usable, for the setup screen: null when it's fine, otherwise
+  // { reason: "empty" | "cdn" | "unreachable", error }
+  connection: null,
   sb: null,          // Supabase client
   session: null,     // Supabase auth session
   demo: false,       // demo mode on/off
@@ -28,9 +31,19 @@ export const subscribe = (fn) => (listeners.add(fn), () => listeners.delete(fn))
 export const emit = (why) => listeners.forEach((fn) => fn(why));
 
 export async function initSupabase() {
-  if (!state.configured) return;
+  if (!state.configured) {
+    const missing = [!SUPABASE_URL && "URL", !SUPABASE_ANON_KEY && "anon key"].filter(Boolean).join(" and ");
+    state.connection = { reason: "empty", error: `The Supabase ${missing} in js/config.js ${missing.includes(" and ") ? "are" : "is"} empty.` };
+    return;
+  }
+  let createClient;
   try {
-    const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+    ({ createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"));
+  } catch (err) {
+    console.error("Could not load supabase-js from the CDN", err);
+    return fail("cdn", err);
+  }
+  try {
     state.sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
     const { data } = await state.sb.auth.getSession();
     state.session = data.session;
@@ -40,9 +53,26 @@ export async function initSupabase() {
       if (changed) emit("auth");
     });
   } catch (err) {
-    console.error("Could not load Supabase", err);
-    state.configured = false;
+    console.error("Could not start the Supabase client", err);
+    return fail("unreachable", err);
   }
+  // getSession reads local storage, so check the project itself answers before showing sign-in.
+  if (!state.session) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/health`, { headers: { apikey: SUPABASE_ANON_KEY }, signal: AbortSignal.timeout(10000) });
+      if (!res.ok) throw new Error(`${SUPABASE_URL} answered ${res.status} ${res.statusText}`.trim());
+    } catch (err) {
+      console.error("Could not reach Supabase", err);
+      return fail("unreachable", err);
+    }
+  }
+}
+
+function fail(reason, err) {
+  state.configured = false;
+  state.sb = null;
+  state.session = null;
+  state.connection = { reason, error: (err && err.message) || String(err) };
 }
 
 export const signedIn = () => Boolean(state.session);

@@ -17,6 +17,7 @@ const TITLES = { home: "Home", journal: "Journal", dashboard: "Dashboard", check
 const main = document.getElementById("main");
 let cleanup = null;
 let lastPage = null;
+let authMode = "signin"; // which tab the sign-in screen opens on
 
 function parseRoute() {
   const raw = location.hash.replace(/^#\/?/, "") || "home";
@@ -68,16 +69,20 @@ function renderChrome() {
 
 // ───────────── Screens shown before sign-in ─────────────
 function authScreen() {
-  let mode = "signin";
+  let mode = authMode;
+  authMode = "signin";
   const el = html(`<div class="page"><div class="auth">
     <div class="card">
       <div>
         <h1>Welcome to Luna</h1>
         <p class="mt-1 muted">A private journal that helps you understand what you've written.</p>
       </div>
-      <div class="seg" role="group" aria-label="Account">
-        <button type="button" data-mode="signin" aria-pressed="true">Sign in</button>
-        <button type="button" data-mode="signup" aria-pressed="false">Create account</button>
+      <div class="stack-tight">
+        <p class="m-0 small muted" id="auth-mode-label">Already have an account? Sign in. New to Luna? Create an account.</p>
+        <div class="seg seg-lg" role="group" aria-labelledby="auth-mode-label">
+          <button type="button" data-mode="signin" aria-pressed="true">Sign in</button>
+          <button type="button" data-mode="signup" aria-pressed="false">Create account</button>
+        </div>
       </div>
       <form novalidate class="stack">
         <label class="field">Email<input class="input" type="email" name="email" autocomplete="email" required /></label>
@@ -91,13 +96,15 @@ function authScreen() {
     </div></div></div>`);
 
   const form = $("form", el), msg = $("[data-msg]", el), submit = $("button[type=submit]", form);
-  $$("[data-mode]", el).forEach((b) => b.addEventListener("click", () => {
-    mode = b.dataset.mode;
-    $$("[data-mode]", el).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  const setMode = (m) => {
+    mode = m;
+    $$("[data-mode]", el).forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
     submit.textContent = mode === "signin" ? "Sign in" : "Create account";
     form.password.autocomplete = mode === "signin" ? "current-password" : "new-password";
     msg.textContent = "";
-  }));
+  };
+  $$("[data-mode]", el).forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
+  setMode(mode);
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -105,9 +112,19 @@ function authScreen() {
     if (!email || password.length < 8) { msg.style.color = "var(--rose)"; msg.textContent = "Enter your email and a password of at least 8 characters."; return; }
     submit.disabled = true; msg.textContent = "";
     const fn = mode === "signin" ? "signInWithPassword" : "signUp";
-    const { data, error } = await state.sb.auth[fn]({ email, password });
+    let data, error;
+    try {
+      ({ data, error } = await state.sb.auth[fn]({ email, password }));
+    } catch (err) {
+      error = err;
+    }
     submit.disabled = false;
-    if (error) { msg.style.color = "var(--rose)"; msg.textContent = error.message; return; }
+    if (error) {
+      console.error(mode === "signin" ? "Sign-in failed" : "Sign-up failed", error);
+      msg.style.color = "var(--rose)";
+      msg.textContent = `${mode === "signin" ? "Couldn't sign in" : "Couldn't create your account"}: ${error.message || "something went wrong. Please try again."}`;
+      return;
+    }
     if (mode === "signup" && !data.session) {
       msg.style.color = "var(--sage)";
       msg.textContent = "Check your email to confirm your account, then sign in.";
@@ -116,16 +133,32 @@ function authScreen() {
   return el;
 }
 
+// Shown when Supabase can't be used. Each case names the real reason (see state.connection).
 function setupScreen() {
-  return html(`<div class="page"><div class="auth-narrow auth">
-    <div class="card">
-      <h1>Connect Supabase</h1>
-      <p class="m-0 muted">Luna stores journals in your Supabase project. Add your project URL and anon key to <code>js/config.js</code>, then reload.</p>
+  const { reason, error } = state.connection || { reason: "empty", error: "" };
+  const refresh = `<p class="m-0 small muted">Try a hard refresh (Cmd/Ctrl+Shift+R). Your browser may be using an old copy of Luna's files.</p>`;
+  const body = {
+    empty: `<h1>Connect Supabase</h1>
+      <p class="m-0 muted">${esc(error)} Luna stores journals in your Supabase project. Add your project URL and anon key to <code>js/config.js</code>, then reload.</p>
       <ol class="steps-list muted small">
         <li>Create a project at supabase.com</li>
         <li>Run <code>supabase/schema.sql</code> in the SQL editor</li>
         <li>Copy the URL and anon key from Project Settings → API</li>
       </ol>
+      <p class="m-0 small muted">Already filled it in? Try a hard refresh (Cmd/Ctrl+Shift+R).</p>`,
+    cdn: `<h1>Luna couldn't load Supabase</h1>
+      <p class="m-0 muted">Your settings in <code>js/config.js</code> look fine, but the Supabase library didn't download. Check your connection, and turn off any ad or script blocker for this site.</p>
+      <p class="m-0 small error-text">Error: ${esc(error)}</p>
+      ${refresh}`,
+    unreachable: `<h1>Luna can't reach Supabase</h1>
+      <p class="m-0 muted">Your settings in <code>js/config.js</code> look fine, but your Supabase project didn't answer. Check your connection, and check that the project is running in the Supabase dashboard.</p>
+      <p class="m-0 small error-text">Error: ${esc(error)}</p>
+      ${refresh}`,
+  }[reason];
+  return html(`<div class="page"><div class="auth-narrow auth">
+    <div class="card">
+      ${body}
+      ${reason === "empty" ? "" : `<button class="btn" type="button" onclick="location.reload()">Try again</button>`}
       <div class="divider">meanwhile</div>
       <button class="btn btn-primary" type="button" data-demo>Explore with sample data</button>
     </div></div></div>`);
@@ -149,6 +182,7 @@ document.addEventListener("click", async (e) => {
   const a = e.target.closest("[data-action]");
   if (!a) return;
   if (a.dataset.action === "exit-demo") exitDemo();
+  if (a.dataset.action === "demo-signup") { authMode = "signup"; exitDemo(); }
   if (a.dataset.action === "signout") { await state.sb.auth.signOut(); state.session = null; route(); }
 });
 document.addEventListener("click", (e) => { if (e.target.closest("[data-demo]")) enterDemo(); });

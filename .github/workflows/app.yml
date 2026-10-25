@@ -27,4 +27,7 @@ jobs:
         with:
           deno-version: v2.x
       - name: Type-check the Supabase Edge Functions
+        # The root package.json is only for `npm run dev`; without this, Deno expects a node_modules folder.
+        env:
+          DENO_NO_PACKAGE_JSON: "1"
         run: deno check supabase/functions/*/index.ts
