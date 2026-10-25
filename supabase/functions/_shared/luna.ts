@@ -75,6 +75,7 @@ ${e.content}
 //   anthropic    Claude through Anthropic's API (needs ANTHROPIC_API_KEY). The default.
 //   ollama       a model running on your own computer (OLLAMA_URL, e.g. http://host.docker.internal:11434)
 //   huggingface  Hugging Face Inference Providers (needs HF_TOKEN)
+//   groq         open models on Groq (needs GROQ_API_KEY)
 const PROVIDER = (Deno.env.get("LUNA_PROVIDER") ?? "anthropic").trim().toLowerCase();
 const env = (name: string, fallback: string) => Deno.env.get(name)?.trim() || fallback;
 
@@ -83,6 +84,7 @@ const MODELS: Record<string, { fast: string; thoughtful: string }> = {
   anthropic: { fast: "claude-haiku-5-5", thoughtful: "claude-sonnet-5-5" },
   ollama: { fast: env("OLLAMA_FAST_MODEL", "llama3.2"), thoughtful: env("OLLAMA_THOUGHTFUL_MODEL", "qwen2.5:7b") },
   huggingface: { fast: env("HF_FAST_MODEL", "Qwen/Qwen2.5-7B-Instruct"), thoughtful: env("HF_THOUGHTFUL_MODEL", "Qwen/Qwen2.5-72B-Instruct") },
+  groq: { fast: env("GROQ_FAST_MODEL", "llama-3.1-8b-instant"), thoughtful: env("GROQ_THOUGHTFUL_MODEL", "llama-3.3-70b-versatile") },
 };
 const models = () => {
   const m = MODELS[PROVIDER];
@@ -96,7 +98,7 @@ export const pickModel = (choice: unknown): string => {
 
 /** Sends one system prompt and one user message to the configured provider; returns the reply text. */
 export async function complete(system: string, user: string, maxTokens = 600, model = pickModel(null)): Promise<string> {
-  const text = (PROVIDER === "ollama" ? ollama : PROVIDER === "huggingface" ? huggingface : anthropic)(system, user, maxTokens, model);
+  const text = (PROVIDER === "ollama" ? ollama : PROVIDER === "huggingface" ? huggingface : PROVIDER === "groq" ? groq : anthropic)(system, user, maxTokens, model);
   const reply = (await text).trim();
   if (!reply) throw new Error("The model returned an empty reply");
   return reply;
@@ -165,6 +167,22 @@ async function huggingface(system: string, user: string, maxTokens: number, mode
     }),
   });
   if (!res.ok) throw new Error(`Hugging Face error ${res.status}: ${await res.text()}`);
+  const data = await res.json();
+  return String(data.choices?.[0]?.message?.content ?? "");
+}
+
+async function groq(system: string, user: string, maxTokens: number, model: string) {
+  const key = Deno.env.get("GROQ_API_KEY");
+  if (!key) throw new NotConfigured("GROQ_API_KEY is not set in Supabase secrets.");
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
+    body: JSON.stringify({
+      model, max_tokens: maxTokens, temperature: 0.4,
+      messages: [{ role: "system", content: system }, { role: "user", content: user }],
+    }),
+  });
+  if (!res.ok) throw new Error(`Groq error ${res.status}: ${await res.text()}`);
   const data = await res.json();
   return String(data.choices?.[0]?.message?.content ?? "");
 }

@@ -15,8 +15,12 @@ const AI_HANDLING = {
     "Requests go from your browser to Luna's server functions, which call an open model through Hugging Face. Your browser never holds an AI key.",
     "The Hugging Face provider that runs the model handles requests under its own privacy policy.",
   ],
+  groq: [
+    "Requests go from your browser to Luna's server functions, which call an open model through Groq. Your browser never holds an AI key.",
+    "Groq handles requests under its own privacy policy.",
+  ],
 };
-const AI_CREDIT = { anthropic: "Claude by Anthropic", ollama: "open models running in Ollama", huggingface: "open models on Hugging Face" };
+const AI_CREDIT = { anthropic: "Claude by Anthropic", ollama: "open models running in Ollama", huggingface: "open models on Hugging Face", groq: "open Llama models on Groq" };
 
 // Quote shown in "About Luna". Set to { text: "…", by: "…" } to show it; null hides it.
 const QUOTE = null;

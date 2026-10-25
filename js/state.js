@@ -15,6 +15,7 @@ const MODEL_NAMES = {
   anthropic: { fast: "Claude Haiku 5.5", thoughtful: "Claude Sonnet 5.5" },
   ollama: { fast: "Llama 3.2 (on this computer)", thoughtful: "Qwen 2.5 7B (on this computer)" },
   huggingface: { fast: "Qwen 2.5 7B (Hugging Face)", thoughtful: "Qwen 2.5 72B (Hugging Face)" },
+  groq: { fast: "Llama 3.1 8B (Groq)", thoughtful: "Llama 3.3 70B (Groq)" },
 };
 const names = MODEL_NAMES[AI_PROVIDER] || MODEL_NAMES.anthropic;
 export const MODELS = {
