@@ -1,6 +1,6 @@
 import { state, MODELS } from "../state.js";
 import { AI_PROVIDER } from "../config.js";
-import { listEntries, listInsights, listMemory, deleteMemory, deleteAllInsights, deleteAccount } from "../data.js";
+import { listEntries, listInsights, listMemory, deleteMemory, deleteAllInsights, deleteAccount, deleteAllChats } from "../data.js";
 import { bunny, emptyState } from "../bunny.js";
 import { esc, html, $, $$, dayKey, fmtLong, download, toast, confirmDialog } from "../util.js";
 
@@ -87,6 +87,10 @@ export async function render(main) {
             <div><strong>Download all entries</strong><p>One Markdown file with everything you've written.</p></div>
             <button type="button" class="btn btn-sm" data-export-all>Download .md</button>
           </div>
+          <div class="data-row">
+            <div><strong>Delete all my Ask Luna chats</strong><p>Removes every saved chat and message${state.demo ? " in this demo" : ""}. Your journal entries stay as they are.</p></div>
+            <button type="button" class="btn btn-danger btn-sm" data-del-chats>Delete all chats</button>
+          </div>
           <div class="data-row danger">
             <div><strong>Delete account</strong><p>Permanently deletes your account, entries, insights, and Luna's memory.</p></div>
             <button type="button" class="btn btn-danger btn-sm" data-del-account ${state.demo ? "disabled title=\"Not available in demo mode\"" : ""}>Delete account and all data</button>
@@ -153,6 +157,13 @@ export async function render(main) {
     const entries = (await listEntries()).slice().reverse();
     const md = entries.map((e) => `# ${e.title || "Untitled"}\n\n*${fmtLong(e.created_at)}${e.mood ? " · Mood: " + e.mood : ""}${(e.tags || []).length ? " · " + e.tags.map((t) => "#" + t).join(" ") : ""}*\n\n${e.content}`).join("\n\n---\n\n");
     download(`luna-journal${state.demo ? "-sample" : ""}-${dayKey(new Date())}.md`, md + "\n");
+  });
+
+  $("[data-del-chats]", page).addEventListener("click", async () => {
+    const ok = await confirmDialog({ title: "Delete all Ask Luna chats?", body: "Every saved chat and message will be deleted. Your journal entries, insights, and Luna's memory stay exactly as they are.", confirmLabel: "Delete all chats", danger: true });
+    if (!ok) return;
+    try { await deleteAllChats(); toast("All chats deleted"); }
+    catch (err) { console.error(err); toast("Couldn't delete chats. " + err.message); }
   });
 
   $("[data-del-account]", page).addEventListener("click", async () => {

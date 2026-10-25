@@ -440,6 +440,38 @@ label.field, div.field { display: grid; gap: 6px; font-size: 13px; color: var(--
 .ask-count { margin: 6px 4px 0; text-align: right; color: var(--muted); }
 .suggestions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 14px; }
 
+/* Ask Luna chats: a sidebar of saved chats beside the conversation (a slide-over drawer on phones). */
+.ask-page { max-width: 1240px; }
+.ask-layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: var(--s-8); align-items: start; }
+.chats { position: sticky; top: 24px; display: grid; gap: var(--s-3); max-height: calc(100vh - 48px); grid-template-rows: auto auto minmax(0, 1fr); }
+.chats-new { width: 100%; }
+.chats-list { min-width: 0; overflow-y: auto; overflow-x: hidden; padding-right: 4px; }
+.chats-list ul { list-style: none; margin: 0 0 var(--s-3); padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; }
+.chats-group { font-size: var(--fs-xs); color: var(--faint); font-weight: 600; margin: var(--s-3) 10px var(--s-1); }
+.chats-empty { padding: 0 10px; }
+.chat-item { display: flex; align-items: center; gap: 2px; border-radius: var(--radius-sm); }
+.chat-item:hover, .chat-item:focus-within { background: var(--card); }
+.chat-item.active { background: var(--card-2); }
+.chat-open { flex: 1; min-width: 0; text-align: left; background: none; border: 0; color: var(--muted); padding: 8px 10px; font-size: var(--fs-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; border-radius: var(--radius-sm); }
+.chat-item.active .chat-open { color: var(--text); font-weight: 600; }
+.chat-actions { display: flex; opacity: 0; }
+.chat-item:hover .chat-actions, .chat-item:focus-within .chat-actions, .chat-item.active .chat-actions { opacity: 1; }
+.chat-actions .icon-btn { width: 28px; height: 28px; }
+.chat-rename { padding: 6px 10px; font-size: var(--fs-sm); }
+.ask-head { margin-bottom: var(--s-4); }
+.ask-head p { max-width: 60ch; overflow: hidden; text-overflow: ellipsis; }
+.ask-page .ask { min-height: calc(100vh - 200px); }
+.chats-toggle { display: none; }
+.chats-scrim { position: fixed; inset: 0; background: rgba(6, 12, 22, .6); z-index: 29; }
+@media (max-width: 820px) {
+  .ask-layout { grid-template-columns: 1fr; }
+  .chats-toggle { display: inline-flex; }
+  .chats { position: fixed; top: 0; left: 0; bottom: 0; width: min(300px, 85vw); max-height: none; z-index: 30; background: var(--bg); border-right: 1px solid var(--line); padding: 16px; transform: translateX(-100%); visibility: hidden; transition: transform .2s ease, visibility .2s; }
+  .chats.open { transform: none; visibility: visible; }
+  .chat-actions { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .chats { transition: none; } }
+
 /* ───────────── Settings ───────────── */
 .settings { max-width: 960px; }
 /* One row per setting: name and description on the left, controls on the right. */

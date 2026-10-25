@@ -50,16 +50,39 @@ drop trigger if exists entries_touch on public.entries;
 create trigger entries_touch before update on public.entries
   for each row execute function public.touch_updated_at();
 
+-- ───────────────────────── Ask Luna chats ─────────────────────────
+create table if not exists public.ask_threads (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  title       text not null default 'New chat',
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+create index if not exists ask_threads_user_updated_idx on public.ask_threads (user_id, updated_at desc);
+
+create table if not exists public.ask_messages (
+  id          uuid primary key default gen_random_uuid(),
+  thread_id   uuid not null references public.ask_threads(id) on delete cascade,
+  user_id     uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  role        text not null check (role in ('user','luna')),
+  content     text not null,
+  citations   jsonb not null default '[]',
+  created_at  timestamptz not null default now()
+);
+create index if not exists ask_messages_thread_idx on public.ask_messages (thread_id, created_at);
+
 -- ───────────────────────── Row-Level Security ─────────────────────────
 -- Every table: a user can only see and change their own rows.
 alter table public.entries     enable row level security;
 alter table public.insights    enable row level security;
 alter table public.luna_memory enable row level security;
+alter table public.ask_threads  enable row level security;
+alter table public.ask_messages enable row level security;
 
 do $$
 declare t text;
 begin
-  foreach t in array array['entries','insights','luna_memory'] loop
+  foreach t in array array['entries','insights','luna_memory','ask_threads','ask_messages'] loop
     execute format('drop policy if exists "own rows select" on public.%I', t);
     execute format('drop policy if exists "own rows insert" on public.%I', t);
     execute format('drop policy if exists "own rows update" on public.%I', t);

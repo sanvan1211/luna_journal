@@ -94,6 +94,75 @@ export async function deleteMemory(id) {
   must(await sb().from("luna_memory").delete().eq("id", id));
 }
 
+// ───────────── Ask Luna chats ─────────────
+// Real chats live in ask_threads / ask_messages (RLS: own rows only). Demo chats live only in memory.
+const demoChats = () => { const d = D(); d.threads ||= []; d.messages ||= []; return d; };
+const byUpdated = (a, b) => new Date(b.updated_at) - new Date(a.updated_at);
+
+export async function listThreads() {
+  if (state.demo) return clone(demoChats().threads).sort(byUpdated);
+  return must(await sb().from("ask_threads").select("*").order("updated_at", { ascending: false }));
+}
+
+export async function listMessages(threadId) {
+  if (state.demo) return clone(demoChats().messages.filter((m) => m.thread_id === threadId));
+  return must(await sb().from("ask_messages").select("*").eq("thread_id", threadId).order("created_at", { ascending: true }));
+}
+
+export async function createThread(title) {
+  if (state.demo) {
+    const now = new Date().toISOString();
+    const row = { id: uid(), user_id: "demo", title, created_at: now, updated_at: now };
+    demoChats().threads.push(row);
+    return clone(row);
+  }
+  return must(await sb().from("ask_threads").insert({ title }).select().single());
+}
+
+/** Saves one message and moves its thread to the top of the list. */
+export async function addMessage(threadId, { role, content, citations = [] }) {
+  const now = new Date().toISOString();
+  if (state.demo) {
+    const row = { id: uid(), thread_id: threadId, user_id: "demo", role, content, citations, created_at: now };
+    demoChats().messages.push(row);
+    const t = demoChats().threads.find((x) => x.id === threadId);
+    if (t) t.updated_at = now;
+    return clone(row);
+  }
+  const row = must(await sb().from("ask_messages").insert({ thread_id: threadId, role, content, citations }).select().single());
+  must(await sb().from("ask_threads").update({ updated_at: now }).eq("id", threadId));
+  return row;
+}
+
+export async function renameThread(id, title) {
+  const now = new Date().toISOString();
+  if (state.demo) {
+    const t = demoChats().threads.find((x) => x.id === id);
+    if (t) Object.assign(t, { title, updated_at: now });
+    return clone(t);
+  }
+  return must(await sb().from("ask_threads").update({ title, updated_at: now }).eq("id", id).select().single());
+}
+
+/** Deletes a chat and its messages (messages first, so nothing is left behind). */
+export async function deleteThread(id) {
+  if (state.demo) {
+    const d = demoChats();
+    d.messages = d.messages.filter((m) => m.thread_id !== id);
+    d.threads = d.threads.filter((t) => t.id !== id);
+    return;
+  }
+  must(await sb().from("ask_messages").delete().eq("thread_id", id));
+  must(await sb().from("ask_threads").delete().eq("id", id));
+}
+
+export async function deleteAllChats() {
+  if (state.demo) { Object.assign(demoChats(), { threads: [], messages: [] }); return; }
+  const me = state.session.user.id;
+  must(await sb().from("ask_messages").delete().eq("user_id", me));
+  must(await sb().from("ask_threads").delete().eq("user_id", me));
+}
+
 // ───────────── Account ─────────────
 export async function deleteAccount() {
   if (state.demo) throw new Error("Not available in demo mode");
