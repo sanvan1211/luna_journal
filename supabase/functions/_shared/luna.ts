@@ -1,6 +1,7 @@
 // Shared helpers for Luna's Edge Functions (Deno).
 import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { splitByDate } from "./date-split.js";
+import { retryAfterSeconds } from "./limits.js";
 
 export const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -13,9 +14,17 @@ export const json = (data: unknown, status = 200) =>
 
 export class NotConfigured extends Error {}
 export class Refused extends Error {}
-/** The AI provider's free allowance is used up (HTTP 413/429 after a short wait and retry). */
-export class FreeLimit extends Error {}
-export const FREE_LIMIT_MESSAGE = "Luna has reached its free AI limit for now. Your writing is safe; try again in a little while.";
+/** The AI provider's free allowance is used up (HTTP 413/429 after a short wait and retry).
+ *  `retryAfter` is the provider's own wait in seconds, when it says. */
+export class FreeLimit extends Error {
+  constructor(message: string, public retryAfter: number | null = null) { super(message); }
+}
+/** Builds a FreeLimit from a provider's 413/429 response, keeping its wait time. */
+async function freeLimit(provider: string, res: Response): Promise<FreeLimit> {
+  const body = await res.text();
+  return new FreeLimit(`${provider} ${res.status}: ${body}`, retryAfterSeconds(res.headers.get("retry-after"), body));
+}
+export const FREE_LIMIT_MESSAGE = "Luna has reached its free AI limit for now. Your writing is safe.";
 
 // Phrases that always show support resources. Run on the FULL text, before any clipping.
 export const URGENT = /\b(kill myself|end my life|want to die|wanna die|suicid\w*|self[- ]?harm\w*|hurt myself|cut myself|cutting myself|no reason to live|better off without me|overdose)\b/i;
@@ -67,7 +76,7 @@ export function serve(handler: (ctx: { body: any; db: SupabaseClient; userId: st
       return await handler({ body, db, userId: user.id });
     } catch (err) {
       if (err instanceof NotConfigured) return json({ error: "ai_not_configured", message: err.message }, 503);
-      if (err instanceof FreeLimit) return json({ error: "free_limit", message: FREE_LIMIT_MESSAGE }, 429);
+      if (err instanceof FreeLimit) return json({ error: "free_limit", message: FREE_LIMIT_MESSAGE, retry_after_seconds: err.retryAfter }, 429);
       console.error(err);
       return json({ error: "server_error", message: "Luna couldn't finish that. Please try again." }, 500);
     }
@@ -181,7 +190,7 @@ async function anthropic(system: string, user: string, maxTokens: number, model:
       messages: [{ role: "user", content: user }],
     }),
   });
-  if (res.status === 413 || res.status === 429) throw new FreeLimit(`Anthropic ${res.status}`);
+  if (res.status === 413 || res.status === 429) throw await freeLimit("Anthropic", res);
   if (!res.ok) throw new Error(`Anthropic error ${res.status}: ${await res.text()}`);
   const data = await res.json();
   if (data.stop_reason === "refusal") throw new Refused("Claude declined this request");
@@ -223,7 +232,7 @@ async function huggingface(system: string, user: string, maxTokens: number, mode
       messages: [{ role: "system", content: system }, { role: "user", content: user }],
     }),
   });
-  if (res.status === 413 || res.status === 429) throw new FreeLimit(`Hugging Face ${res.status}`);
+  if (res.status === 413 || res.status === 429) throw await freeLimit("Hugging Face", res);
   if (!res.ok) throw new Error(`Hugging Face error ${res.status}: ${await res.text()}`);
   const data = await res.json();
   return String(data.choices?.[0]?.message?.content ?? "");
@@ -250,7 +259,7 @@ async function groq(system: string, user: string, maxTokens: number, model: stri
     if (res.status === 413 || res.status === 429) {
       const wait = parseFloat(res.headers.get("retry-after") ?? "") || parseFloat(res.headers.get("x-ratelimit-reset-tokens") ?? "") || 0;
       if (res.status === 429 && attempt < 2 && wait > 0 && wait <= 25) { await new Promise((r) => setTimeout(r, wait * 1000 + 250)); continue; }
-      throw new FreeLimit(`Groq ${res.status}: ${await res.text()}`);
+      throw await freeLimit("Groq", res);
     }
     if (!res.ok) throw new Error(`Groq error ${res.status}: ${await res.text()}`);
     const data = await res.json();

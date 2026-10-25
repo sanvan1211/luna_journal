@@ -6,6 +6,7 @@
 import { state } from "./state.js";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
 import { demoEntriesForAI } from "./data.js";
+import { limitResetText } from "./limits.js";
 import { esc } from "./util.js";
 import { bunny } from "./bunny.js";
 
@@ -59,7 +60,8 @@ export async function callAI(name, body = {}) {
     return { ok: false, kind: "notconfigured", message: "The AI key hasn't been added to Supabase secrets yet." };
   }
   if (res.status === 429 && data && data.error === "free_limit") {
-    return { ok: false, kind: "limit", message: data.message };
+    // Say when it should work again, using the AI provider's own wait time when it gave one.
+    return { ok: false, kind: "limit", message: `${data.message} ${limitResetText(data.retry_after_seconds)}`, retryAfter: data.retry_after_seconds ?? null };
   }
   if (res.status === 401) {
     return { ok: false, kind: "signin", message: "Your session expired. Please sign in again." };
