@@ -3,7 +3,7 @@ import { serve, json, loadEntries, formatEntries, complete, parseJSON, LUNA_RULE
 const STOP = new Set("the a an and or but i me my we you it is was are to of in on for with about at what when did do does how have has had that this from be been am".split(" "));
 const toks = (s: string) => (s.toLowerCase().match(/[a-z']+/g) ?? []).filter((w) => w.length > 2 && !STOP.has(w));
 
-/** Picks the entries most related to the question, plus the most recent few. */
+/* Picks the entries most related to the question, plus the most recent few. */
 function relevant(entries: Entry[], question: string, n = 14) {
   const q = new Set(toks(question));
   const scored = entries.map((e, i) => {
