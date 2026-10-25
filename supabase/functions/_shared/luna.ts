@@ -244,6 +244,7 @@ async function groq(system: string, user: string, maxTokens: number, model: stri
       method: "POST",
       headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
       body,
+      signal: AbortSignal.timeout(75000), // a stuck call fails honestly instead of hanging the function
     });
     if (opts.usage) opts.usage.calls++;
     if (res.status === 413 || res.status === 429) {

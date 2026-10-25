@@ -15,3 +15,6 @@ data/
 secrets.local*
 *.key
 *.pem
+
+# Deep analysis eval output (generated, may echo fixture text)
+tests/eval/out/

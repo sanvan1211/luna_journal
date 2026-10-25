@@ -1,7 +1,7 @@
 // Unit tests for deep analysis quote checks. Run with: npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { verifyQuotes, checkBlockquotes, removeSentences, fakeInlineQuotes } from "../supabase/functions/_shared/quotes.js";
+import { verifyQuotes, checkBlockquotes, removeSentences, fakeInlineQuotes, repairQuotes } from "../supabase/functions/_shared/quotes.js";
 
 const days = [
   { date: "2026-10-22", text: "why is my life somewhat getting better. i think my absence of romance has led me to romanticize my own life" },
@@ -53,10 +53,30 @@ test("fakeInlineQuotes flags sentences that quote words the writer never wrote",
     "You call it a \u201cwin\u201d sometimes.",
     "> \u201canything in a blockquote is checked elsewhere\u201d \u2014 Oct 22",
   ].join("\n");
-  assert.deepEqual(fakeInlineQuotes(md, days.map((d) => d.text)), ["Your own note, \u201clife is improving,\u201d fits this."]);
+  // "win" is one of Luna's note labels; this writer never used the word, so that sentence is flagged too.
+  assert.deepEqual(fakeInlineQuotes(md, days.map((d) => d.text)), ["Your own note, \u201clife is improving,\u201d fits this.", "You call it a \u201cwin\u201d sometimes."]);
 });
 
 test("removing a flagged question leaves no empty numbered item", () => {
   const md = "## Questions to write about next\n1. What felt best this week?\n2. You should probably see someone about this, right?\n3. What would you keep doing?";
   assert.equal(removeSentences(md, ["You should probably see someone about this, right?"]), "## Questions to write about next\n1. What felt best this week?\n2. What would you keep doing?");
+});
+
+test("repairQuotes closes a quote the model left open, so Luna's words don't read as the writer's", () => {
+  const texts = ["i'm not sure if i'm doing all this to get over things or because i actually like it. maybe both."];
+  const line = "By Sep 24 you write, \u201ci\u2019m not sure if i\u2019m doing all this to get over things or because i actually like it. If you ever notice that you push through, that could matter. Moments like (\u201clearned half a song\u201d) count.";
+  const fixed = repairQuotes(line, [...texts, "learned half a song"]);
+  assert.ok(fixed.includes("because i actually like it.\u201d If you ever notice"), fixed);
+  assert.ok(fixed.includes("(\u201clearned half a song\u201d)"));
+  assert.equal([...fixed].filter((c) => "\u201c\u201d".includes(c)).length % 2, 0);
+});
+
+test("repairQuotes removes a stray opening mark when nothing after it is the writer's", () => {
+  assert.equal(repairQuotes("You might call it \u201ca fresh start. That's okay.", ["something else entirely"]), "You might call it a fresh start. That's okay.");
+});
+
+test("quoting Luna's note labels as the writer's words is flagged, unless the writer used the word", () => {
+  const md = "The essay and the game are both \u201cwins,\u201d yet you felt empty.";
+  assert.equal(fakeInlineQuotes(md, ["got an A on the essay. i felt empty"]).length, 1);
+  assert.equal(fakeInlineQuotes(md, ["small wins all week. i felt empty"]).length, 0);
 });

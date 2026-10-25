@@ -55,6 +55,45 @@ export function checkBlockquotes(markdown = "", days = []) {
   return { markdown: out.join("\n").replace(/\n{3,}/g, "\n\n"), verified, removed };
 }
 
+const OPEN = new Set(['"', "“", "„"]), CLOSE = new Set(['"', "”"]);
+const isQuoteMark = (c) => OPEN.has(c) || CLOSE.has(c);
+
+/**
+ * Fixes quotation marks the model left unbalanced in a paragraph, so Luna's own words never read
+ * as the writer's. An opening mark whose quote runs past the writer's actual words is closed where
+ * the verbatim part ends (at a sentence or clause boundary); if nothing after it is verbatim, the
+ * stray mark is removed. Works on the original characters, so nothing else in the text changes.
+ * @param {string} markdown
+ * @param {string[]} texts  the writer's own text
+ */
+export function repairQuotes(markdown = "", texts = []) {
+  const hay = texts.map(norm).join("\n");
+  return markdown.split("\n").map((line) => {
+    if (/^\s*>/.test(line)) return line;
+    const marks = [...line].reduce((n, c) => n + (isQuoteMark(c) ? 1 : 0), 0);
+    if (marks % 2 === 0) return line;
+    // Walk the marks in pairs; at the first pair whose content isn't verbatim, look for the end.
+    const chars = [...line];
+    for (let i = 0; i < chars.length; i++) {
+      if (!isQuoteMark(chars[i])) continue;
+      let j = i + 1;
+      while (j < chars.length && !isQuoteMark(chars[j])) j++;
+      const span = chars.slice(i + 1, j).join("");
+      if (j < chars.length && hay.includes(norm(span).replace(/[.,;:!?]+$/, ""))) { i = j; continue; }
+      // Longest verbatim prefix that ends at a boundary (. ! ? , ; :) inside the span.
+      let end = -1;
+      for (let k = span.length; k > 0; k--) {
+        if (!/[.!?,;:]/.test(span[k - 1])) continue;
+        if (hay.includes(norm(span.slice(0, k)).replace(/[.,;:!?]+$/, "")) && span.slice(0, k).trim().split(/\s+/).length >= 2) { end = k; break; }
+      }
+      if (end > 0) chars.splice(i + 1 + end, 0, chars[i] === '"' ? '"' : "”");
+      else chars.splice(i, 1);
+      return chars.join("");
+    }
+    return line;
+  }).join("\n");
+}
+
 /**
  * Sentences outside blockquotes that put words in quotation marks the writer never wrote
  * (a made-up "your own note, '…'"). Short single-word scare quotes are ignored.
@@ -62,6 +101,9 @@ export function checkBlockquotes(markdown = "", days = []) {
  * @param {string[]} texts  the writer's own text (days, plus their question if they asked one)
  * @returns {string[]} the offending sentences, as written
  */
+// Luna's note headings: quoting one of these as if the writer said it is a made-up quote.
+const NOTE_LABELS = new Set(["win", "wins", "stressor", "stressors", "event", "events", "behavior", "behaviors", "things felt", "goals or plans", "past references"]);
+
 export function fakeInlineQuotes(markdown = "", texts = []) {
   const hay = texts.map(norm).join("\n");
   const out = [];
@@ -69,7 +111,12 @@ export function fakeInlineQuotes(markdown = "", texts = []) {
     if (/^\s*>/.test(line)) continue;
     for (const sentence of line.split(/(?<=[.!?])\s+/)) {
       const spans = [...plainForm(sentence).matchAll(/"([^"]{3,}?)"/g)].map((m) => m[1].trim());
-      if (spans.some((q) => q.split(/\s+/).length >= 2 && !hay.includes(norm(q).replace(/[.,;:!?]+$/, "")))) out.push(sentence.trim());
+      const fake = (q) => {
+        const n = norm(q).replace(/[.,;:!?]+$/, "");
+        if (NOTE_LABELS.has(n)) return !new RegExp(`\\b${n}\\b`).test(hay); // "wins" is a label unless they wrote it
+        return q.split(/\s+/).length >= 2 && !hay.includes(n);
+      };
+      if (spans.some(fake)) out.push(sentence.trim());
     }
   }
   return out;

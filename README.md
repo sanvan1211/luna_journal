@@ -70,6 +70,12 @@ supabase secrets set LUNA_MODEL=claude-sonnet-5-5
 
 After changing anything in `supabase/functions/`, deploy again with the same `supabase functions deploy …` command.
 
+## Deep analysis
+
+`supabase/functions/analyze-journal` reads a range of days (oldest first, inline-dated entries split into days) and writes a longitudinal reflection in three passes: verified notes per day, the analysis, and a review. **Luna's master prompt for it lives in `supabase/functions/_shared/deep-analysis-prompt.ts`**; change the analysis there, not in the function. The parts that matter most for safety are also enforced in code (`_shared/quotes.js`, `_shared/deep-checks.js`): quotes must be the writer's exact words, clinical words are removed, recurring sadness always gets a gentle note about talking to someone, and urgent writing stops the analysis so the app can show support instead.
+
+`npm test` covers those checks. `tests/eval/deep-analysis.eval.mjs` runs fictional scenarios (`tests/fixtures/deep/scenarios.json`) against the deployed function and scores them; it uses real AI calls, so it isn't part of `npm test` (see the comment at the top of the file).
+
 ## Sign in with Google
 
 Email and password always work. "Continue with Google" works once you do these steps. Until then, the button says Google sign-in isn't turned on. The Client Secret goes only into the Supabase dashboard, never into this repo.
