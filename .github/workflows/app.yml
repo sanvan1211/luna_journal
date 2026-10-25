@@ -18,6 +18,8 @@ jobs:
           for f in $(find js -name '*.js'); do
             node --check --input-type=module < "$f" || { echo "Syntax error in $f"; exit 1; }
           done
+      - name: Unit tests
+        run: npm test
 
   edge-functions:
     runs-on: ubuntu-latest

@@ -438,6 +438,13 @@ label.field, div.field { display: grid; gap: 6px; font-size: 13px; color: var(--
 .composer textarea:focus { outline: none; box-shadow: none; }
 .copy-btn { float: right; font-weight: 500; letter-spacing: 0; text-transform: none; }
 .ask-count { margin: 6px 4px 0; text-align: right; color: var(--muted); }
+.split-table-wrap { max-height: 320px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius-sm); margin: var(--s-3) 0; }
+.split-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.split-table th, .split-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.split-table th { position: sticky; top: 0; background: var(--card-2); color: var(--muted); font-weight: 600; font-size: var(--fs-xs); }
+.split-table td:first-child { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.split-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.split-table tr:last-child td { border-bottom: 0; }
 .suggestions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 14px; }
 
 /* Ask Luna chats: a sidebar of saved chats beside the conversation (a slide-over drawer on phones). */

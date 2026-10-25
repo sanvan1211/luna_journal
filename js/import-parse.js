@@ -1,6 +1,8 @@
 // Turns exported notes (Notion, Google Docs, Obsidian, plain files) into Luna entries.
 // Pure functions only, so it can be tested without a browser.
 
+import { splitByDate } from "./date-split.js";
+
 export const MAX_FILES = 1000;
 export const MAX_CHARS = 100000;
 
@@ -38,6 +40,20 @@ const validDate = (v) => {
 // Notion puts page properties as "Name: value" lines right under the title.
 const NOTION_DATE = /^(created|created time|date|date created|created at):\s*(.+)$/i;
 const NOTION_TAGS = /^(tags|tag):\s*(.+)$/i;
+
+/**
+ * Splits a parsed entry into one entry per day when its text marks days inline ("10.22- … 10.23- …").
+ * Text before the first date stays as its own entry, so nothing is dropped.
+ */
+export function splitEntry(entry, { now } = {}) {
+  const { before, days } = splitByDate(entry.content, { now });
+  if (!days.length) return [entry];
+  const short = (iso) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" });
+  return [
+    ...(before ? [{ ...entry, content: before, title: entry.title, split: "before" }] : []),
+    ...days.map((d) => ({ ...entry, title: `${entry.title === "Untitled" ? "Journal" : entry.title} · ${short(d.created_at)}`, content: d.text, created_at: d.created_at, split: "day" })),
+  ];
+}
 
 /**
  * @param {string} path      file name, possibly with folders ("Vault/Daily/2025-03-01.md")

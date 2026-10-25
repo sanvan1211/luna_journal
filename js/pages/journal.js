@@ -3,9 +3,10 @@ import { listEntries, createEntry, updateEntry, deleteEntry } from "../data.js";
 import { createEditor } from "../editor.js";
 import { callAI, aiProblem, aiLoading } from "../ai.js";
 import { emptyState } from "../bunny.js";
-import { openImport } from "../import.js";
+import { openImport, previewTable } from "../import.js";
+import { splitEntry } from "../import-parse.js";
 import { safetyNote } from "../support.js";
-import { esc, html, $, $$, debounce, fmtShort, fmtLong, fmtMonth, fmtTime, plain, download, slug, toast, confirmDialog, onPageKey, typing } from "../util.js";
+import { esc, html, $, $$, debounce, fmtShort, fmtLong, fmtMonth, fmtTime, plain, download, slug, toast, confirmDialog, onPageKey, typing, openModal } from "../util.js";
 
 // How the sidebar groups entries. Remembered per browser; only a view preference.
 const GROUP_KEY = "luna-journal-group";
@@ -156,6 +157,7 @@ export async function render(main, route) {
         <span class="save-state saved" data-save aria-live="polite">Saved</span>
       </div>
       <div class="editor-actions">
+        <button type="button" class="btn btn-sm btn-ghost" data-split hidden>Split by date</button>
         <button type="button" class="btn btn-sm" data-reflect>Reflect with Luna</button>
         <button type="button" class="icon-btn" data-export aria-label="Export as Markdown" title="Export as Markdown (.md)">${ICON.down}</button>
         <button type="button" class="icon-btn danger" data-delete aria-label="Delete this entry" title="Delete entry">${ICON.trash}</button>
@@ -205,6 +207,7 @@ export async function render(main, route) {
       const link = $(`.entry-link[data-id="${entry.id}"] .t`, el);
       if (link) link.textContent = patch.title || "Untitled";
       setSave(state.demo ? "Saved (demo)" : "Saved", "saved");
+      checkSplit();
     } catch (err) {
       dirty = true;
       setSave("Couldn't save. Retrying…", "err");
@@ -277,6 +280,44 @@ export async function render(main, route) {
     const date = new Date(entry.created_at).toISOString().slice(0, 10);
     const head = `# ${entry.title || "Untitled"}\n\n*${fmtLong(entry.created_at)}${entry.mood ? " · Mood: " + entry.mood : ""}${entry.tags.length ? " · " + entry.tags.map((t) => "#" + t).join(" ") : ""}*\n\n`;
     download(`${date}-${slug(entry.title)}.md`, head + editor.getMarkdown() + "\n");
+  });
+
+  // split an entry that marks days inline ("10.22- … 10.23- …") into one entry per day
+  const splitBtn = $("[data-split]", area);
+  const splitRows = () => splitEntry({ title: entry.title || "Untitled", content: editor.getMarkdown(), tags: entry.tags, created_at: entry.created_at }, { now: new Date(entry.created_at) });
+  const checkSplit = () => { splitBtn.hidden = !splitRows().some((r) => r.split === "day"); };
+  checkSplit();
+  splitBtn.addEventListener("click", async () => {
+    await debounced.flush();
+    const rows = splitRows();
+    if (!rows.some((r) => r.split === "day")) { checkSplit(); return; }
+    const el = html(`<div>
+      <h2>Split this entry by date?</h2>
+      <p class="muted">Luna found ${rows.filter((r) => r.split === "day").length} days marked inline. This entry will be replaced by the ${rows.length} entries below, each dated at noon. All of your text is kept${rows[0].split === "before" ? ", and the text before the first date stays on this entry's date" : ""}. Tags are copied; the mood isn't, since it was set for the whole entry.</p>
+      ${previewTable(rows)}
+      <p class="small error-text" data-split-error></p>
+      <div class="modal-actions"><button type="button" class="btn btn-ghost" data-no>Cancel</button><button type="button" class="btn btn-primary" data-yes>Split into ${rows.length} entries</button></div>
+    </div>`);
+    const close = openModal(el, { label: "Split this entry by date" });
+    $("[data-no]", el).addEventListener("click", close);
+    $("[data-yes]", el).addEventListener("click", async (e) => {
+      e.currentTarget.disabled = true;
+      const made = [];
+      try {
+        for (const r of rows) made.push(await createEntry({ title: r.title, content: r.content, tags: r.tags, created_at: r.created_at }));
+        debounced.cancel(); dirty = false;
+        await deleteEntry(entry.id);
+        deleted = true;
+        close();
+        toast(`Split into ${made.length} entries`);
+        location.hash = `#/journal/${made[made.length - 1].id}`;
+      } catch (err) {
+        console.error("Couldn't split the entry", err);
+        for (const m of made) { try { await deleteEntry(m.id); } catch {} } // undo, so nothing is duplicated
+        $("[data-split-error]", el).textContent = `Couldn't split it: ${err.message}. Your entry is unchanged.`;
+        e.currentTarget.disabled = false;
+      }
+    });
   });
 
   // delete
