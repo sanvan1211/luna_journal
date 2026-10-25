@@ -21,7 +21,7 @@ const who = () =>
   : state.configured ? "Not signed in"
   : "Not connected yet";
 
-const planLine = () => `${MODELS[state.model].name.replace("Claude ", "")} · Free`;
+const planLine = () => `${MODELS[state.model].name.replace(/^Claude /, "").replace(/ \(.*\)$/, "")} · Free`;
 
 /** Redraws the account button. Called whenever the app chrome renders. */
 export function renderAccount() {

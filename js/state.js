@@ -1,5 +1,5 @@
 // App-wide state + Supabase client. The client is only loaded if config.js is filled in.
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
+import { SUPABASE_URL, SUPABASE_ANON_KEY, AI_PROVIDER } from "./config.js";
 
 export const state = {
   configured: Boolean(SUPABASE_URL && SUPABASE_ANON_KEY),
@@ -9,11 +9,17 @@ export const state = {
   model: "fast",     // AI model choice: "fast" | "thoughtful" (see MODELS)
 };
 
-// What the user can pick under Account → Model. The Edge Functions map these keys
-// to model IDs and ignore anything else.
+// What the user can pick under Account → Model, named for the provider the Edge Functions use.
+// The functions map "fast" and "thoughtful" to model IDs and ignore anything else.
+const MODEL_NAMES = {
+  anthropic: { fast: "Claude Haiku 5.5", thoughtful: "Claude Sonnet 5.5" },
+  ollama: { fast: "Llama 3.2 (on this computer)", thoughtful: "Qwen 2.5 7B (on this computer)" },
+  huggingface: { fast: "Qwen 2.5 7B (Hugging Face)", thoughtful: "Qwen 2.5 72B (Hugging Face)" },
+};
+const names = MODEL_NAMES[AI_PROVIDER] || MODEL_NAMES.anthropic;
 export const MODELS = {
-  fast: { name: "Claude Haiku 5.5", blurb: "Fast, for everyday reflections" },
-  thoughtful: { name: "Claude Sonnet 5.5", blurb: "Slower, more thoughtful answers" },
+  fast: { name: names.fast, blurb: "Fast, for everyday reflections" },
+  thoughtful: { name: names.thoughtful, blurb: "Slower, more thoughtful answers" },
 };
 
 const listeners = new Set();

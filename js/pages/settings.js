@@ -1,7 +1,22 @@
-import { state } from "../state.js";
+import { state, MODELS } from "../state.js";
+import { AI_PROVIDER } from "../config.js";
 import { listEntries, listInsights, listMemory, deleteMemory, deleteAllInsights, deleteAccount } from "../data.js";
 import { bunny, emptyState } from "../bunny.js";
 import { esc, html, $, $$, dayKey, fmtLong, download, toast, confirmDialog } from "../util.js";
+
+// Where writing goes depends on which AI provider the Edge Functions use (see js/config.js).
+const AI_HANDLING = {
+  anthropic: [
+    "Requests go from your browser to Luna's server functions, which call Anthropic's Claude. Your browser never holds an AI key.",
+    "Anthropic doesn't train its models on data sent through its API by default.",
+  ],
+  ollama: ["Luna's AI runs on this computer with Ollama. Your writing never leaves your machine."],
+  huggingface: [
+    "Requests go from your browser to Luna's server functions, which call an open model through Hugging Face. Your browser never holds an AI key.",
+    "The Hugging Face provider that runs the model handles requests under its own privacy policy.",
+  ],
+};
+const AI_CREDIT = { anthropic: "Claude by Anthropic", ollama: "open models running in Ollama", huggingface: "open models on Hugging Face" };
 
 // Quote shown in "About Luna". Set to { text: "…", by: "…" } to show it; null hides it.
 const QUOTE = null;
@@ -40,9 +55,8 @@ export async function render(main) {
           </dl>
           <h3>How it's handled</h3>
           <ul>
-            <li>Requests go from your browser to Luna's server functions, which call Anthropic's Claude. Your browser never holds an AI key.</li>
-            <li>You pick the model under Account: Claude Haiku 5.5 (fast) or Claude Sonnet 5.5 (more thoughtful). Safety checks always use Haiku.</li>
-            <li>Anthropic doesn't train its models on data sent through its API by default.</li>
+            ${(AI_HANDLING[AI_PROVIDER] || AI_HANDLING.anthropic).map((t) => `<li>${esc(t)}</li>`).join("")}
+            <li>You pick the model under Account: ${esc(MODELS.fast.name)} (fast) or ${esc(MODELS.thoughtful.name)} (more thoughtful). Safety checks always use the fast one.</li>
             <li>A short safety check reads text you send for reflection, only to decide whether to show support resources.</li>
             <li>Your entries are stored in a database where only your account can read them. Luna never sells or shares them.</li>
             <li>Moods are only what you choose. Luna never assigns a mood or a score.</li>
@@ -77,7 +91,7 @@ export async function render(main) {
           ${QUOTE ? `<figure class="about-quote"><blockquote>“${esc(QUOTE.text)}”</blockquote><figcaption>${esc(QUOTE.by)}</figcaption></figure>` : ""}
           <dl class="about-facts">
             <div><dt>Built for</dt><dd>Congressional App Challenge</dd></div>
-            <div><dt>Made with</dt><dd>HTML, CSS, JavaScript, Supabase, and Claude by Anthropic</dd></div>
+            <div><dt>Made with</dt><dd>HTML, CSS, JavaScript, Supabase, and ${esc(AI_CREDIT[AI_PROVIDER] || AI_CREDIT.anthropic)}</dd></div>
             <div><dt>Mascot</dt><dd>Luna, a Holland Lop</dd></div>
           </dl>
         </div>
