@@ -68,6 +68,11 @@ function renderChrome() {
 }
 
 // ───────────── Screens shown before sign-in ─────────────
+const EYE = {
+  show: `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M1.8 10s3-5.5 8.2-5.5 8.2 5.5 8.2 5.5-3 5.5-8.2 5.5S1.8 10 1.8 10z"/><circle cx="10" cy="10" r="2.6"/></svg>`,
+  hide: `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M1.8 10s3-5.5 8.2-5.5 8.2 5.5 8.2 5.5-3 5.5-8.2 5.5S1.8 10 1.8 10z"/><circle cx="10" cy="10" r="2.6"/><path d="M3 3l14 14"/></svg>`,
+};
+
 const GOOGLE_G = `<svg viewBox="0 0 18 18" aria-hidden="true" focusable="false">
   <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/>
   <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/>
@@ -95,7 +100,12 @@ function authScreen() {
       <div class="divider">or</div>
       <form novalidate class="stack">
         <label class="field">Email<input class="input" type="email" name="email" autocomplete="email" required /></label>
-        <label class="field">Password<input class="input" type="password" name="password" autocomplete="current-password" minlength="8" required /></label>
+        <label class="field">Password
+          <span class="pw-wrap">
+            <input class="input" type="password" name="password" id="auth-password" autocomplete="current-password" minlength="8" required />
+            <button type="button" class="icon-btn pw-toggle" data-pw-toggle aria-controls="auth-password" aria-pressed="false" aria-label="Show password" title="Show password">${EYE.show}</button>
+          </span>
+        </label>
         <div data-msg role="alert" class="small"></div>
         <button class="btn btn-primary" type="submit">Sign in</button>
       </form>
@@ -114,6 +124,15 @@ function authScreen() {
   };
   $$("[data-mode]", el).forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
   setMode(mode);
+  const pwToggle = $("[data-pw-toggle]", el);
+  pwToggle.addEventListener("click", () => {
+    const show = form.password.type === "password";
+    form.password.type = show ? "text" : "password";
+    pwToggle.setAttribute("aria-pressed", String(show));
+    pwToggle.setAttribute("aria-label", show ? "Hide password" : "Show password");
+    pwToggle.title = show ? "Hide password" : "Show password";
+    pwToggle.innerHTML = show ? EYE.hide : EYE.show;
+  });
   const showError = (text) => { msg.style.color = "var(--rose)"; msg.textContent = text; };
   if (state.authError) { showError(`Couldn't sign in with Google: ${state.authError}`); state.authError = null; }
 
