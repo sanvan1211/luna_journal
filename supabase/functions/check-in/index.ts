@@ -1,4 +1,4 @@
-import { serve, json, claude, LUNA_RULES, pickModel } from "../_shared/luna.ts";
+import { serve, json, complete, LUNA_RULES, pickModel } from "../_shared/luna.ts";
 
 serve(async ({ body }) => {
   const a = body.answers ?? {};
@@ -11,7 +11,7 @@ serve(async ({ body }) => {
   ].filter(Boolean);
   if (!lines.length) return json({ error: "empty", message: "There's nothing in this check-in to reflect on yet." }, 400);
 
-  const reflection = await claude(
+  const reflection = await complete(
     `${LUNA_RULES}
 
 Task: the writer just finished a short emotional check-in. Reply in plain text, under 90 words:

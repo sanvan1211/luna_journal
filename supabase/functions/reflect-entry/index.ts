@@ -1,4 +1,4 @@
-import { serve, json, loadEntries, formatEntries, claude, LUNA_RULES, pickModel } from "../_shared/luna.ts";
+import { serve, json, loadEntries, formatEntries, complete, LUNA_RULES, pickModel } from "../_shared/luna.ts";
 
 serve(async ({ body, db }) => {
   const entries = await loadEntries(db, body, 200);
@@ -6,7 +6,7 @@ serve(async ({ body, db }) => {
   // 400, not 404: the app treats 404 as "function not deployed".
   if (!entry) return json({ error: "entry_not_found", message: "That entry wasn't found. Try saving it first." }, 400);
 
-  const reflection = await claude(
+  const reflection = await complete(
     `${LUNA_RULES}
 
 Task: reflect on ONE journal entry. Reply in plain text (no markdown, no headings), under 130 words:

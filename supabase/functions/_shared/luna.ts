@@ -71,19 +71,45 @@ ${e.content}
 </entry>`).join("\n\n");
 }
 
-// Models the user can choose under Account → Model. Anything else gets the default.
-const MODELS: Record<string, string> = { fast: "claude-haiku-5-5", thoughtful: "claude-sonnet-5-5" };
-export const pickModel = (choice: unknown): string =>
-  MODELS[String(choice)] ?? Deno.env.get("LUNA_MODEL") ?? MODELS.fast;
+// Which AI writes Luna's replies. Set LUNA_PROVIDER in the function secrets (or supabase/functions/.env locally):
+//   anthropic    Claude through Anthropic's API (needs ANTHROPIC_API_KEY). The default.
+//   ollama       a model running on your own computer (OLLAMA_URL, e.g. http://host.docker.internal:11434)
+//   huggingface  Hugging Face Inference Providers (needs HF_TOKEN)
+const PROVIDER = (Deno.env.get("LUNA_PROVIDER") ?? "anthropic").trim().toLowerCase();
+const env = (name: string, fallback: string) => Deno.env.get(name)?.trim() || fallback;
 
-// These models think by default, and thinking counts toward max_tokens. Luna's replies
-// are short and single-turn, so thinking is turned off and the budget goes to the answer.
+// The two choices under Account → Model, per provider. Anything else gets the default.
+const MODELS: Record<string, { fast: string; thoughtful: string }> = {
+  anthropic: { fast: "claude-haiku-5-5", thoughtful: "claude-sonnet-5-5" },
+  ollama: { fast: env("OLLAMA_FAST_MODEL", "llama3.2"), thoughtful: env("OLLAMA_THOUGHTFUL_MODEL", "qwen2.5:7b") },
+  huggingface: { fast: env("HF_FAST_MODEL", "Qwen/Qwen2.5-7B-Instruct"), thoughtful: env("HF_THOUGHTFUL_MODEL", "Qwen/Qwen2.5-72B-Instruct") },
+};
+const models = () => {
+  const m = MODELS[PROVIDER];
+  if (!m) throw new NotConfigured(`LUNA_PROVIDER "${PROVIDER}" isn't one of: ${Object.keys(MODELS).join(", ")}.`);
+  return m;
+};
+export const pickModel = (choice: unknown): string => {
+  const m = models();
+  return m[String(choice) as "fast" | "thoughtful"] ?? Deno.env.get("LUNA_MODEL") ?? m.fast;
+};
+
+/** Sends one system prompt and one user message to the configured provider; returns the reply text. */
+export async function complete(system: string, user: string, maxTokens = 600, model = pickModel(null)): Promise<string> {
+  const text = (PROVIDER === "ollama" ? ollama : PROVIDER === "huggingface" ? huggingface : anthropic)(system, user, maxTokens, model);
+  const reply = (await text).trim();
+  if (!reply) throw new Error("The model returned an empty reply");
+  return reply;
+}
+
+// Claude Haiku 5.5 and Sonnet 5.5 think by default, and thinking counts toward max_tokens. Luna's
+// replies are short and single-turn, so thinking is turned off and the budget goes to the answer.
 const THINKING_OFF: Record<string, unknown> = {
   "claude-haiku-5-5": { type: "disabled" },
   "claude-sonnet-5-5": { type: "between_tools" },
 };
 
-export async function claude(system: string, user: string, maxTokens = 600, model = pickModel(null)): Promise<string> {
+async function anthropic(system: string, user: string, maxTokens: number, model: string) {
   const key = Deno.env.get("ANTHROPIC_API_KEY");
   if (!key) throw new NotConfigured("ANTHROPIC_API_KEY is not set in Supabase secrets.");
   const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -100,9 +126,47 @@ export async function claude(system: string, user: string, maxTokens = 600, mode
   if (!res.ok) throw new Error(`Anthropic error ${res.status}: ${await res.text()}`);
   const data = await res.json();
   if (data.stop_reason === "refusal") throw new Refused("Claude declined this request");
-  const text = (data.content ?? []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("").trim();
-  if (!text) throw new Error("Claude returned an empty reply");
-  return text;
+  return (data.content ?? []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
+}
+
+async function ollama(system: string, user: string, maxTokens: number, model: string) {
+  const url = Deno.env.get("OLLAMA_URL")?.replace(/\/+$/, "");
+  if (!url) throw new NotConfigured("OLLAMA_URL is not set.");
+  let res: Response;
+  try {
+    res = await fetch(`${url}/api/chat`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        model, stream: false,
+        options: { num_predict: maxTokens, temperature: 0.4 },
+        messages: [{ role: "system", content: system }, { role: "user", content: user }],
+      }),
+    });
+  } catch {
+    throw new NotConfigured(`Couldn't reach Ollama at ${url}. Is it running?`);
+  }
+  if (res.status === 404) throw new NotConfigured(`Ollama doesn't have the model "${model}". Run: ollama pull ${model}`);
+  if (!res.ok) throw new Error(`Ollama error ${res.status}: ${await res.text()}`);
+  const data = await res.json();
+  // Some local models wrap their reasoning in <think> tags; only the answer is kept.
+  return String(data.message?.content ?? "").replace(/<think>[\s\S]*?<\/think>/g, "");
+}
+
+async function huggingface(system: string, user: string, maxTokens: number, model: string) {
+  const token = Deno.env.get("HF_TOKEN");
+  if (!token) throw new NotConfigured("HF_TOKEN is not set in Supabase secrets.");
+  const res = await fetch("https://router.huggingface.co/v1/chat/completions", {
+    method: "POST",
+    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+    body: JSON.stringify({
+      model, max_tokens: maxTokens, temperature: 0.4,
+      messages: [{ role: "system", content: system }, { role: "user", content: user }],
+    }),
+  });
+  if (!res.ok) throw new Error(`Hugging Face error ${res.status}: ${await res.text()}`);
+  const data = await res.json();
+  return String(data.choices?.[0]?.message?.content ?? "");
 }
 
 /** Pulls the first JSON object out of a model reply. */

@@ -1,4 +1,4 @@
-import { serve, json, loadEntries, formatEntries, claude, parseJSON, LUNA_RULES, pickModel } from "../_shared/luna.ts";
+import { serve, json, loadEntries, formatEntries, complete, parseJSON, LUNA_RULES, pickModel } from "../_shared/luna.ts";
 
 type Raw = {
   insights?: { insight: string; explanation: string; confidence: string; supporting_entry_ids: string[] }[];
@@ -9,7 +9,7 @@ serve(async ({ body, db, userId }) => {
   const entries = await loadEntries(db, body, 40);
   if (entries.length < 3) return json({ insights: [], message: "Write at least 3 entries first." });
 
-  const reply = await claude(
+  const reply = await complete(
     `${LUNA_RULES}
 
 Task: look across these journal entries for patterns in what the writer WRITES ABOUT.
