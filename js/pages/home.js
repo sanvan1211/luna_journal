@@ -65,7 +65,7 @@ export async function render(main) {
       <h1>${greeting}</h1>
       <form class="home-ask">
         <label for="home-input" class="sr-only">Ask Luna about your journal</label>
-        <input id="home-input" type="text" placeholder="Ask Luna about your journal…" maxlength="500" autocomplete="off" />
+        <input id="home-input" type="text" placeholder="Ask Luna about your journal…" maxlength="5000" autocomplete="off" />
         <button type="submit" class="home-send" aria-label="Ask Luna">${ICON.send}</button>
       </form>
       <div class="home-actions">

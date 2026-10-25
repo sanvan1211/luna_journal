@@ -434,7 +434,7 @@ label.field, div.field { display: grid; gap: 6px; font-size: 13px; color: var(--
 .composer { position: sticky; bottom: 0; background: var(--bg); padding: 12px 0 8px; }
 .composer form { display: flex; gap: 10px; align-items: flex-end; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 8px 8px 8px 16px; }
 .composer form:focus-within { border-color: var(--accent); }
-.composer textarea { flex: 1; border: 0; background: none; resize: none; min-height: 24px; max-height: 160px; padding: 8px 0; line-height: 1.5; }
+.composer textarea { flex: 1; border: 0; background: none; resize: none; min-height: 24px; max-height: calc(1.5em * 8 + 16px); overflow-y: hidden; padding: 8px 0; line-height: 1.5; }
 .composer textarea:focus { outline: none; box-shadow: none; }
 .copy-btn { float: right; font-weight: 500; letter-spacing: 0; text-transform: none; }
 .ask-count { margin: 6px 4px 0; text-align: right; color: var(--muted); }

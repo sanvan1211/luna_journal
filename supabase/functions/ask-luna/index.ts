@@ -1,4 +1,4 @@
-import { serve, json, loadEntries, formatEntries, complete, parseJSON, LUNA_RULES, Entry, pickModel } from "../_shared/luna.ts";
+import { serve, json, loadEntries, formatEntries, withinBudget, complete, parseJSON, LUNA_RULES, Entry, pickModel } from "../_shared/luna.ts";
 
 const STOP = new Set("the a an and or but i me my we you it is was are to of in on for with about at what when did do does how have has had that this from be been am".split(" "));
 const toks = (s: string) => (s.toLowerCase().match(/[a-z']+/g) ?? []).filter((w) => w.length > 2 && !STOP.has(w));
@@ -15,15 +15,15 @@ function relevant(entries: Entry[], question: string, n = 14) {
 }
 
 serve(async ({ body, db }) => {
-  const question = String(body.question ?? "").trim().slice(0, 500);
+  const question = String(body.question ?? "").trim().slice(0, 5000);
   if (!question) return json({ error: "empty", message: "Ask a question first." }, 400);
 
   const entries = await loadEntries(db, body, 120);
   if (!entries.length) return json({ answer: "I don't see any entries yet, so there's nothing for me to read. Write a little and ask again.", citations: [] });
 
-  const pool = relevant(entries, question);
+  const pool = withinBudget(relevant(entries, question)); // most relevant first, within the text budget
   const history = (Array.isArray(body.history) ? body.history : []).slice(-6)
-    .map((m: any) => `${m.role === "user" ? "Writer" : "Luna"}: ${String(m.text ?? "").slice(0, 600)}`).join("\n");
+    .map((m: any) => `${m.role === "user" ? "Writer" : "Luna"}: ${String(m.text ?? "").slice(0, 2000)}`).join("\n");
 
   const reply = await complete(
     `${LUNA_RULES}

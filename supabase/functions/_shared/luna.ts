@@ -13,7 +13,16 @@ export const json = (data: unknown, status = 200) =>
 export class NotConfigured extends Error {}
 export class Refused extends Error {}
 
-export type Entry = { id: string; title: string; content: string; mood: string | null; tags: string[]; created_at: string };
+export type Entry = { id: string; title: string; content: string; mood: string | null; tags: string[]; created_at: string; cut?: boolean };
+
+// Text limits. One entry can carry up to ENTRY_CHARS to the model; a whole request carries at most
+// TOTAL_CHARS of entry text, which keeps Luna inside the AI provider's free daily token budget.
+export const ENTRY_CHARS = 8000;
+export const TOTAL_CHARS = 24000;
+const clipEntry = (content: unknown) => {
+  const text = String(content ?? "");
+  return { content: text.slice(0, ENTRY_CHARS), cut: text.length > ENTRY_CHARS };
+};
 
 export const LUNA_RULES = `You are Luna, a calm reflection companion inside a private journaling app used by teenagers and adults.
 Rules you always follow:
@@ -53,21 +62,37 @@ export function serve(handler: (ctx: { body: any; db: SupabaseClient; userId: st
 export async function loadEntries(db: SupabaseClient, body: any, limit = 40): Promise<Entry[]> {
   if (body?.demo && Array.isArray(body.demo_entries)) {
     return body.demo_entries.slice(0, limit).map((e: any) => ({
-      id: String(e.id), title: String(e.title ?? "").slice(0, 200), content: String(e.content ?? "").slice(0, 4000),
+      id: String(e.id), title: String(e.title ?? "").slice(0, 200), ...clipEntry(e.content),
       mood: e.mood ?? null, tags: Array.isArray(e.tags) ? e.tags.slice(0, 10) : [], created_at: String(e.created_at),
     }));
   }
   const { data, error } = await db.from("entries").select("id,title,content,mood,tags,created_at")
     .order("created_at", { ascending: false }).limit(limit);
   if (error) throw error;
-  return (data ?? []).map((e) => ({ ...e, content: (e.content ?? "").slice(0, 4000) }));
+  return (data ?? []).map((e) => ({ ...e, ...clipEntry(e.content) }));
 }
 
+/** Keeps entries in the order given (most relevant or newest first) until TOTAL_CHARS is used up.
+ *  The entry that crosses the line is cut to fit; anything after it is left out. */
+export function withinBudget(entries: Entry[], total = TOTAL_CHARS): Entry[] {
+  const out: Entry[] = [];
+  let used = 0;
+  for (const e of entries) {
+    const room = total - used;
+    if (room <= 0) break;
+    out.push(e.content.length > room ? { ...e, content: e.content.slice(0, room), cut: true } : e);
+    used += Math.min(e.content.length, room);
+  }
+  return out;
+}
+
+/** Formats entries for the model. Pass entries already trimmed with withinBudget when you need
+ *  to know which ones were sent (for citations); otherwise the budget is applied here. */
 export function formatEntries(entries: Entry[]) {
-  return entries.map((e) =>
+  return withinBudget(entries).map((e) =>
     `<entry id="${e.id}" date="${e.created_at.slice(0, 10)}"${e.mood ? ` self_reported_mood="${e.mood}"` : ""}${e.tags?.length ? ` tags="${e.tags.join(",")}"` : ""}>
 <title>${e.title || "Untitled"}</title>
-${e.content}
+${e.content}${e.cut ? "\n[entry continues]" : ""}
 </entry>`).join("\n\n");
 }
 

@@ -4,6 +4,7 @@ import { callAI, aiProblem } from "../ai.js";
 import { bunny, emptyState } from "../bunny.js";
 import { esc, html, $, $$, fmtShort, toast } from "../util.js";
 
+const MAX_QUESTION = 5000; // keep in step with the textarea maxlength and ask-luna's limit
 const SUGGESTIONS = ["What do I write about most?", "What seems to help on hard days?", "When did I last write about feeling proud?"];
 
 // Conversation lives only in this tab, and never crosses between demo and real mode.
@@ -31,7 +32,7 @@ export async function render(main) {
       <div class="composer">
         <form>
           <label for="ask-input" class="sr-only">Ask about your journal</label>
-          <textarea id="ask-input" rows="1" placeholder="Ask about your journal…" maxlength="500"></textarea>
+          <textarea id="ask-input" rows="1" placeholder="Ask about your journal…" maxlength="5000"></textarea>
           <button type="submit" class="btn btn-primary">Ask</button>
         </form>
         <p class="small ask-count" data-count aria-live="polite" hidden></p>
@@ -95,13 +96,19 @@ export async function render(main) {
 
   form.addEventListener("submit", (e) => { e.preventDefault(); const q = input.value; input.value = ""; resize(); ask(q); });
   input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
-  const resize = () => { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 160) + "px"; };
+  // Grows with the question up to about 8 lines (max-height in CSS), then scrolls.
+  const resize = () => {
+    input.style.height = "auto";
+    const max = parseFloat(getComputedStyle(input).maxHeight);
+    input.style.height = Math.min(input.scrollHeight, max) + "px";
+    input.style.overflowY = input.scrollHeight > max ? "auto" : "hidden";
+  };
   input.addEventListener("input", resize);
   const countEl = $("[data-count]", page);
   const updateCount = () => {
     const n = input.value.length;
-    countEl.hidden = n < 400; // only worth showing near the 500-character limit
-    countEl.textContent = `${n} / 500 characters`;
+    countEl.hidden = n <= MAX_QUESTION * 0.8; // only worth showing when the box is over 80% full
+    countEl.textContent = `${n.toLocaleString()} / ${MAX_QUESTION.toLocaleString()}`;
   };
   input.addEventListener("input", updateCount);
   form.addEventListener("submit", updateCount);

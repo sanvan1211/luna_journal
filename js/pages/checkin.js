@@ -36,7 +36,7 @@ export async function render(main) {
       <p class="m-0 muted">${esc(s.help)}</p>
       ${s.kind === "words"
         ? `<div class="word-grid" role="group" aria-labelledby="q">${WORDS.map((w) => `<button type="button" aria-pressed="${answers.arriving.includes(w)}" data-word="${esc(w)}">${esc(w)}</button>`).join("")}</div>`
-        : `<textarea class="mt-4 textarea" aria-labelledby="q" maxlength="2000">${esc(answers[s.id])}</textarea>`}
+        : `<textarea class="mt-4 textarea" aria-labelledby="q" maxlength="5000">${esc(answers[s.id])}</textarea>`}
       <div class="step-actions">
         <button type="button" class="btn btn-ghost" data-back ${step === 0 ? "disabled" : ""}>Back</button>
         <div class="hstack gap-2">

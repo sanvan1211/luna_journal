@@ -2,7 +2,7 @@ import { serve, json, complete, LUNA_RULES, pickModel } from "../_shared/luna.ts
 
 serve(async ({ body }) => {
   const a = body.answers ?? {};
-  const clip = (s: unknown) => String(s ?? "").trim().slice(0, 1500);
+  const clip = (s: unknown) => String(s ?? "").trim().slice(0, 5000);
   const lines = [
     Array.isArray(a.arriving) && a.arriving.length ? `How I'm arriving: ${a.arriving.slice(0, 3).join(", ")}` : "",
     clip(a.space) && `What's taking up space in my mind: ${clip(a.space)}`,

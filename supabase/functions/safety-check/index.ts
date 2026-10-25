@@ -5,11 +5,13 @@ import { serve, json, complete, parseJSON, NotConfigured, Refused } from "../_sh
 const URGENT = /\b(kill myself|end my life|want to die|wanna die|suicid\w*|self[- ]?harm\w*|hurt myself|cut myself|cutting myself|no reason to live|better off without me|overdose)\b/i;
 
 serve(async ({ body }) => {
-  const text = String(body.text ?? "").slice(0, 6000);
-  if (!text.trim()) return json({ flagged: false, level: "none" });
+  const full = String(body.text ?? "");
+  if (!full.trim()) return json({ flagged: false, level: "none" });
 
-  // Fast path: obvious phrases always show resources, even if the AI is unavailable.
-  if (URGENT.test(text)) return json({ flagged: true, level: "urgent" });
+  // Fast path, on the full text before any clipping: obvious phrases always show resources,
+  // even if the AI is unavailable.
+  if (URGENT.test(full)) return json({ flagged: true, level: "urgent" });
+  const text = full.slice(0, 10000);
 
   try {
     const reply = await complete(
