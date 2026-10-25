@@ -1,9 +1,10 @@
 import { state } from "../state.js";
-import { listEntries, listInsights, listMemory, addDemoInsights, createEntry } from "../data.js";
+import { listEntries, listInsights, listMemory, addDemoInsights } from "../data.js";
 import { callAI, aiProblem, aiLoading } from "../ai.js";
 import { emptyState } from "../bunny.js";
 import { supportPanel } from "../support.js";
-import { esc, html, $, $$, dayKey, fmtShort, fmtDate, fmtLong, fmtMonth, fmtTime, plain, words, openModal, toast } from "../util.js";
+import { esc, html, $, $$, dayKey, fmtShort, fmtDate, plain, words, openModal } from "../util.js";
+import { renderMoodCalendar } from "./mood-calendar.js";
 
 // Word families for "Journal language trends". This describes LANGUAGE, not feelings.
 // Colors validated for color-blind separation on the card surface.
@@ -30,9 +31,6 @@ export async function render(main, route) {
   const streakDays = new Set();
   while (days.has(dayKey(cursor))) { streak++; streakDays.add(dayKey(cursor)); cursor.setDate(cursor.getDate() - 1); }
   const streakEntries = entries.filter((e) => streakDays.has(dayKey(e.created_at)));
-
-  const wordsByDay = {};
-  entries.forEach((e) => { const k = dayKey(e.created_at); wordsByDay[k] = (wordsByDay[k] || 0) + words(plain(e.content)).length; });
 
   // ───── themes: Luna's remembered themes + your most-used tags ─────
   const tagCounts = {};
@@ -91,7 +89,7 @@ export async function render(main, route) {
 
   renderMoods($("[data-moods]", page), entries);
 
-  renderCalendar($("[data-calendar]", page), entries, wordsByDay);
+  renderMoodCalendar($("[data-calendar]", page), entries);
   renderTrend($("[data-trend]", page), entries);
   renderNoticed($("[data-noticed]", page), entries, insights);
 
@@ -101,140 +99,6 @@ export async function render(main, route) {
     s.focus({ preventScroll: true });
   }
 }
-
-// ─────────────────────────── Calendar ───────────────────────────
-const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const level = (w) => (w === 0 ? "" : w < 60 ? "w1" : w < 140 ? "w2" : "w3");
-
-function renderCalendar(card, entries, wordsByDay) {
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const byDay = {};
-  entries.forEach((e) => (byDay[dayKey(e.created_at)] ||= []).push(e));
-  // Open on today, or on the latest entry's day if nothing was written this month.
-  const latest = entries.length ? new Date(entries.reduce((a, e) => (e.created_at > a ? e.created_at : a), entries[0].created_at)) : null;
-  const thisMonthHasEntries = entries.some((e) => { const d = new Date(e.created_at); return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth(); });
-  let selected = latest && !thisMonthHasEntries ? new Date(latest.getFullYear(), latest.getMonth(), latest.getDate()) : new Date(today);
-  let month = new Date(selected.getFullYear(), selected.getMonth(), 1);
-
-  function draw(focus = false) {
-    const first = new Date(month);
-    const daysIn = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
-    const lead = (first.getDay() + 6) % 7; // Monday-first
-    const inMonth = entries.filter((e) => { const d = new Date(e.created_at); return d.getFullYear() === month.getFullYear() && d.getMonth() === month.getMonth(); });
-    const daysWritten = new Set(inMonth.map((e) => dayKey(e.created_at))).size;
-    const isCurrent = month.getFullYear() === today.getFullYear() && month.getMonth() === today.getMonth();
-
-    const cells = [];
-    for (let i = 0; i < lead; i++) cells.push(`<span class="cal-pad" aria-hidden="true"></span>`);
-    for (let n = 1; n <= daysIn; n++) {
-      const d = new Date(month.getFullYear(), month.getMonth(), n);
-      const k = dayKey(d), list = byDay[k] || [], w = wordsByDay[k] || 0;
-      const sel = k === dayKey(selected);
-      const label = `${fmtLong(d)}: ${list.length ? `${list.length} ${list.length === 1 ? "entry" : "entries"}, ${w} words` : "no entries"}`;
-      cells.push(`<button type="button" class="cal-cell ${level(w)} ${k === dayKey(today) ? "today" : ""} ${d > today ? "future" : ""}"
-        data-day="${k}" aria-label="${esc(label)}" aria-pressed="${sel}" tabindex="${sel ? 0 : -1}">
-        <span class="n">${n}</span>${list.length ? `<span class="dots" aria-hidden="true">${"<i></i>".repeat(Math.min(list.length, 3))}</span>` : ""}</button>`);
-    }
-
-    card.innerHTML = `
-      <div class="wrap card-head">
-        <div><h2 id="cal-h">Calendar</h2>
-        <p class="mt-1 muted small">Pick a day to see what you wrote. Arrow keys move between days; Home and End jump to the ends of the month.</p></div>
-        <div class="cal-nav">
-          <button type="button" class="icon-btn" data-prev aria-label="Previous month"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12 5l-5 5 5 5"/></svg></button>
-          <span class="cal-title" aria-live="polite">${fmtMonth(month)}</span>
-          <button type="button" class="icon-btn" data-next aria-label="Next month"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 5l5 5-5 5"/></svg></button>
-          <button type="button" class="btn btn-sm btn-ghost" data-today ${isCurrent && dayKey(selected) === dayKey(today) ? "disabled" : ""}>Today</button>
-        </div>
-      </div>
-      <div class="cal">
-        <div>
-          <div class="cal-grid" role="group" aria-label="${esc(fmtMonth(month))}">
-            ${WEEKDAYS.map((d) => `<span class="cal-wd" aria-hidden="true">${d}</span>`).join("")}
-            ${cells.join("")}
-          </div>
-          <div class="cal-foot">
-            <span class="muted small">${inMonth.length} ${inMonth.length === 1 ? "entry" : "entries"} on ${daysWritten} ${daysWritten === 1 ? "day" : "days"} in ${esc(month.toLocaleDateString(undefined, { month: "long" }))}</span>
-            <span class="cal-key small muted" aria-hidden="true">Fewer words <i></i><i class="w1"></i><i class="w2"></i><i class="w3"></i> More</span>
-          </div>
-        </div>
-        <div class="cal-day" data-panel aria-live="polite"></div>
-      </div>`;
-
-    $("[data-prev]", card).addEventListener("click", () => shiftMonth(-1));
-    $("[data-next]", card).addEventListener("click", () => shiftMonth(1));
-    $("[data-today]", card).addEventListener("click", () => select(new Date(today), true));
-    $$("[data-day]", card).forEach((b) => b.addEventListener("click", () => select(parseDay(b.dataset.day))));
-    $(".cal-grid", card).addEventListener("keydown", onKey);
-    drawPanel();
-    if (focus) { const b = $(`[data-day="${dayKey(selected)}"]`, card); b && b.focus(); }
-  }
-
-  function drawPanel() {
-    const k = dayKey(selected), list = byDay[k] || [];
-    const panel = $("[data-panel]", card);
-    panel.innerHTML = `<h3>${esc(fmtLong(selected))}</h3>` + (list.length
-      ? list.map((e) => `<a class="mini-entry" href="#/journal/${e.id}">
-          <span class="t">${esc(e.title || "Untitled")}</span>
-          <span class="small muted">${fmtTime(e.created_at)}${e.mood ? " · " + esc(e.mood) : ""}</span>
-          <span class="x">${esc(plain(e.content).slice(0, 180))}</span></a>`).join("")
-      : `<p class="m-0 muted small">${selected > today ? "This day hasn't happened yet." : "No entry on this day."}</p>
-         ${k === dayKey(today) ? `<button type="button" class="mt-3 btn btn-primary btn-sm" data-write>Write today's entry</button>` : ""}`);
-    const write = $("[data-write]", panel);
-    write && write.addEventListener("click", async () => {
-      write.disabled = true;
-      try { const row = await createEntry(); location.hash = `#/journal/${row.id}`; }
-      catch (err) { toast("Couldn't create an entry. " + err.message); write.disabled = false; }
-    });
-  }
-
-  function select(d, focus = false) {
-    selected = d;
-    if (d.getFullYear() !== month.getFullYear() || d.getMonth() !== month.getMonth()) {
-      month = new Date(d.getFullYear(), d.getMonth(), 1);
-      draw(true);
-      return;
-    }
-    // Same month: update in place so the focused day button survives.
-    const k = dayKey(d);
-    $$("[data-day]", card).forEach((b) => {
-      const on = b.dataset.day === k;
-      b.setAttribute("aria-pressed", String(on));
-      b.tabIndex = on ? 0 : -1;
-      if (on && focus) b.focus();
-    });
-    $("[data-today]", card).disabled = k === dayKey(today);
-    drawPanel();
-  }
-
-  function shiftMonth(delta) {
-    month = new Date(month.getFullYear(), month.getMonth() + delta, 1);
-    const last = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
-    selected = new Date(month.getFullYear(), month.getMonth(), Math.min(selected.getDate(), last));
-    draw();
-  }
-
-  function onKey(e) {
-    const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[e.key];
-    if (step) {
-      e.preventDefault();
-      const d = new Date(selected); d.setDate(d.getDate() + step);
-      select(d, true);
-    } else if (e.key === "Home" || e.key === "End") {
-      e.preventDefault();
-      const last = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
-      select(new Date(month.getFullYear(), month.getMonth(), e.key === "Home" ? 1 : last), true);
-    } else if (e.key === "PageUp" || e.key === "PageDown") {
-      e.preventDefault();
-      shiftMonth(e.key === "PageUp" ? -1 : 1);
-      $(`[data-day="${dayKey(selected)}"]`, card).focus();
-    }
-  }
-
-  draw();
-}
-
-const parseDay = (k) => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };
 
 // ─────────────────────────── Moods you picked ───────────────────────────
 // Counts only the moods people chose on their own entries. Luna never assigns one.

@@ -29,7 +29,7 @@ function loadGroup() {
   try { const g = localStorage.getItem(GROUP_KEY); return GROUPS[g] ? g : "month"; } catch { return "month"; }
 }
 
-export const MOODS = ["Calm", "Content", "Hopeful", "Proud", "Okay", "Tired", "Restless", "Stretched thin", "Unsure", "Low"];
+export const MOODS = ["Great", "Good", "Calm", "Content", "Hopeful", "Proud", "Okay", "Tired", "Restless", "Stretched thin", "Unsure", "Low", "Rough"];
 
 const ICON = {
   search: `<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="M13.5 13.5 17 17"/></svg>`,
