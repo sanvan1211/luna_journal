@@ -11,3 +11,7 @@ node_modules/
 data/
 .DS_Store
 
+# Passwords and API keys: keep them in these files, never in .gitignore itself or in code.
+secrets.local*
+*.key
+*.pem
