@@ -20,7 +20,7 @@ const AI_HANDLING = {
     "Groq handles requests under its own privacy policy.",
   ],
 };
-const AI_CREDIT = { anthropic: "Claude by Anthropic", ollama: "open models running in Ollama", huggingface: "open models on Hugging Face", groq: "open Llama models on Groq" };
+const AI_CREDIT = { anthropic: "Claude by Anthropic", ollama: "open models running in Ollama", huggingface: "open models on Hugging Face", groq: "open models on Groq" };
 
 // Quote shown in "About Luna". Set to { text: "…", by: "…" } to show it; null hides it.
 const QUOTE = null;

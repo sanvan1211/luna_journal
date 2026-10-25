@@ -84,7 +84,7 @@ const MODELS: Record<string, { fast: string; thoughtful: string }> = {
   anthropic: { fast: "claude-haiku-5-5", thoughtful: "claude-sonnet-5-5" },
   ollama: { fast: env("OLLAMA_FAST_MODEL", "llama3.2"), thoughtful: env("OLLAMA_THOUGHTFUL_MODEL", "qwen2.5:7b") },
   huggingface: { fast: env("HF_FAST_MODEL", "Qwen/Qwen2.5-7B-Instruct"), thoughtful: env("HF_THOUGHTFUL_MODEL", "Qwen/Qwen2.5-72B-Instruct") },
-  groq: { fast: env("GROQ_FAST_MODEL", "llama-3.1-8b-instant"), thoughtful: env("GROQ_THOUGHTFUL_MODEL", "llama-3.3-70b-versatile") },
+  groq: { fast: env("GROQ_FAST_MODEL", "openai/gpt-oss-20b"), thoughtful: env("GROQ_THOUGHTFUL_MODEL", "openai/gpt-oss-120b") },
 };
 const models = () => {
   const m = MODELS[PROVIDER];
@@ -179,6 +179,8 @@ async function groq(system: string, user: string, maxTokens: number, model: stri
     headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
     body: JSON.stringify({
       model, max_tokens: maxTokens, temperature: 0.4,
+      // gpt-oss models reason before answering, and reasoning counts toward max_tokens.
+      ...(model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {}),
       messages: [{ role: "system", content: system }, { role: "user", content: user }],
     }),
   });
