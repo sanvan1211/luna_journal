@@ -438,6 +438,11 @@ label.field, div.field { display: grid; gap: 6px; font-size: 13px; color: var(--
 .composer textarea:focus { outline: none; box-shadow: none; }
 .copy-btn { float: right; font-weight: 500; letter-spacing: 0; text-transform: none; }
 .ask-count { margin: 6px 4px 0; text-align: right; color: var(--muted); }
+.quote-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-5); grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.quote-list li { display: grid; gap: var(--s-2); align-self: start; padding-left: var(--s-4); border-left: 2px solid var(--accent); }
+.quote-list blockquote { margin: 0; font: 400 18px/1.5 var(--serif); color: var(--text); overflow-wrap: anywhere; }
+.quote-src { font-size: var(--fs-sm); color: var(--muted); text-decoration: none; font-variant-numeric: tabular-nums; width: fit-content; }
+.quote-src:hover { color: var(--text); text-decoration: underline; }
 .split-table-wrap { max-height: 320px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius-sm); margin: var(--s-3) 0; }
 .split-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 .split-table th, .split-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }

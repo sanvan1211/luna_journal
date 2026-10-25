@@ -5,6 +5,7 @@ import { emptyState } from "../bunny.js";
 import { supportPanel } from "../support.js";
 import { esc, html, $, $$, dayKey, fmtShort, fmtDate, plain, words, openModal } from "../util.js";
 import { renderMoodCalendar } from "./mood-calendar.js";
+import { pickQuotes } from "../quote-picks.js";
 
 // Word families for "Journal language trends". This describes LANGUAGE, not feelings.
 // Colors validated for color-blind separation on the card surface.
@@ -68,6 +69,8 @@ export async function render(main, route) {
 
       <section class="card span-12" aria-labelledby="cal-h" data-calendar></section>
 
+      <section class="card span-12" aria-labelledby="quotes-h" data-quotes></section>
+
       <section class="card span-8" aria-labelledby="trend-h" data-trend></section>
       <section class="card span-4" aria-labelledby="themes-h">
         <div class="card-head"><h2 id="themes-h">Recurring themes</h2></div>
@@ -90,6 +93,7 @@ export async function render(main, route) {
   renderMoods($("[data-moods]", page), entries);
 
   renderMoodCalendar($("[data-calendar]", page), entries);
+  renderQuotes($("[data-quotes]", page), entries);
   renderTrend($("[data-trend]", page), entries);
   renderNoticed($("[data-noticed]", page), entries, insights);
 
@@ -98,6 +102,21 @@ export async function render(main, route) {
     s.scrollIntoView({ behavior: "smooth", block: "center" });
     s.focus({ preventScroll: true });
   }
+}
+
+// ─────────────────────────── Your most important quotes ───────────────────────────
+// Picked on this device by simple rules (js/quote-picks.js), never by AI, and never from writing about danger.
+function renderQuotes(card, entries) {
+  const picks = pickQuotes(entries, { toText: plain });
+  card.innerHTML = `
+    <div class="card-head"><div><h2 id="quotes-h">Your most important quotes</h2>
+      <p class="mt-1 muted small">Lines from the past 30 days where you reflect on yourself, name a feeling, or give a reason. Picked on this device by simple rules, not by AI.</p></div></div>
+    ${picks.length
+      ? `<ul class="quote-list">${picks.map((q) => `<li>
+          <blockquote>${esc(q.text)}</blockquote>
+          <a class="quote-src" href="#/journal/${q.entry.id}">${esc(fmtShort(q.entry.created_at))} · ${esc(q.entry.title || "Untitled")}</a>
+        </li>`).join("")}</ul>`
+      : `<p class="m-0 muted small">Nothing yet. As you write this month, lines where you think things through will show up here.</p>`}`;
 }
 
 // ─────────────────────────── Moods you picked ───────────────────────────
