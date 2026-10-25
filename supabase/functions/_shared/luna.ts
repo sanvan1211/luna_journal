@@ -13,6 +13,12 @@ export const json = (data: unknown, status = 200) =>
 
 export class NotConfigured extends Error {}
 export class Refused extends Error {}
+/** The AI provider's free allowance is used up (HTTP 413/429 after a short wait and retry). */
+export class FreeLimit extends Error {}
+export const FREE_LIMIT_MESSAGE = "Luna has reached its free AI limit for now. Your writing is safe; try again in a little while.";
+
+// Phrases that always show support resources. Run on the FULL text, before any clipping.
+export const URGENT = /\b(kill myself|end my life|want to die|wanna die|suicid\w*|self[- ]?harm\w*|hurt myself|cut myself|cutting myself|no reason to live|better off without me|overdose)\b/i;
 
 export type Entry = { id: string; title: string; content: string; mood: string | null; tags: string[]; created_at: string; cut?: boolean };
 
@@ -32,6 +38,14 @@ Rules you always follow:
 - Only use what is in the journal text you are given. If something isn't there, say you don't see it.
 - Be warm, plain, and brief. No therapy jargon, no exclamation-heavy cheerleading, no emojis.
 - If writing mentions self-harm, wanting to die, abuse, or being in danger, gently encourage reaching out to a trusted adult, a school counselor, or calling/texting 988, without lecturing.`;
+
+/** Deep analysis: the same rules, except "brief" becomes "thorough". Quick Reflect keeps LUNA_RULES. */
+export const DEEP_RULES = LUNA_RULES.replace(
+  "- Be warm, plain, and brief. No therapy jargon, no exclamation-heavy cheerleading, no emojis.",
+  `- Be warm and plain, and be thorough, specific, and insightful: connect details across days, compare days to each other, and say plainly what the writing doesn't show.
+- Keep what the writer said separate from what is only a possibility ("one possibility is…", "it may be that…"). Prefer the writer's own conclusions over new ones.
+- No therapy jargon, no exclamation-heavy cheerleading, no emojis, no advice they didn't ask for, and no pressure to be more productive.`,
+);
 
 /** Wraps a handler with CORS, auth, and consistent error responses. */
 export function serve(handler: (ctx: { body: any; db: SupabaseClient; userId: string }) => Promise<Response>) {
@@ -53,6 +67,7 @@ export function serve(handler: (ctx: { body: any; db: SupabaseClient; userId: st
       return await handler({ body, db, userId: user.id });
     } catch (err) {
       if (err instanceof NotConfigured) return json({ error: "ai_not_configured", message: err.message }, 503);
+      if (err instanceof FreeLimit) return json({ error: "free_limit", message: FREE_LIMIT_MESSAGE }, 429);
       console.error(err);
       return json({ error: "server_error", message: "Luna couldn't finish that. Please try again." }, 500);
     }
@@ -133,9 +148,13 @@ export const pickModel = (choice: unknown): string => {
   return m[String(choice) as "fast" | "thoughtful"] ?? Deno.env.get("LUNA_MODEL") ?? m.fast;
 };
 
+/** Optional per-call settings. `reasoning` applies to reasoning models on Groq; `usage` collects
+ *  how many calls and tokens a multi-step request used. */
+export type CallOptions = { reasoning?: "low" | "medium" | "high"; usage?: { calls: number; tokens: number } };
+
 /** Sends one system prompt and one user message to the configured provider; returns the reply text. */
-export async function complete(system: string, user: string, maxTokens = 600, model = pickModel(null)): Promise<string> {
-  const text = (PROVIDER === "ollama" ? ollama : PROVIDER === "huggingface" ? huggingface : PROVIDER === "groq" ? groq : anthropic)(system, user, maxTokens, model);
+export async function complete(system: string, user: string, maxTokens = 600, model = pickModel(null), opts: CallOptions = {}): Promise<string> {
+  const text = (PROVIDER === "ollama" ? ollama : PROVIDER === "huggingface" ? huggingface : PROVIDER === "groq" ? groq : anthropic)(system, user, maxTokens, model, opts);
   const reply = (await text).trim();
   if (!reply) throw new Error("The model returned an empty reply");
   return reply;
@@ -148,7 +167,7 @@ const THINKING_OFF: Record<string, unknown> = {
   "claude-sonnet-5-5": { type: "between_tools" },
 };
 
-async function anthropic(system: string, user: string, maxTokens: number, model: string) {
+async function anthropic(system: string, user: string, maxTokens: number, model: string, _opts: CallOptions = {}) {
   const key = Deno.env.get("ANTHROPIC_API_KEY");
   if (!key) throw new NotConfigured("ANTHROPIC_API_KEY is not set in Supabase secrets.");
   const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -162,13 +181,14 @@ async function anthropic(system: string, user: string, maxTokens: number, model:
       messages: [{ role: "user", content: user }],
     }),
   });
+  if (res.status === 413 || res.status === 429) throw new FreeLimit(`Anthropic ${res.status}`);
   if (!res.ok) throw new Error(`Anthropic error ${res.status}: ${await res.text()}`);
   const data = await res.json();
   if (data.stop_reason === "refusal") throw new Refused("Claude declined this request");
   return (data.content ?? []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
 }
 
-async function ollama(system: string, user: string, maxTokens: number, model: string) {
+async function ollama(system: string, user: string, maxTokens: number, model: string, _opts: CallOptions = {}) {
   const url = Deno.env.get("OLLAMA_URL")?.replace(/\/+$/, "");
   if (!url) throw new NotConfigured("OLLAMA_URL is not set.");
   let res: Response;
@@ -192,7 +212,7 @@ async function ollama(system: string, user: string, maxTokens: number, model: st
   return String(data.message?.content ?? "").replace(/<think>[\s\S]*?<\/think>/g, "");
 }
 
-async function huggingface(system: string, user: string, maxTokens: number, model: string) {
+async function huggingface(system: string, user: string, maxTokens: number, model: string, _opts: CallOptions = {}) {
   const token = Deno.env.get("HF_TOKEN");
   if (!token) throw new NotConfigured("HF_TOKEN is not set in Supabase secrets.");
   const res = await fetch("https://router.huggingface.co/v1/chat/completions", {
@@ -203,27 +223,39 @@ async function huggingface(system: string, user: string, maxTokens: number, mode
       messages: [{ role: "system", content: system }, { role: "user", content: user }],
     }),
   });
+  if (res.status === 413 || res.status === 429) throw new FreeLimit(`Hugging Face ${res.status}`);
   if (!res.ok) throw new Error(`Hugging Face error ${res.status}: ${await res.text()}`);
   const data = await res.json();
   return String(data.choices?.[0]?.message?.content ?? "");
 }
 
-async function groq(system: string, user: string, maxTokens: number, model: string) {
+async function groq(system: string, user: string, maxTokens: number, model: string, opts: CallOptions = {}) {
   const key = Deno.env.get("GROQ_API_KEY");
   if (!key) throw new NotConfigured("GROQ_API_KEY is not set in Supabase secrets.");
-  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
-    body: JSON.stringify({
-      model, max_tokens: maxTokens, temperature: 0.4,
-      // gpt-oss models reason before answering, and reasoning counts toward max_tokens.
-      ...(model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {}),
-      messages: [{ role: "system", content: system }, { role: "user", content: user }],
-    }),
+  const body = JSON.stringify({
+    model, max_tokens: maxTokens, temperature: 0.4,
+    // gpt-oss models reason before answering, and reasoning counts toward max_tokens.
+    ...(model.startsWith("openai/gpt-oss") ? { reasoning_effort: opts.reasoning ?? "low" } : {}),
+    messages: [{ role: "system", content: system }, { role: "user", content: user }],
   });
-  if (!res.ok) throw new Error(`Groq error ${res.status}: ${await res.text()}`);
-  const data = await res.json();
-  return String(data.choices?.[0]?.message?.content ?? "");
+  // The free tier limits tokens per minute: wait out a short limit once or twice, then give up honestly.
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
+      body,
+    });
+    if (opts.usage) opts.usage.calls++;
+    if (res.status === 413 || res.status === 429) {
+      const wait = parseFloat(res.headers.get("retry-after") ?? "") || parseFloat(res.headers.get("x-ratelimit-reset-tokens") ?? "") || 0;
+      if (res.status === 429 && attempt < 2 && wait > 0 && wait <= 25) { await new Promise((r) => setTimeout(r, wait * 1000 + 250)); continue; }
+      throw new FreeLimit(`Groq ${res.status}: ${await res.text()}`);
+    }
+    if (!res.ok) throw new Error(`Groq error ${res.status}: ${await res.text()}`);
+    const data = await res.json();
+    if (opts.usage) opts.usage.tokens += Number(data.usage?.total_tokens ?? 0);
+    return String(data.choices?.[0]?.message?.content ?? "");
+  }
 }
 
 /** Pulls the first JSON object out of a model reply. */

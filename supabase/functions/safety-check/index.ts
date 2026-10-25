@@ -1,8 +1,6 @@
 // Decides whether to gently show support resources. It never blocks writing, never
 // stores anything, and never labels the person. When unsure, it errs toward showing help.
-import { serve, json, complete, parseJSON, NotConfigured, Refused } from "../_shared/luna.ts";
-
-const URGENT = /\b(kill myself|end my life|want to die|wanna die|suicid\w*|self[- ]?harm\w*|hurt myself|cut myself|cutting myself|no reason to live|better off without me|overdose)\b/i;
+import { serve, json, complete, parseJSON, NotConfigured, Refused, URGENT } from "../_shared/luna.ts";
 
 serve(async ({ body }) => {
   const full = String(body.text ?? "");

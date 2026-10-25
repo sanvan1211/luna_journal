@@ -2,7 +2,7 @@
 // an AI provider directly and never holds an AI API key.
 //
 // Result shape: { ok: true, data } or { ok: false, kind, message }
-//   kind: "notconfigured" | "signin" | "demo" | "offline" | "error"
+//   kind: "notconfigured" | "signin" | "demo" | "limit" | "offline" | "error"
 import { state } from "./state.js";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
 import { demoEntriesForAI } from "./data.js";
@@ -58,6 +58,9 @@ export async function callAI(name, body = {}) {
   if (res.status === 503 && data && data.error === "ai_not_configured") {
     return { ok: false, kind: "notconfigured", message: "The AI key hasn't been added to Supabase secrets yet." };
   }
+  if (res.status === 429 && data && data.error === "free_limit") {
+    return { ok: false, kind: "limit", message: data.message };
+  }
   if (res.status === 401) {
     return { ok: false, kind: "signin", message: "Your session expired. Please sign in again." };
   }
@@ -73,6 +76,7 @@ export function aiProblem(result, { retry = false } = {}) {
     notconfigured: "AI not configured",
     signin: "Sign in to use Luna's AI",
     demo: "Demo mode",
+    limit: "Free AI limit reached",
     offline: "You're offline",
     error: "Something went wrong",
   };
