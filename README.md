@@ -4,7 +4,7 @@ Luna is a private journal that helps you make sense of what you've written. You 
 
 I built it with plain HTML, CSS and JavaScript, so there's no build step. Supabase handles accounts, the database, and the server functions that talk to the AI.
 
-**Try it:** [lunajournal.vercel.app](https://lunajournal.vercel.app/#/home). It's hosted on Vercel for now, and a proper domain is coming soon. Click "Try it with sample data" to look around without making an account.
+**Try it:** [lunajournal.vercel.app](https://lunajournal.vercel.app/#/home). It's hosted on Vercel for now, and a proper domain is coming soon. Click "Try it with sample data" to look around without making an account. (Private accounts are coming soon, check out demo mode for now) 
 
 ## What it does
 
