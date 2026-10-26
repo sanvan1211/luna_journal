@@ -13,6 +13,10 @@ import * as checkin from "./pages/checkin.js";
 import * as ask from "./pages/ask.js";
 import * as settings from "./pages/settings.js";
 
+// Show "Continue with Google" on the sign-in screen. Turn on once Google is set up in Supabase
+// (Authentication → Sign In / Providers → Google). The sign-in code itself is already in place.
+const GOOGLE_SIGNIN_ENABLED = false;
+
 const PAGES = { home, journal, dashboard, checkin, ask, settings };
 const TITLES = { home: "Home", journal: "Journal", dashboard: "Dashboard", checkin: "Check-in", ask: "Ask Luna", settings: "Privacy" };
 
@@ -123,8 +127,8 @@ function authScreen(prefill = "") {
           <button type="button" data-mode="signup" aria-pressed="false">Create account</button>
         </div>
       </div>
-      <button class="btn btn-google" type="button" data-google>${GOOGLE_G}<span>Continue with Google</span></button>
-      <div class="divider">or</div>
+      ${GOOGLE_SIGNIN_ENABLED ? `<button class="btn btn-google" type="button" data-google>${GOOGLE_G}<span>Continue with Google</span></button>
+      <div class="divider">or</div>` : ""}
       <form novalidate class="stack">
         <label class="field">Email<input class="input" type="email" name="email" autocomplete="email" required /></label>
         <div class="stack-tight">
@@ -157,8 +161,8 @@ function authScreen(prefill = "") {
   const showError = (text) => { msg.style.color = "var(--rose)"; msg.textContent = text; };
   if (state.authError) { showError(state.authError); state.authError = null; }
 
-  const google = $("[data-google]", el), googleLabel = $("span", google);
-  google.addEventListener("click", async () => {
+  const google = $("[data-google]", el), googleLabel = google && $("span", google);
+  google && google.addEventListener("click", async () => {
     google.disabled = true;
     googleLabel.textContent = "Opening Google…";
     msg.textContent = "";
