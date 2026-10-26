@@ -172,8 +172,6 @@ function fail(reason, err) {
   state.connection = { reason, error: (err && err.message) || String(err) };
 }
 
-export const signedIn = () => Boolean(state.session);
-
 const DEMO_KEY = "luna-demo";
 export function loadDemoPref() {
   try { state.demo = localStorage.getItem(DEMO_KEY) === "1"; } catch { state.demo = false; }

@@ -24,11 +24,6 @@ export async function listEntries() {
   return must(await sb().from("entries").select("*").order("created_at", { ascending: false }));
 }
 
-export async function getEntry(id) {
-  if (state.demo) return clone(D().entries.find((e) => e.id === id) || null);
-  return must(await sb().from("entries").select("*").eq("id", id).maybeSingle());
-}
-
 export async function createEntry(fields = {}) {
   const base = { title: "", content: "", mood: null, tags: [], ...fields };
   if (state.demo) {

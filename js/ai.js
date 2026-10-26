@@ -17,8 +17,6 @@ const NOT_CONNECTED = {
   unreachable: "Luna couldn't reach Supabase, so the AI can't run. Check your connection.",
 };
 
-export const AI_FUNCTIONS = ["reflect-entry", "generate-insights", "ask-luna", "check-in", "safety-check"];
-
 export async function callAI(name, body = {}) {
   if (!state.configured) {
     const reason = state.connection && state.connection.reason;
