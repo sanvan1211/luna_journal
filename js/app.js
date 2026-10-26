@@ -1,5 +1,6 @@
-import { state, initSupabase, signInWithGoogle, loadDemoPref, loadModelPref, setDemo, subscribe } from "./state.js";
+import { state, initSupabase, signInWithGoogle, sendPasswordReset, updatePassword, loadDemoPref, loadModelPref, setDemo, subscribe } from "./state.js";
 import { initAccount, renderAccount } from "./account.js";
+import { initRail } from "./rail.js";
 import { resetDemoStore } from "./data.js";
 import { esc, html, $, $$, toast } from "./util.js";
 import { emptyState, loadingState } from "./bunny.js";
@@ -45,6 +46,12 @@ async function route() {
     main.append(state.configured ? authScreen() : setupScreen());
     return;
   }
+  // Arrived from a password-reset link: choose the new password before anything else.
+  if (state.session && state.recovery) {
+    main.innerHTML = "";
+    main.append(newPasswordScreen());
+    return;
+  }
 
   main.innerHTML = loadingState();
   try {
@@ -80,7 +87,26 @@ const GOOGLE_G = `<svg viewBox="0 0 18 18" aria-hidden="true" focusable="false">
   <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/>
 </svg>`;
 
-function authScreen() {
+const pwField = (id, label, autocomplete) => `<label class="field">${label}
+  <span class="pw-wrap">
+    <input class="input" type="password" name="password" id="${id}" autocomplete="${autocomplete}" minlength="8" required />
+    <button type="button" class="icon-btn pw-toggle" data-pw-toggle aria-controls="${id}" aria-pressed="false" aria-label="Show password" title="Show password">${EYE.show}</button>
+  </span>
+</label>`;
+
+function wirePwToggle(el) {
+  const btn = $("[data-pw-toggle]", el), input = $(`#${btn.getAttribute("aria-controls")}`, el);
+  btn.addEventListener("click", () => {
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    btn.setAttribute("aria-pressed", String(show));
+    btn.setAttribute("aria-label", show ? "Hide password" : "Show password");
+    btn.title = show ? "Hide password" : "Show password";
+    btn.innerHTML = show ? EYE.hide : EYE.show;
+  });
+}
+
+function authScreen(prefill = "") {
   let mode = authMode;
   authMode = "signin";
   const el = html(`<div class="page"><div class="auth">
@@ -100,12 +126,10 @@ function authScreen() {
       <div class="divider">or</div>
       <form novalidate class="stack">
         <label class="field">Email<input class="input" type="email" name="email" autocomplete="email" required /></label>
-        <label class="field">Password
-          <span class="pw-wrap">
-            <input class="input" type="password" name="password" id="auth-password" autocomplete="current-password" minlength="8" required />
-            <button type="button" class="icon-btn pw-toggle" data-pw-toggle aria-controls="auth-password" aria-pressed="false" aria-label="Show password" title="Show password">${EYE.show}</button>
-          </span>
-        </label>
+        <div class="stack-tight">
+          ${pwField("auth-password", "Password", "current-password")}
+          <button type="button" class="link-btn small forgot" data-forgot>Forgot password?</button>
+        </div>
         <div data-msg role="alert" class="small"></div>
         <button class="btn btn-primary" type="submit">Sign in</button>
       </form>
@@ -120,21 +144,17 @@ function authScreen() {
     $$("[data-mode]", el).forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.mode === m)));
     submit.textContent = mode === "signin" ? "Sign in" : "Create account";
     form.password.autocomplete = mode === "signin" ? "current-password" : "new-password";
+    forgot.hidden = mode !== "signin";
     msg.textContent = "";
   };
+  const forgot = $("[data-forgot]", el);
+  forgot.addEventListener("click", () => main.replaceChildren(resetScreen(form.email.value.trim())));
+  if (prefill) form.email.value = prefill;
   $$("[data-mode]", el).forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
   setMode(mode);
-  const pwToggle = $("[data-pw-toggle]", el);
-  pwToggle.addEventListener("click", () => {
-    const show = form.password.type === "password";
-    form.password.type = show ? "text" : "password";
-    pwToggle.setAttribute("aria-pressed", String(show));
-    pwToggle.setAttribute("aria-label", show ? "Hide password" : "Show password");
-    pwToggle.title = show ? "Hide password" : "Show password";
-    pwToggle.innerHTML = show ? EYE.hide : EYE.show;
-  });
+  wirePwToggle(el);
   const showError = (text) => { msg.style.color = "var(--rose)"; msg.textContent = text; };
-  if (state.authError) { showError(`Couldn't sign in with Google: ${state.authError}`); state.authError = null; }
+  if (state.authError) { showError(state.authError); state.authError = null; }
 
   const google = $("[data-google]", el), googleLabel = $("span", google);
   google.addEventListener("click", async () => {
@@ -171,6 +191,68 @@ function authScreen() {
       msg.style.color = "var(--sage)";
       msg.textContent = "Check your email to confirm your account, then sign in.";
     }
+  });
+  return el;
+}
+
+// "Forgot password?": emails a link that signs the user in and opens newPasswordScreen.
+function resetScreen(email) {
+  const el = html(`<div class="page"><div class="auth-narrow auth">
+    <div class="card">
+      <div>
+        <h1>Reset your password</h1>
+        <p class="mt-1 muted">Enter the email you signed up with. We'll send a link to choose a new password.</p>
+      </div>
+      <form novalidate class="stack">
+        <label class="field">Email<input class="input" type="email" name="email" autocomplete="email" required /></label>
+        <div data-msg role="alert" class="small"></div>
+        <button class="btn btn-primary" type="submit">Send reset link</button>
+      </form>
+      <p class="m-0 small muted">Open the link in this browser. It works for one hour.</p>
+      <button type="button" class="link-btn small" data-back>Back to sign in</button>
+    </div></div></div>`);
+  const form = $("form", el), msg = $("[data-msg]", el), submit = $("button[type=submit]", form);
+  form.email.value = email;
+  $("[data-back]", el).addEventListener("click", () => main.replaceChildren(authScreen(form.email.value.trim())));
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const address = form.email.value.trim();
+    if (!/^\S+@\S+\.\S+$/.test(address)) { msg.style.color = "var(--rose)"; msg.textContent = "Enter the email address for your account."; return; }
+    submit.disabled = true; msg.textContent = "";
+    const { error } = await sendPasswordReset(address);
+    submit.disabled = false;
+    if (error) { msg.style.color = "var(--rose)"; msg.textContent = `Couldn't send the link: ${error}`; return; }
+    msg.style.color = "var(--sage)";
+    msg.textContent = `If there's a Luna account for ${address}, a reset link is on its way. Check your spam folder too.`;
+    submit.textContent = "Send again";
+  });
+  return el;
+}
+
+function newPasswordScreen() {
+  const el = html(`<div class="page"><div class="auth-narrow auth">
+    <div class="card">
+      <div>
+        <h1>Choose a new password</h1>
+        <p class="mt-1 muted">For ${esc(state.session.user.email)}. Use at least 8 characters.</p>
+      </div>
+      <form novalidate class="stack">
+        ${pwField("new-password", "New password", "new-password")}
+        <div data-msg role="alert" class="small"></div>
+        <button class="btn btn-primary" type="submit">Save password</button>
+      </form>
+    </div></div></div>`);
+  wirePwToggle(el);
+  const form = $("form", el), msg = $("[data-msg]", el), submit = $("button[type=submit]", form);
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (form.password.value.length < 8) { msg.style.color = "var(--rose)"; msg.textContent = "Use at least 8 characters."; return; }
+    submit.disabled = true; msg.textContent = "";
+    const { error } = await updatePassword(form.password.value);
+    submit.disabled = false;
+    if (error) { msg.style.color = "var(--rose)"; msg.textContent = `Couldn't save it: ${error}`; return; }
+    toast("Password updated");
+    navigate("#/journal");
   });
   return el;
 }
@@ -240,6 +322,7 @@ window.addEventListener("hashchange", route);
   loadDemoPref();
   loadModelPref();
   initAccount();
+  initRail();
   if (state.demo) resetDemoStore();
   await initSupabase();
   route();

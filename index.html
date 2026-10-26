@@ -16,6 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
+  <script>try { if (localStorage.getItem("luna-rail") === "collapsed") document.documentElement.classList.add("rail-collapsed"); } catch {}</script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -27,11 +28,16 @@
   </div>
 
   <div class="shell">
-    <nav class="rail" aria-label="Main">
-      <a class="brand" href="#/home" aria-label="Luna home">
-        <svg viewBox="0 0 100 100" width="30" height="30" aria-hidden="true"><defs><clipPath id="logo-clip"><circle cx="50" cy="50" r="34.5"/></clipPath></defs><circle cx="50" cy="50" r="40" fill="none" stroke="#e8c88a" stroke-width="11"/><g clip-path="url(#logo-clip)" fill="#e8c88a"><g transform="translate(-22 4) scale(1.2)"><circle cx="13" cy="57" r="6.5"/><path d="M10 66C10 50 24 40 42 40C52 40 58 43 62 47L70 46C74 54 74 66 72 78H14C11 75 10 71 10 66Z"/><ellipse cx="65" cy="37" rx="14.5" ry="13"/><ellipse cx="74.5" cy="40.5" rx="8" ry="7.2"/><ellipse cx="72" cy="76" rx="9" ry="3.6"/><rect x="0" y="74" width="90" height="40"/><path d="M63 25.5C54 22.5 46.5 28 45.5 37C44.6 46 46.5 55 51 57.5C55.5 60 58.5 54 58 47C57.6 40 58.5 32 63.5 28.8Z" stroke="#0f1b2d" stroke-width="2.4"/><circle cx="69.5" cy="35.5" r="1.9" fill="#0f1b2d"/></g></g></svg>
-        <span>Luna</span>
-      </a>
+    <nav class="rail" id="rail" aria-label="Main">
+      <div class="rail-head">
+        <a class="brand" href="#/home" aria-label="Luna home">
+          <svg viewBox="0 0 100 100" width="30" height="30" aria-hidden="true"><defs><clipPath id="logo-clip"><circle cx="50" cy="50" r="34.5"/></clipPath></defs><circle cx="50" cy="50" r="40" fill="none" stroke="#e8c88a" stroke-width="11"/><g clip-path="url(#logo-clip)" fill="#e8c88a"><g transform="translate(-22 4) scale(1.2)"><circle cx="13" cy="57" r="6.5"/><path d="M10 66C10 50 24 40 42 40C52 40 58 43 62 47L70 46C74 54 74 66 72 78H14C11 75 10 71 10 66Z"/><ellipse cx="65" cy="37" rx="14.5" ry="13"/><ellipse cx="74.5" cy="40.5" rx="8" ry="7.2"/><ellipse cx="72" cy="76" rx="9" ry="3.6"/><rect x="0" y="74" width="90" height="40"/><path d="M63 25.5C54 22.5 46.5 28 45.5 37C44.6 46 46.5 55 51 57.5C55.5 60 58.5 54 58 47C57.6 40 58.5 32 63.5 28.8Z" stroke="#0f1b2d" stroke-width="2.4"/><circle cx="69.5" cy="35.5" r="1.9" fill="#0f1b2d"/></g></g></svg>
+          <span>Luna</span>
+        </a>
+        <button type="button" class="rail-toggle" id="rail-toggle" aria-controls="rail" aria-expanded="true" aria-label="Close sidebar" title="Close sidebar (Ctrl+Shift+S)">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="2.5"/><path d="M7.5 3.5v13"/></svg>
+        </button>
+      </div>
       <ul class="nav-list">
         <li><a href="#/home" data-nav="home"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 9.5 10 4l7 5.5 M5 8v9h10V8" /></svg><span>Home</span></a></li>
         <li><a href="#/journal" data-nav="journal"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3h8l3 3v11H5z M8 8h5 M8 11h5 M8 14h3" /></svg><span>Journal</span></a></li>

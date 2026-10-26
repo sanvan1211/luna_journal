@@ -6,7 +6,8 @@ export const state = {
   // Why Supabase isn't usable, for the setup screen: null when it's fine, otherwise
   // { reason: "empty" | "cdn" | "unreachable", error }
   connection: null,
-  authError: null,   // an error Supabase sent back from Google sign-in, shown once on the sign-in screen
+  authError: null,   // why Google sign-in or a reset link failed, shown once on the sign-in screen
+  recovery: false,   // signed in from a password-reset link: ask for a new password first
   sb: null,          // Supabase client
   session: null,     // Supabase auth session
   demo: false,       // demo mode on/off
@@ -54,10 +55,11 @@ export async function initSupabase() {
     const { data } = await state.sb.auth.getSession(); // also exchanges ?code=… for a session
     state.session = data.session;
     if (returning) finishOAuthReturn(returning);
-    state.sb.auth.onAuthStateChange((_event, session) => {
+    state.sb.auth.onAuthStateChange((event, session) => {
       const changed = (session && session.user.id) !== (state.session && state.session.user.id);
       state.session = session;
-      if (changed) emit("auth");
+      if (event === "PASSWORD_RECOVERY" && !state.recovery) { state.recovery = true; emit("auth"); }
+      else if (changed) emit("auth");
     });
   } catch (err) {
     console.error("Could not start the Supabase client", err);
@@ -87,10 +89,15 @@ function oauthReturnParams() {
 }
 
 // Removes ?code and other auth params, then opens the journal (signed in) or shows why it didn't work.
+// The same return handles Google sign-in and password-reset links.
 function finishOAuthReturn({ query, error }) {
+  const resetting = takeResetPending();
+  if (state.session && resetting) state.recovery = true;
   if (!state.session) {
-    state.authError = error || "Google sign-in didn't finish. Please try again.";
-    console.error("Google sign-in failed", state.authError);
+    state.authError = resetting
+      ? "That reset link didn't work. It may have expired, or been opened in a different browser than the one you asked from. Use “Forgot password?” to get a new one."
+      : `Couldn't sign in with Google: ${error || "sign-in didn't finish. Please try again."}`;
+    console.error(resetting ? "Password reset link failed" : "Google sign-in failed", error);
   }
   AUTH_PARAMS.forEach((k) => query.delete(k));
   const rest = query.toString();
@@ -120,6 +127,40 @@ export async function signInWithGoogle() {
     console.error("Google sign-in failed", err);
     return { error: err.message || String(err) };
   }
+}
+
+// Reset links only work in the browser that asked for them (PKCE), so remember the request here.
+const RESET_KEY = "luna-pw-reset";
+const RESET_TTL = 60 * 60 * 1000; // Supabase reset links last an hour by default
+
+function takeResetPending() {
+  try {
+    const at = +localStorage.getItem(RESET_KEY);
+    localStorage.removeItem(RESET_KEY);
+    return Boolean(at) && Date.now() - at < RESET_TTL;
+  } catch { return false; }
+}
+
+/** Emails a password-reset link. Resolves with { error } on failure. */
+export async function sendPasswordReset(email) {
+  try {
+    const { error } = await state.sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+    if (error) throw error;
+    try { localStorage.setItem(RESET_KEY, String(Date.now())); } catch {}
+    return {};
+  } catch (err) {
+    console.error("Couldn't send the reset email", err);
+    const msg = err.message || String(err);
+    return { error: /rate limit|too many/i.test(msg) ? "Too many reset emails were sent recently. Wait a few minutes, then try again." : msg };
+  }
+}
+
+/** Sets a new password for the signed-in user (after following a reset link). */
+export async function updatePassword(password) {
+  const { error } = await state.sb.auth.updateUser({ password });
+  if (error) { console.error("Couldn't update the password", error); return { error: error.message }; }
+  state.recovery = false;
+  return {};
 }
 
 function fail(reason, err) {
