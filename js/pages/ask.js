@@ -66,7 +66,7 @@ export async function render(main, route) {
               <button type="submit" class="btn btn-primary">Ask</button>
             </form>
             <p class="small ask-count" data-count aria-live="polite" hidden></p>
-            <p class="center mt-2 small muted">Luna answers only from your entries. It isn't a therapist and can be wrong.${state.demo ? " Demo chats aren't saved." : ""}</p>
+            <p class="center mt-2 small muted">Luna answers only from your entries. It isn't a therapist and can be wrong.${state.demo ? " Demo chats aren't saved." : ""} Need someone to talk to? Call or text <a href="tel:988">988</a>.</p>
           </div>
         </div>
       </section>
