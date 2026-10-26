@@ -3,31 +3,19 @@
 // first-person summary to the entry. Nothing is inserted until the writer edits/reads the preview
 // and clicks Insert.
 //
-// Demo mode without an account can't call the AI, so it uses pre-written replies that say they are
-// samples (and are labelled "Sample reply (demo mode)"). They never pretend a model wrote them.
+// Demo mode without an account can't call the AI, so it uses pre-written replies written for each
+// sample entry (js/demo-replies.js), each labelled "Sample reply (demo mode)". They never pretend a
+// model wrote them.
 import { state } from "./state.js";
 import { getEntryChat, saveEntryChat } from "./data.js";
 import { callAI, aiProblem, aiLoading } from "./ai.js";
 import { safetyNote, supportMini } from "./support.js";
 import { URGENT } from "./quote-picks.js";
+import { sampleFirst, sampleFollow, sampleSummary } from "./demo-replies.js";
 import { esc, $, fmtLong, toast } from "./util.js";
 
 const MAX_REPLY = 2000;
 const DISCLAIMER = "Luna reflects on what you wrote. It isn't advice or a diagnosis, and it can be wrong.";
-
-const SAMPLE = {
-  reflection: "This is a pre-written sample, because Luna's AI is off in demo mode, so I haven't actually read your entry. With an account, this first message would reflect on what you wrote here. What part of this day stands out most when you look back at it?",
-  replies: [
-    "Another pre-written sample. With an account, Luna would answer from this entry and your messages, and nothing else. Is there anything about this day you'd want to remember?",
-    "Still a sample reply in demo mode. In the real app, Luna keeps its replies short and sticks to what you wrote. If you added one more line to this entry, what would it say?",
-  ],
-};
-
-/** A sample summary made only from the writer's own messages, so it adds nothing they didn't say. */
-function sampleSummary(messages) {
-  const said = messages.filter((m) => m.role === "user").map((m) => m.content.trim().replace(/\s+/g, " ")).join(" ");
-  return `I talked with Luna about this entry. What I said: ${said}`;
-}
 
 const SEND = `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 16V4M5 9l5-5 5 5"/></svg>`;
 
@@ -67,9 +55,9 @@ export async function mountReflection(el, { entry, flush, text, append }) {
     });
     if (r.ok) return { text: r.data.reflection || r.data.reply || r.data.summary || "", sample: false };
     if (r.kind === "demo") {
-      if (mode === "reflect") return { text: SAMPLE.reflection, sample: true };
-      if (mode === "summary") return { text: sampleSummary(messages), sample: true };
-      return { text: SAMPLE.replies[sampleTurn++ % SAMPLE.replies.length], sample: true };
+      if (mode === "reflect") return { text: sampleFirst(entry.id), sample: true };
+      if (mode === "summary") return { text: sampleSummary(entry.id, messages), sample: true };
+      return { text: sampleFollow(entry.id, sampleTurn++), sample: true };
     }
     return { problem: r };
   }
@@ -109,7 +97,7 @@ export async function mountReflection(el, { entry, flush, text, append }) {
       <p class="refl-hint small faint">Enter to send · Shift+Enter for a new line</p>
       <p class="mt-3 small muted">${DISCLAIMER}</p>
       ${saved || state.demo ? "" : `<p class="small faint m-0">This conversation isn't saved yet, so it will be gone if you leave this entry. (Saving needs a one-time database update.)</p>`}
-      ${state.demo ? `<p class="small faint m-0">Demo mode: this conversation is kept only until you leave demo mode.</p>` : ""}
+      ${state.demo ? `<p class="small faint m-0">Demo mode: replies are pre-written samples. With an account, Luna answers from your own entry.</p>` : ""}
       <div class="mt-3">${supportMini()}</div>
     </div>`;
 
