@@ -133,11 +133,12 @@ ${e.content}${e.cut ? "\n[entry continues]" : ""}
 }
 
 // Which AI writes Luna's replies. Set LUNA_PROVIDER in the function secrets (or supabase/functions/.env locally):
-//   anthropic    Claude through Anthropic's API (needs ANTHROPIC_API_KEY). The default.
-//   ollama       a model running on your own computer (OLLAMA_URL, e.g. http://host.docker.internal:11434)
+//   groq         GPT-OSS on Groq (needs GROQ_API_KEY). The default.
+//   openai       the OpenAI Platform (needs OPENAI_API_KEY, OPENAI_FAST_MODEL, OPENAI_THOUGHTFUL_MODEL)
 //   huggingface  Hugging Face Inference Providers (needs HF_TOKEN)
-//   groq         open models on Groq (needs GROQ_API_KEY)
-const PROVIDER = (Deno.env.get("LUNA_PROVIDER") ?? "anthropic").trim().toLowerCase();
+//   anthropic    Claude through Anthropic's API (needs ANTHROPIC_API_KEY)
+//   ollama       a model running on your own computer (OLLAMA_URL, e.g. http://host.docker.internal:11434)
+const PROVIDER = (Deno.env.get("LUNA_PROVIDER") ?? "groq").trim().toLowerCase();
 const env = (name: string, fallback: string) => Deno.env.get(name)?.trim() || fallback;
 
 // The two choices under Account → Model, per provider. Anything else gets the default.
@@ -146,10 +147,13 @@ const MODELS: Record<string, { fast: string; thoughtful: string }> = {
   ollama: { fast: env("OLLAMA_FAST_MODEL", "llama3.2"), thoughtful: env("OLLAMA_THOUGHTFUL_MODEL", "qwen2.5:7b") },
   huggingface: { fast: env("HF_FAST_MODEL", "Qwen/Qwen2.5-7B-Instruct"), thoughtful: env("HF_THOUGHTFUL_MODEL", "Qwen/Qwen2.5-72B-Instruct") },
   groq: { fast: env("GROQ_FAST_MODEL", "openai/gpt-oss-20b"), thoughtful: env("GROQ_THOUGHTFUL_MODEL", "openai/gpt-oss-120b") },
+  // OpenAI's model names change often, so they're set as secrets rather than guessed here.
+  openai: { fast: env("OPENAI_FAST_MODEL", ""), thoughtful: env("OPENAI_THOUGHTFUL_MODEL", "") },
 };
 const models = () => {
   const m = MODELS[PROVIDER];
   if (!m) throw new NotConfigured(`LUNA_PROVIDER "${PROVIDER}" isn't one of: ${Object.keys(MODELS).join(", ")}.`);
+  if (!m.fast || !m.thoughtful) throw new NotConfigured("Set OPENAI_FAST_MODEL and OPENAI_THOUGHTFUL_MODEL in Supabase secrets.");
   return m;
 };
 export const pickModel = (choice: unknown): string => {
@@ -163,7 +167,7 @@ export type CallOptions = { reasoning?: "low" | "medium" | "high"; usage?: { cal
 
 /** Sends one system prompt and one user message to the configured provider; returns the reply text. */
 export async function complete(system: string, user: string, maxTokens = 600, model = pickModel(null), opts: CallOptions = {}): Promise<string> {
-  const text = (PROVIDER === "ollama" ? ollama : PROVIDER === "huggingface" ? huggingface : PROVIDER === "groq" ? groq : anthropic)(system, user, maxTokens, model, opts);
+  const text = (PROVIDER === "ollama" ? ollama : PROVIDER === "huggingface" ? huggingface : PROVIDER === "groq" ? groq : PROVIDER === "openai" ? openai : anthropic)(system, user, maxTokens, model, opts);
   const reply = (await text).trim();
   if (!reply) throw new Error("The model returned an empty reply");
   return reply;
@@ -266,6 +270,22 @@ async function groq(system: string, user: string, maxTokens: number, model: stri
     if (opts.usage) opts.usage.tokens += Number(data.usage?.total_tokens ?? 0);
     return String(data.choices?.[0]?.message?.content ?? "");
   }
+}
+
+async function openai(system: string, user: string, maxTokens: number, model: string, _opts: CallOptions = {}) {
+  const key = Deno.env.get("OPENAI_API_KEY");
+  if (!key) throw new NotConfigured("OPENAI_API_KEY is not set in Supabase secrets.");
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
+    // No temperature: some OpenAI reasoning models only accept the default.
+    body: JSON.stringify({ model, max_completion_tokens: maxTokens, messages: [{ role: "system", content: system }, { role: "user", content: user }] }),
+    signal: AbortSignal.timeout(75000),
+  });
+  if (res.status === 413 || res.status === 429) throw await freeLimit("OpenAI", res);
+  if (!res.ok) throw new Error(`OpenAI error ${res.status}: ${await res.text()}`);
+  const data = await res.json();
+  return String(data.choices?.[0]?.message?.content ?? "");
 }
 
 /** Pulls the first JSON object out of a model reply. */

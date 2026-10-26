@@ -20,8 +20,9 @@ const MODEL_NAMES = {
   ollama: { fast: "Llama 3.2 (on this computer)", thoughtful: "Qwen 2.5 7B (on this computer)" },
   huggingface: { fast: "Qwen 2.5 7B (Hugging Face)", thoughtful: "Qwen 2.5 72B (Hugging Face)" },
   groq: { fast: "GPT-OSS 20B (Groq)", thoughtful: "GPT-OSS 120B (Groq)" },
+  openai: { fast: "Fast model (OpenAI)", thoughtful: "Thoughtful model (OpenAI)" },
 };
-const names = MODEL_NAMES[AI_PROVIDER] || MODEL_NAMES.anthropic;
+const names = MODEL_NAMES[AI_PROVIDER] || MODEL_NAMES.groq;
 export const MODELS = {
   fast: { name: names.fast, blurb: "Fast, for everyday reflections" },
   thoughtful: { name: names.thoughtful, blurb: "Slower, more thoughtful answers" },

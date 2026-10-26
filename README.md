@@ -54,19 +54,46 @@ cd luna_journal              # the repo root
 supabase login
 supabase init                 # say no to the VS Code prompts; it keeps the functions folder
 supabase link --project-ref YOUR_PROJECT_REF
-supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
-supabase functions deploy reflect-entry generate-insights ask-luna check-in safety-check
+supabase secrets set LUNA_PROVIDER=groq GROQ_API_KEY=gsk_...     # see "Choosing the AI model" below
+supabase functions deploy reflect-entry generate-insights ask-luna check-in safety-check analyze-journal
 ```
 
 Until the functions and key are set up, the app shows an honest "AI not configured" state. It never shows fake AI output.
 
-### Choosing the AI model
+## Choosing the AI model
 
-Each person picks a model in the account menu: **Claude Haiku 5.5** (fast, the default) or **Claude Sonnet 5.5** (slower, more thoughtful). The functions accept only those two. Safety checks always use the default model. To change the default for everyone, set a secret:
+Luna's AI runs only in the Supabase Edge Functions. API keys go in **Supabase secrets**, never in this repo or in `js/config.js`. Pick a provider with the `LUNA_PROVIDER` secret, then set `ai` in `js/config.js` to the same name so the Privacy page says honestly where writing goes.
+
+### Default: GPT-OSS on Groq
+
+1. Create a free account at [console.groq.com](https://console.groq.com) → **API Keys** → **Create API Key**.
+2. Set it as a secret (type it in your own terminal so the key never lands in a file or a chat):
+   ```bash
+   supabase secrets set LUNA_PROVIDER=groq GROQ_API_KEY=gsk_...
+   ```
+3. In `js/config.js`, keep `ai: "groq"`.
+
+Each person picks a model in the account menu: **Fast** (`openai/gpt-oss-20b`) or **Thoughtful** (`openai/gpt-oss-120b`). Safety checks always use Fast. Deep analysis uses Fast for notes and Thoughtful for the analysis. To use other Groq models, set `GROQ_FAST_MODEL` and `GROQ_THOUGHTFUL_MODEL`.
+
+Groq's free tier has limits on tokens per minute and per day. When one is reached, Luna says so and tells people when it should work again. Deep analysis uses the most (about 15,000 tokens a run).
+
+### Other providers
+
+| Provider | `LUNA_PROVIDER` | Secrets to set | Models |
+|---|---|---|---|
+| [OpenAI Platform](https://platform.openai.com/api-keys) | `openai` | `OPENAI_API_KEY`, `OPENAI_FAST_MODEL`, `OPENAI_THOUGHTFUL_MODEL` | You choose both from OpenAI's model list (names change often, so there's no default) |
+| [Hugging Face](https://huggingface.co/settings/tokens) | `huggingface` | `HF_TOKEN` | Qwen 2.5 7B / 72B by default; override with `HF_FAST_MODEL`, `HF_THOUGHTFUL_MODEL` |
+| [Anthropic](https://console.anthropic.com/settings/keys) | `anthropic` | `ANTHROPIC_API_KEY` | Claude Haiku 5.5 (Fast) / Claude Sonnet 5.5 (Thoughtful) |
+| [Ollama](https://ollama.com) (on your own computer, local Supabase only) | `ollama` | `OLLAMA_URL` (e.g. `http://host.docker.internal:11434`) | `llama3.2` / `qwen2.5:7b` by default; override with `OLLAMA_FAST_MODEL`, `OLLAMA_THOUGHTFUL_MODEL` |
+
+For example, to switch to OpenAI:
 
 ```bash
-supabase secrets set LUNA_MODEL=claude-sonnet-5-5
+supabase secrets set LUNA_PROVIDER=openai OPENAI_API_KEY=sk-... OPENAI_FAST_MODEL=<model> OPENAI_THOUGHTFUL_MODEL=<model>
+supabase functions deploy reflect-entry generate-insights ask-luna check-in safety-check analyze-journal
 ```
+
+Then set `ai: "openai"` in `js/config.js`. To change which model everyone gets by default (instead of Fast), set `LUNA_MODEL` to a model name. If a provider's key or models are missing, the app shows an honest "AI not configured" message; it never shows made-up answers.
 
 After changing anything in `supabase/functions/`, deploy again with the same `supabase functions deploy …` command.
 

@@ -19,8 +19,12 @@ const AI_HANDLING = {
     "Requests go from your browser to Luna's server functions, which call an open model through Groq. Your browser never holds an AI key.",
     "Groq handles requests under its own privacy policy.",
   ],
+  openai: [
+    "Requests go from your browser to Luna's server functions, which call OpenAI's API. Your browser never holds an AI key.",
+    "OpenAI handles API requests under its own privacy policy.",
+  ],
 };
-const AI_CREDIT = { anthropic: "Claude by Anthropic", ollama: "open models running in Ollama", huggingface: "open models on Hugging Face", groq: "open models on Groq" };
+const AI_CREDIT = { anthropic: "Claude by Anthropic", ollama: "open models running in Ollama", huggingface: "open models on Hugging Face", groq: "open models on Groq", openai: "OpenAI" };
 
 // How this account signs in, from Supabase's app_metadata.provider.
 const signInMethod = (user) => {
@@ -65,7 +69,7 @@ export async function render(main) {
           </dl>
           <h3>How it's handled</h3>
           <ul>
-            ${(AI_HANDLING[AI_PROVIDER] || AI_HANDLING.anthropic).map((t) => `<li>${esc(t)}</li>`).join("")}
+            ${(AI_HANDLING[AI_PROVIDER] || AI_HANDLING.groq).map((t) => `<li>${esc(t)}</li>`).join("")}
             <li>You pick the model under Account: ${esc(MODELS.fast.name)} (fast) or ${esc(MODELS.thoughtful.name)} (more thoughtful). Safety checks always use the fast one.</li>
             <li>A short safety check reads text you send for reflection, only to decide whether to show support resources.</li>
             <li>Your entries are stored in a database where only your account can read them. Luna never sells or shares them.</li>
@@ -105,7 +109,7 @@ export async function render(main) {
           ${QUOTE ? `<figure class="about-quote"><blockquote>“${esc(QUOTE.text)}”</blockquote><figcaption>${esc(QUOTE.by)}</figcaption></figure>` : ""}
           <dl class="about-facts">
             <div><dt>Built for</dt><dd>Congressional App Challenge</dd></div>
-            <div><dt>Made with</dt><dd>HTML, CSS, JavaScript, Supabase, and ${esc(AI_CREDIT[AI_PROVIDER] || AI_CREDIT.anthropic)}</dd></div>
+            <div><dt>Made with</dt><dd>HTML, CSS, JavaScript, Supabase, and ${esc(AI_CREDIT[AI_PROVIDER] || AI_CREDIT.groq)}</dd></div>
             <div><dt>Mascot</dt><dd>Luna, a Holland Lop</dd></div>
           </dl>
         </div>

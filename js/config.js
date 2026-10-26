@@ -6,7 +6,7 @@
 // (Supabase Dashboard → Project Settings → API).
 //
 // `ai` names the provider the Edge Functions use (LUNA_PROVIDER), so the app can say honestly
-// where your writing goes: "anthropic", "ollama", "huggingface", or "groq".
+// where your writing goes: "groq" (the default), "openai", "huggingface", "anthropic", or "ollama".
 
 const LOCAL = { url: "", anonKey: "", ai: "ollama" };
 const HOSTED = {
