@@ -1,4 +1,4 @@
-import { serve, json, loadEntries, formatEntries, complete, parseJSON, LUNA_RULES, pickModel } from "../_shared/luna.ts";
+import { serve, json, loadEntries, formatEntries, complete, parseJSON, stripIds, LUNA_RULES, pickModel } from "../_shared/luna.ts";
 
 type Raw = {
   insights?: { insight: string; explanation: string; confidence: string; supporting_entry_ids: string[] }[];
@@ -18,7 +18,7 @@ Return ONLY a JSON object, no other text:
   "insights": [
     {
       "insight": "one sentence about a pattern in their writing, e.g. 'Your entries after a run tend to use calmer language.'",
-      "explanation": "2-3 sentences pointing to what in the entries shows this. End by noting it's a pattern in their words, not a conclusion about them.",
+      "explanation": "2-3 sentences pointing to what in the entries shows this, naming entries by date or title (never by id). End by noting it's a pattern in their words, not a conclusion about them.",
       "confidence": "low" | "medium" | "high",
       "supporting_entry_ids": ["ids of the entries that show this, copied exactly"]
     }
@@ -28,16 +28,17 @@ Return ONLY a JSON object, no other text:
 Rules: at most 2 insights. Each insight needs at least 2 supporting entries; use "high" only with 4+.
 Never describe mental health, diagnoses, or a mood score. If there is no clear pattern, return "insights": [].`,
     formatEntries(entries),
-    900,
+    body.model === "thoughtful" ? 1800 : 900,
     pickModel(body.model),
+    body.model === "thoughtful" ? { reasoning: "medium" } : {},
   );
 
   const parsed = parseJSON<Raw>(reply) ?? {};
   const known = new Set(entries.map((e) => e.id));
   const insights = (parsed.insights ?? [])
     .map((i) => ({
-      insight: String(i.insight ?? "").slice(0, 300),
-      explanation: String(i.explanation ?? "").slice(0, 800),
+      insight: stripIds(String(i.insight ?? "")).slice(0, 300),
+      explanation: stripIds(String(i.explanation ?? "")).slice(0, 800),
       confidence: ["low", "medium", "high"].includes(i.confidence) ? i.confidence : "low",
       supporting_entry_ids: (i.supporting_entry_ids ?? []).filter((id) => known.has(id)),
     }))

@@ -1,6 +1,7 @@
 // Shared helpers for Luna's Edge Functions (Deno).
 import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { splitByDate } from "./date-split.js";
+export { stripIds } from "./text.js";
 import { retryAfterSeconds } from "./limits.js";
 import { userAI, loadUserAI, compat, ProviderError } from "./providers.ts";
 
@@ -132,9 +133,12 @@ export function withinBudget(entries: Entry[], total = TOTAL_CHARS): Entry[] {
 
 /** Formats entries for the model. Pass entries already trimmed with withinBudget when you need
  *  to know which ones were sent (for citations); otherwise the budget is applied here. */
+/** The entry's day in New York time (the app's day), so an evening entry isn't shown as the next day. */
+const nyDay = (iso: string) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(iso));
+
 export function formatEntries(entries: Entry[]) {
   return withinBudget(entries).map((e) =>
-    `<entry id="${e.id}" date="${e.created_at.slice(0, 10)}"${e.mood ? ` self_reported_mood="${e.mood}"` : ""}${e.tags?.length ? ` tags="${e.tags.join(",")}"` : ""}>
+    `<entry id="${e.id}" date="${nyDay(e.created_at)}"${e.mood ? ` self_reported_mood="${e.mood}"` : ""}${e.tags?.length ? ` tags="${e.tags.join(",")}"` : ""}>
 <title>${e.title || "Untitled"}</title>
 ${e.content}${e.cut ? "\n[entry continues]" : ""}
 </entry>`).join("\n\n");

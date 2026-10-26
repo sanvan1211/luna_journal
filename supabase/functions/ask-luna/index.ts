@@ -1,4 +1,4 @@
-import { serve, json, loadEntries, formatEntries, withinBudget, complete, parseJSON, LUNA_RULES, Entry, pickModel } from "../_shared/luna.ts";
+import { serve, json, loadEntries, formatEntries, withinBudget, complete, parseJSON, stripIds, LUNA_RULES, Entry, pickModel } from "../_shared/luna.ts";
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 const STOP = new Set("the a an and or but i me my we you it is was are to of in on for with about at what when did do does how have has had that this from be been am".split(" "));
@@ -43,21 +43,25 @@ serve(async ({ body, db }) => {
   const history = (await threadHistory(db, body, question))
     .map((m) => `${m.role === "user" ? "Writer" : "Luna"}: ${m.text.slice(0, 2000)}`).join("\n");
 
+  // "Thoughtful" gets more room and more reasoning, for questions that need a fuller answer.
+  const deep = body.model === "thoughtful";
   const reply = await complete(
     `${LUNA_RULES}
 
 Task: answer the writer's question using ONLY the journal entries provided.
-Return ONLY a JSON object: {"answer": "plain text, under 150 words", "citations": ["ids of every entry you drew on, copied exactly"]}
+Return ONLY a JSON object: {"answer": "plain text, ${deep ? "under 260 words. Be specific: connect details across entries and dates, and say plainly what the entries don't show" : "under 150 words"}", "citations": ["ids of every entry you drew on, copied exactly"]}
 If the entries don't contain the answer, say so honestly and return "citations": [].
 Refer to entries by date or title in the answer when it helps, never by id.`,
     `${history ? `Earlier in this conversation:\n${history}\n\n` : ""}Journal entries:\n${formatEntries(pool)}\n\nQuestion: ${question}`,
-    700,
+    deep ? 1600 : 700,
     pickModel(body.model),
+    deep ? { reasoning: "medium" } : {},
   );
 
   const parsed = parseJSON<{ answer: string; citations: string[] }>(reply);
   const known = new Set(pool.map((e) => e.id));
-  const answer = parsed?.answer?.trim() || reply.replace(/[{}]/g, "").trim();
+  // Entry ids belong in citations (shown as links), never in the text.
+  const answer = stripIds(parsed?.answer?.trim() || reply.replace(/[{}]/g, "").trim());
   const citations = (parsed?.citations ?? []).filter((id) => known.has(id));
   return json({ answer, citations });
 });

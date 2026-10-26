@@ -1,5 +1,5 @@
 // "Bring your own key": a signed-in user can point Luna at their own Groq, Hugging Face, or other
-// OpenAI-compatible provider. Their key lives encrypted in Supabase Vault (see MIGRATION_NEEDED.sql)
+// OpenAI-compatible provider. Their key lives encrypted in Supabase Vault (see supabase/schema-chats-and-keys.sql)
 // and is only ever read here, server-side, for that user's own requests. It is never returned to
 // the browser, never logged, and redacted from any provider error text.
 import { AsyncLocalStorage } from "node:async_hooks";
