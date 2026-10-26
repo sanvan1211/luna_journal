@@ -1,4 +1,4 @@
-# Luna
+![Luna: a private AI journal that reflects your own words back to you](.github/banner.png)
 
 Luna is a private journal that helps you make sense of what you've written. You write, and when you want, Luna reflects back on it, notices patterns across your entries, and answers questions about your own journal.
 
