@@ -8,7 +8,7 @@ import { callAI } from "./ai.js";
 import { esc, $, $$, toast, confirmDialog } from "./util.js";
 
 // Model names checked against each provider's live model list on 2026-10-26.
-const PROVIDERS = {
+export const PROVIDERS = {
   default: {
     name: "Luna's default",
     blurb: "Works right away with no setup. Shares Luna's free limit with everyone else.",
@@ -63,10 +63,30 @@ const PROVIDERS = {
   },
 };
 const OTHER = "__other";
+
+// Every chat model live on Hugging Face's router right now. The list is public (no key needed).
+let hfModels = null;
+export async function liveHFModels() {
+  if (hfModels) return hfModels;
+  try {
+    const res = await fetch("https://router.huggingface.co/v1/models", { signal: AbortSignal.timeout(8000) });
+    const { data = [] } = await res.json();
+    hfModels = data
+      .filter((m) => (m.architecture?.output_modalities || ["text"]).includes("text") && (m.providers || []).some((p) => p.status === "live"))
+      .map((m) => m.id).sort((a, b) => a.localeCompare(b));
+  } catch (err) {
+    console.warn("Couldn't load Hugging Face's model list", err);
+    hfModels = [];
+  }
+  return hfModels;
+}
+
+/** Display name for a model id: the preset's label, else the id without its owner. */
+export const modelLabel = (provider, id) => (PROVIDERS[provider]?.models || []).find(([m]) => m === id)?.[1] || id.split("/").pop();
 const PRIVACY = "Your key is sent once over HTTPS and stored encrypted on the server. It is never shown again or kept in your browser. Your journal text is sent to the provider you choose.";
 
 const statusText = (s) => s.provider === "default" || !s.has_key
-  ? `<strong>Using Luna's default AI.</strong> Everything works as usual.`
+  ? `<strong>Using Luna's default AI.</strong> Everything works as usual.${s.has_key ? ` Your ${esc(PROVIDERS[s.key_provider]?.name || "")} key (ending in <code>${esc(s.key_last4 || "")}</code>) is saved for when you switch back.` : ""}`
   : `<strong>Connected</strong> · ${esc(PROVIDERS[s.provider]?.name || s.provider)} · <code>${esc(s.model)}</code> · key ending in <code>${esc(s.key_last4 || "????")}</code>`;
 
 /** Fills the section's body. Demo mode never shows key entry. */
@@ -86,7 +106,7 @@ export async function renderAIModel(root) {
     return;
   }
 
-  let choice = saved.has_key ? saved.provider : "default";
+  let choice = saved.has_key && saved.provider !== "default" ? saved.provider : "default";
   root.innerHTML = `<div class="aim">
     <div class="aim-status" data-status role="status">${statusText(saved)}</div>
     <fieldset class="aim-providers">
@@ -102,16 +122,25 @@ export async function renderAIModel(root) {
 
   function drawForm() {
     if (choice === "default") {
+      const usingKey = saved.has_key && saved.provider !== "default";
       form.innerHTML = saved.has_key
-        ? `<p class="m-0 small muted">You have your own ${esc(PROVIDERS[saved.provider]?.name || "")} key saved. Switch back to Luna's default and delete that key?</p>
-           <div><button type="button" class="btn btn-sm" data-remove>Use Luna's default and remove my key</button></div>`
+        ? `<p class="m-0 small muted">${usingKey ? `Switch back to Luna's default? Your ${esc(PROVIDERS[saved.key_provider]?.name || "")} key stays saved, so you can switch again from the account menu.` : `Your ${esc(PROVIDERS[saved.key_provider]?.name || "")} key is saved but not in use.`}</p>
+           <div class="aim-actions">${usingKey ? `<button type="button" class="btn btn-primary btn-sm" data-use-default>Use Luna's default</button>` : ""}
+             <button type="button" class="btn btn-ghost btn-sm" data-remove>Remove my key</button></div>`
         : `<p class="m-0 small muted">Nothing to set up. Luna's AI works as it always has.</p>`;
+      $("[data-use-default]", form)?.addEventListener("click", async () => {
+        busy(true);
+        const r = await callAI("ai-settings", { action: "save", provider: "default" });
+        busy(false);
+        if (!r.ok) { toast(r.message); return; }
+        update(r.data); drawForm(); toast("Using Luna's default AI");
+      });
       wireRemove();
       return;
     }
     const p = PROVIDERS[choice];
-    const same = saved.has_key && saved.provider === choice;
-    const savedModel = same ? saved.model : "";
+    const same = saved.has_key && saved.key_provider === choice;
+    const savedModel = same && saved.provider === choice ? saved.model : "";
     const preset = p.models.find(([id]) => id === savedModel);
     const firstModel = p.models[0] ? p.models[0][0] : "";
     form.innerHTML = `
@@ -127,7 +156,8 @@ export async function renderAIModel(root) {
         </select>
       </label>` : ""}
       <label class="field" data-model-other ${p.models.length && (preset || !savedModel) ? "hidden" : ""}>Model name
-        <input class="input" name="model_other" placeholder="${choice === "custom" ? "e.g. gpt-4o-mini" : "e.g. openai/gpt-oss-20b"}" value="${esc(savedModel && !preset ? savedModel : "")}" spellcheck="false" />
+        <input class="input" name="model_other" ${choice === "huggingface" ? `list="hf-models"` : ""} placeholder="${choice === "custom" ? "e.g. gpt-4o-mini" : choice === "huggingface" ? "Type to search Hugging Face models" : "e.g. openai/gpt-oss-20b"}" value="${esc(savedModel && !preset ? savedModel : "")}" spellcheck="false" />
+        ${choice === "huggingface" ? `<span class="small muted" data-hf-count>Loading the models live on Hugging Face…</span><datalist id="hf-models"></datalist>` : ""}
       </label>
       <label class="field">${same ? "Key (leave empty to keep the saved one)" : "Your key"}
         <input class="input" name="api_key" type="password" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true" placeholder="${same ? `Saved key ends in ${esc(saved.key_last4 || "")}` : esc(p.placeholder)}" />
@@ -141,6 +171,12 @@ export async function renderAIModel(root) {
       </div>`;
     const pick = form.model_pick, other = $("[data-model-other]", form);
     pick && pick.addEventListener("change", () => { other.hidden = pick.value !== OTHER; if (!other.hidden) form.model_other.focus(); });
+    if (choice === "huggingface") liveHFModels().then((ids) => {
+      const list = $("#hf-models", form), count = $("[data-hf-count]", form);
+      if (!list) return;
+      list.innerHTML = ids.map((id) => `<option value="${esc(id)}"></option>`).join("");
+      count.textContent = ids.length ? `Any of the ${ids.length} chat models live on Hugging Face right now. Start typing a name, like Llama or Qwen.` : "Type the model's full name from its Hugging Face page, like meta-llama/Llama-3.3-70B-Instruct.";
+    });
     $("[data-test]", form)?.addEventListener("click", test);
     wireRemove();
   }

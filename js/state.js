@@ -12,7 +12,8 @@ export const state = {
   session: null,     // Supabase auth session
   demo: false,       // demo mode on/off
   model: "fast",     // AI model choice: "fast" | "thoughtful" (see MODELS)
-  ownAI: null,       // { provider, model } when the user connected their own key (never the key)
+  ownAI: null,       // { provider, model } while the user's own key is in use (never the key)
+  aiKey: null,       // { provider, model, base_url, last4 } when a key is saved, in use or not
 };
 
 // What the user can pick under Account → Model, named for the provider the Edge Functions use.
@@ -197,5 +198,7 @@ export function setModel(m) {
 /** Records the user's own-key choice (from ai_settings; the key itself is never readable here). */
 export function setOwnAI(s) {
   state.ownAI = s && s.has_key && s.provider !== "default" ? { provider: s.provider, model: s.model } : null;
+  // A saved key may be idle while Luna's default is in use; the account menu offers both.
+  state.aiKey = s && s.has_key ? { provider: s.key_provider || s.provider, model: s.model, base_url: s.base_url || "", last4: s.key_last4 } : null;
   emit("ownai");
 }

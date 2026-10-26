@@ -785,3 +785,8 @@ label.field, div.field { display: grid; gap: 6px; font-size: 13px; color: var(--
 .aim-steps { margin: 0; padding-left: 1.3em; color: var(--muted); display: grid; gap: 2px; }
 .aim-actions { display: flex; flex-wrap: wrap; gap: var(--s-2); }
 @media (max-width: 520px) { .aim-providers { grid-template-columns: minmax(0, 1fr); } }
+.menu-sub { font-size: 11px; color: var(--faint); padding: var(--s-1) 10px 2px; text-transform: none; }
+.account-menu [aria-busy="true"] { opacity: .6; pointer-events: none; }
+.account-menu .menu-more { padding-top: 4px; padding-bottom: 4px; color: var(--muted); }
+.account-menu [data-own-model] { padding-top: 6px; padding-bottom: 6px; }
+@media (min-width: 821px) { .account-menu { max-height: calc(100vh - 96px); overflow-y: auto; } }

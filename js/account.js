@@ -1,7 +1,9 @@
 // Account menu, bottom-left of the rail (the last tab on phones): who's signed in,
 // the plan, which AI model Luna uses, and links to settings and support.
-import { state, MODELS, setModel } from "./state.js";
-import { esc, html, $, $$, openModal } from "./util.js";
+import { state, MODELS, setModel, setOwnAI } from "./state.js";
+import { callAI } from "./ai.js";
+import { PROVIDERS, modelLabel } from "./ai-model-settings.js";
+import { esc, html, $, $$, openModal, toast } from "./util.js";
 
 const ICON = {
   user: `<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="7" r="3.2"/><path d="M4 17c.8-3.2 3.1-4.8 6-4.8s5.2 1.6 6 4.8"/></svg>`,
@@ -21,9 +23,8 @@ const who = () =>
   : state.configured ? "Not signed in"
   : "Not connected yet";
 
-const OWN_NAMES = { groq: "Groq", huggingface: "Hugging Face", custom: "your provider" };
 const planLine = () => state.ownAI
-  ? `${state.ownAI.model.split("/").pop()} · Your key`
+  ? `${modelLabel(state.ownAI.provider, state.ownAI.model).replace(/ \(.*\)$/, "")} · Your key`
   : `${MODELS[state.model].name.replace(/^Claude /, "").replace(/ \(.*\)$/, "")} · Free`;
 
 /** Redraws the account button. Called whenever the app chrome renders. */
@@ -46,12 +47,7 @@ function open() {
   menu = html(`<div class="account-menu" id="account-menu" role="menu" aria-label="Account">
     <div class="menu-head"><div class="name">${esc(who())}</div><div class="small muted">Luna Free plan</div></div>
     <div class="menu-label" id="model-label">Model</div>
-    ${state.ownAI ? `<p class="menu-note">Using your own ${esc(OWN_NAMES[state.ownAI.provider] || "")} key with <strong>${esc(state.ownAI.model)}</strong>. Change it in Settings → AI model.</p>` : `<div role="group" aria-labelledby="model-label">
-      ${Object.entries(MODELS).map(([k, m]) => `<button type="button" role="menuitemradio" aria-checked="${state.model === k}" data-model="${k}">
-        <span class="menu-text"><span>${esc(m.name)}</span><span class="small muted">${esc(m.blurb)}</span></span>
-        <span class="menu-check">${ICON.check}</span></button>`).join("")}
-    </div>`}
-    ${state.ownAI ? "" : `<p class="menu-note">Used for reflections, patterns, check-ins and Ask Luna. Safety checks always use the fast model.</p>`}
+    ${modelGroups()}
     <div class="menu-sep" role="separator"></div>
     <button type="button" role="menuitem" data-upgrade>${ICON.spark}<span class="menu-text">Upgrade plan</span><span class="tag">Free</span></button>
     <a role="menuitem" href="#/settings">${ICON.gear}<span class="menu-text">Settings &amp; privacy</span></a>
@@ -66,10 +62,16 @@ function open() {
   $(".rail-foot").append(menu);
   btn.setAttribute("aria-expanded", "true");
 
-  $$("[data-model]", menu).forEach((b) => b.addEventListener("click", () => {
+  // Luna's default models. If the user's own key is in use, switch back first (the key stays saved).
+  $$("[data-model]", menu).forEach((b) => b.addEventListener("click", async () => {
+    if (state.ownAI && !(await switchTo(b, { provider: "default" }))) return;
     setModel(b.dataset.model);
-    $$("[data-model]", menu).forEach((x) => x.setAttribute("aria-checked", String(x === b)));
-    $(".plan", btn).textContent = planLine();
+    checkOnly(b);
+  }));
+  // Models on the user's own key: one click switches (the server checks it with a tiny request).
+  $$("[data-own-model]", menu).forEach((b) => b.addEventListener("click", async () => {
+    const k = state.aiKey;
+    if (await switchTo(b, { provider: k.provider, model: b.dataset.ownModel, ...(k.provider === "custom" ? { base_url: k.base_url } : {}) })) checkOnly(b);
   }));
   $("[data-upgrade]", menu).addEventListener("click", () => { close(false); showPlan(); });
   $("[data-demo-item]", menu).addEventListener("click", () => {
@@ -85,6 +87,55 @@ function open() {
   $$("a[role=menuitem], [data-action=signout]", menu).forEach((a) => a.addEventListener("click", () => close(false)));
   menu.addEventListener("keydown", onKey);
   (items().find((i) => i.getAttribute("aria-checked") === "true") || items()[0]).focus();
+}
+
+/** The Model section: Luna's default (Groq) models, then the user's own-key models if a key is
+ *  saved, or a way to add Hugging Face models if not. */
+function modelGroups() {
+  const radio = (attrs, name, blurb, checked) => `<button type="button" role="menuitemradio" aria-checked="${checked}" ${attrs}>
+    <span class="menu-text"><span>${esc(name)}</span>${blurb ? `<span class="small muted">${esc(blurb)}</span>` : ""}</span>
+    <span class="menu-check">${ICON.check}</span></button>`;
+  const def = `<div role="group" aria-label="Luna's default models">
+    ${state.aiKey || !state.session ? `<div class="menu-sub">Luna's default</div>` : ""}
+    ${Object.entries(MODELS).map(([k, m]) => radio(`data-model="${k}"`, m.name, m.blurb, !state.ownAI && state.model === k)).join("")}
+  </div>`;
+  if (!state.session || state.demo) return def;
+  const k = state.aiKey;
+  if (!k) {
+    return `${def}<a role="menuitem" href="#/settings?focus=ai-model">${ICON.spark}<span class="menu-text"><span>Use Hugging Face models…</span><span class="small muted">Connect your own key for Llama, Qwen, Gemma and more</span></span></a>`;
+  }
+  const p = PROVIDERS[k.provider] || { name: "Your provider", models: [] };
+  const ids = p.models.map(([id]) => id);
+  const current = state.ownAI ? state.ownAI.model : k.model;
+  if (current && !ids.includes(current)) ids.push(current);
+  return `${def}<div role="group" aria-label="${esc(p.name)} models with your key">
+    <div class="menu-sub">${esc(p.name)} · your key ····${esc(k.last4 || "")}</div>
+    ${ids.map((id) => radio(`data-own-model="${esc(id)}" title="${esc(id)}"`, modelLabel(k.provider, id).replace(/ \(.*\)$/, ""), "", Boolean(state.ownAI && state.ownAI.model === id))).join("")}
+    <a role="menuitem" href="#/settings?focus=ai-model" class="menu-more"><span class="menu-text small">More ${esc(p.name)} models…</span></a>
+  </div>`;
+}
+
+function checkOnly(b) {
+  if (!menu) return; // a switch that changed the account line closes the menu
+  $$("[role=menuitemradio][data-model], [role=menuitemradio][data-own-model]", menu).forEach((x) => x.setAttribute("aria-checked", String(x === b)));
+  $(".plan", $("#account-btn")).textContent = planLine();
+}
+
+/** Saves the provider/model choice. Returns true when it worked. */
+async function switchTo(b, body) {
+  b.setAttribute("aria-busy", "true");
+  const label = $(".menu-text > span", b);
+  const before = label.textContent;
+  label.textContent = "Switching…";
+  const r = await callAI("ai-settings", { action: "save", ...body });
+  label.textContent = before;
+  b.removeAttribute("aria-busy");
+  if (!r.ok) { toast(r.message); return false; }
+  const keepOpen = menu;
+  setOwnAI(r.data); // redraws the account button, which closes the menu
+  if (!keepOpen) return true;
+  toast(r.data.provider === "default" ? "Using Luna's default AI" : `Using ${modelLabel(r.data.provider, r.data.model)}`);
+  return true;
 }
 
 function close(refocus = true) {

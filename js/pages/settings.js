@@ -39,7 +39,7 @@ const QUOTE = null;
 
 const TRASH = `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/></svg>`;
 
-export async function render(main) {
+export async function render(main, route) {
   let [memory, insights] = await Promise.all([listMemory(), listInsights()]);
 
   main.innerHTML = "";
@@ -130,7 +130,10 @@ export async function render(main) {
     </div></div>`);
   main.append(page);
 
-  renderAIModel($("[data-ai-model]", page));
+  const aim = $("[data-ai-model]", page);
+  renderAIModel(aim).then(() => {
+    if (route && route.query.get("focus") === "ai-model") aim.closest("section").scrollIntoView({ block: "start" });
+  });
 
   const memEl = $("[data-memory]", page);
   const label = { theme: "Theme", goal: "Goal", strategy: "Helps me" };

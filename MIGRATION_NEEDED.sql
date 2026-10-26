@@ -45,6 +45,7 @@ create table if not exists public.ai_settings (
   model          text not null default '',
   base_url       text not null default '',     -- only for 'custom'; checked server-side (https, public host)
   key_secret_id  uuid,                          -- vault.secrets id; never the key itself
+  key_provider   text check (key_provider in ('groq', 'huggingface', 'custom')),  -- which provider the saved key is for
   key_last4      text,
   updated_at     timestamptz not null default now()
 );
@@ -89,7 +90,7 @@ declare sid uuid;
 begin
   select key_secret_id into sid from public.ai_settings where user_id = p_user;
   if sid is not null then
-    update public.ai_settings set key_secret_id = null, key_last4 = null where user_id = p_user;
+    update public.ai_settings set key_secret_id = null, key_last4 = null, key_provider = null where user_id = p_user;
     delete from vault.secrets where id = sid;
   end if;
 end $$;

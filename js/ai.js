@@ -31,7 +31,7 @@ export async function callAI(name, body = {}) {
   if (!state.session) {
     return { ok: false, kind: "signin", message: "Sign in to use Luna's AI. In demo mode, it reads only the sample entries." };
   }
-  body = { ...body, model: state.model };
+  body = { model: state.model, ...body }; // a "model" the caller sets itself (Settings → AI model) wins
   if (state.demo) body = { ...body, demo: true, demo_entries: demoEntriesForAI() };
 
   let res;

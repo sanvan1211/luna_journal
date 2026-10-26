@@ -134,17 +134,17 @@ export const missingTable = (e: any) => e && (e.code === "42P01" || e.code === "
 
 /** The user's own provider and key, or null to use Luna's default. Only called with the id of the
  *  user whose JWT was just verified, so a request can only ever use its own user's key. */
-export async function loadUserAI(userId: string): Promise<UserAI | null> {
+export async function loadUserAI(userId: string, { evenIfDefault = false } = {}): Promise<UserAI | null> {
   if (tableMissing) return null;
   const db = admin();
-  const { data, error } = await db.from("ai_settings").select("provider, model, base_url, key_secret_id").eq("user_id", userId).maybeSingle();
+  const { data, error } = await db.from("ai_settings").select("provider, model, base_url, key_secret_id, key_provider").eq("user_id", userId).maybeSingle();
   if (missingTable(error)) { tableMissing = true; return null; }
   if (error) throw error;
-  if (!data || data.provider === "default" || !data.key_secret_id) return null;
+  if (!data || !data.key_secret_id || (data.provider === "default" && !evenIfDefault)) return null;
   const { data: key, error: keyErr } = await db.rpc("luna_get_ai_key", { p_user: userId });
   if (keyErr || !key) {
     console.error("Couldn't read the user's saved AI key", keyErr?.code ?? "no key");
     throw new ProviderError("Luna couldn't read your saved AI key. Remove it in Settings → AI model and add it again.", "setup");
   }
-  return { provider: data.provider, baseUrl: data.base_url ?? "", model: data.model, key: String(key) };
+  return { provider: data.provider === "default" ? data.key_provider : data.provider, baseUrl: data.base_url ?? "", model: data.model, key: String(key) };
 }

@@ -322,7 +322,7 @@ subscribe((why) => {
 // Whether the user connected their own AI key (shown in the account menu). Runs in the background;
 // the answer never includes the key.
 async function refreshOwnAI() {
-  state.ownAI = null;
+  state.ownAI = null; state.aiKey = null;
   if (!state.session || state.demo) return;
   const r = await callAI("ai-settings", { action: "get" });
   if (r.ok) setOwnAI(r.data);

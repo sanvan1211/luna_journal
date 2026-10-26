@@ -1,5 +1,6 @@
 // Settings → AI model. One endpoint, four actions, all for the signed-in user only:
-//   get     { provider, model, base_url, has_key, key_last4 }  (never the key itself)
+//   get     { provider, model, base_url, has_key, key_provider, key_last4 }  (never the key itself)
+//           provider "default" with has_key true means a key is saved but Luna's default is in use.
 //   save    tests the provider with one tiny request, then stores the settings and the key
 //           (encrypted in Supabase Vault). A key that fails the test is not saved.
 //   test    one tiny request with the saved settings
@@ -13,7 +14,7 @@ const SETUP = { error: "setup_needed", message: "Bring-your-own-key needs a one-
 const MODEL_RE = /^[\w.\-/:+@]{1,200}$/;
 
 async function current(userId: string) {
-  const { data, error } = await admin().from("ai_settings").select("provider, model, base_url, key_last4, key_secret_id").eq("user_id", userId).maybeSingle();
+  const { data, error } = await admin().from("ai_settings").select("provider, model, base_url, key_provider, key_last4, key_secret_id").eq("user_id", userId).maybeSingle();
   if (missingTable(error)) return null;
   if (error) throw error;
   return {
@@ -21,6 +22,7 @@ async function current(userId: string) {
     model: data?.model ?? "",
     base_url: data?.base_url ?? "",
     has_key: Boolean(data?.key_secret_id),
+    key_provider: data?.key_secret_id ? data.key_provider : null,
     key_last4: data?.key_secret_id ? data.key_last4 : null,
   };
 }
@@ -65,13 +67,14 @@ serve(async ({ body, userId }) => {
 async function save(body: any, userId: string) {
   const provider = String(body.provider ?? "") as Provider | "default";
   const now = await current(userId);
+  // Back to Luna's default. A saved key stays saved (switch back any time); "delete" removes it.
   if (provider === "default") {
     if (!now) return json(SETUP, 409);
-    const db = admin();
-    const { error } = await db.rpc("luna_delete_ai_key", { p_user: userId });
-    if (error) throw error;
-    await db.from("ai_settings").delete().eq("user_id", userId);
-    return json({ provider: "default", model: "", base_url: "", has_key: false, key_last4: null });
+    if (now.has_key) {
+      const { error } = await admin().from("ai_settings").update({ provider: "default" }).eq("user_id", userId);
+      if (error) throw error;
+    }
+    return json(await current(userId));
   }
   if (!["groq", "huggingface", "custom"].includes(provider)) return json({ error: "bad_provider", message: "Pick a provider from the list." }, 400);
 
@@ -88,10 +91,10 @@ async function save(body: any, userId: string) {
   let key = typeof body.api_key === "string" ? body.api_key.trim() : "";
   let newKey = true;
   if (!key) {
-    if (!now || !now.has_key || now.provider !== provider || (provider === "custom" && now.base_url !== baseUrl)) {
+    if (!now || !now.has_key || now.key_provider !== provider || (provider === "custom" && now.base_url !== baseUrl)) {
       return json({ error: "no_key", message: "Paste your key first." }, 400);
     }
-    const saved = await loadUserAI(userId);
+    const saved = await loadUserAI(userId, { evenIfDefault: true });
     key = saved?.key ?? "";
     newKey = false;
   }
@@ -109,7 +112,7 @@ async function save(body: any, userId: string) {
 
   if (!now) return json({ ...SETUP, message: "Your key works, but saving it needs a one-time database update first. Nothing was saved." }, 409);
   const db = admin();
-  const up = await db.from("ai_settings").upsert({ user_id: userId, provider, model, base_url: baseUrl }, { onConflict: "user_id" });
+  const up = await db.from("ai_settings").upsert({ user_id: userId, provider, model, base_url: baseUrl, ...(newKey ? { key_provider: provider } : {}) }, { onConflict: "user_id" });
   if (up.error) throw up.error;
   if (newKey) {
     const { error } = await db.rpc("luna_set_ai_key", { p_user: userId, p_key: key });
