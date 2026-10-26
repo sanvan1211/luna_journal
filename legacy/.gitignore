@@ -1,7 +1,0 @@
-node_modules/
-.env
-.env.*
-!.env.example
-# Luna's memory and caches — personal data, never committed.
-data/
-.DS_Store

@@ -7,7 +7,8 @@ supabase/.temp/
 supabase/.branches/
 .wrangler/
 node_modules/
-# The legacy app's local journal data and caches: personal, never committed.
+# The old Node + Notion app (removed; it's in git history) and its local journal data: never committed.
+legacy/
 data/
 .DS_Store
 

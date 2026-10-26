@@ -30,12 +30,11 @@ luna_journal/
 │   ├── rail.js            collapsible sidebar
 │   ├── state.js data.js ai.js editor.js markdown.js util.js bunny.js support.js demo.js
 │   └── pages/             home, journal, dashboard, checkin, ask, settings
-├── supabase/
-│   ├── schema.sql         tables + Row-Level Security
-│   ├── schema-chats-and-keys.sql  saved reflection chats + bring-your-own-key (run after schema.sql)
-│   └── functions/         reflect-entry, generate-insights, ask-luna, check-in, safety-check,
-│                          analyze-journal, ai-settings
-└── legacy/                the earlier Node + Notion version (not deployed)
+└── supabase/
+    ├── schema.sql         tables + Row-Level Security
+    ├── schema-chats-and-keys.sql  saved reflection chats + bring-your-own-key (run after schema.sql)
+    └── functions/         reflect-entry, generate-insights, ask-luna, check-in, safety-check,
+                           analyze-journal, ai-settings
 ```
 
 ## Run it locally (Mac)
@@ -170,7 +169,7 @@ Google sign-in returns to Luna as `?code=…` (Supabase's PKCE flow), so it does
 
 ## Deploy to Cloudflare Pages
 
-Upload only the frontend files. `wrangler pages deploy .` would also publish `legacy/`, `supabase/`, and any local `.env` or journal data, because direct uploads ignore `.gitignore`.
+Upload only the frontend files. `wrangler pages deploy .` would also publish `supabase/` and any local `.env` or data files, because direct uploads ignore `.gitignore`.
 
 ```bash
 rm -rf /tmp/luna-site && mkdir /tmp/luna-site
@@ -181,11 +180,7 @@ Then add your Pages URL under Supabase **Authentication → URL Configuration �
 
 ## Deploy to Vercel
 
-Import the repo in Vercel with no build command and the repo root as the output. `vercel.json` sends `Cache-Control: no-cache` for `index.html`, `js/`, and `css/`, so config and code changes show up right away. `.vercelignore` keeps `legacy/`, `supabase/`, and any secrets out of the upload. Add the Vercel URL to Supabase's Site URL as above.
-
-## Legacy app
-
-`legacy/` holds the earlier Node + Notion version of Luna, kept for reference. It is not part of the deployed site.
+Import the repo in Vercel with no build command and the repo root as the output. `vercel.json` sends `Cache-Control: no-cache` for `index.html`, `js/`, and `css/`, so config and code changes show up right away. `.vercelignore` keeps `supabase/`, scripts, and any secrets out of the upload. Add the Vercel URL to Supabase's Site URL as above.
 
 ## Privacy design
 
