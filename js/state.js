@@ -12,6 +12,7 @@ export const state = {
   session: null,     // Supabase auth session
   demo: false,       // demo mode on/off
   model: "fast",     // AI model choice: "fast" | "thoughtful" (see MODELS)
+  ownAI: null,       // { provider, model } when the user connected their own key (never the key)
 };
 
 // What the user can pick under Account → Model, named for the provider the Edge Functions use.
@@ -191,4 +192,10 @@ export function setModel(m) {
   state.model = m;
   try { localStorage.setItem(MODEL_KEY, m); } catch {}
   emit("model");
+}
+
+/** Records the user's own-key choice (from ai_settings; the key itself is never readable here). */
+export function setOwnAI(s) {
+  state.ownAI = s && s.has_key && s.provider !== "default" ? { provider: s.provider, model: s.model } : null;
+  emit("ownai");
 }

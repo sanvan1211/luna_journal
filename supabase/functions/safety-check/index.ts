@@ -1,6 +1,7 @@
 // Decides whether to gently show support resources. It never blocks writing, never
 // stores anything, and never labels the person. When unsure, it errs toward showing help.
 import { serve, json, complete, parseJSON, NotConfigured, Refused, URGENT } from "../_shared/luna.ts";
+import { ProviderError } from "../_shared/providers.ts";
 
 serve(async ({ body }) => {
   const full = String(body.text ?? "");
@@ -23,7 +24,8 @@ Return ONLY JSON: {"level": "none" | "concern" | "urgent"}`,
     const ok = level === "concern" || level === "urgent";
     return json({ flagged: ok, level: ok ? level : "none" });
   } catch (err) {
-    if (err instanceof NotConfigured) return json({ flagged: false, level: "none", ai: false });
+    // The phrase check above already ran; without a working AI there's nothing more to add.
+    if (err instanceof NotConfigured || err instanceof ProviderError) return json({ flagged: false, level: "none", ai: false });
     // A declined safety read leans toward showing help, never toward hiding it.
     if (err instanceof Refused) return json({ flagged: true, level: "concern" });
     throw err;

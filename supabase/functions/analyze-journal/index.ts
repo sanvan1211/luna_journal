@@ -9,6 +9,7 @@
 //              then any sentences still flagged are removed.
 // Each request stays under ~6,000 tokens because the free tier limits tokens per minute.
 import { serve, json, complete, parseJSON, pickModel, splitDays, URGENT, ENTRY_CHARS, Entry, CallOptions, NotConfigured, FreeLimit } from "../_shared/luna.ts";
+import { ProviderError } from "../_shared/providers.ts";
 import { DEEP_NOTES_PROMPT, DEEP_ANALYSIS_PROMPT, DEEP_REVIEW_PROMPT } from "../_shared/deep-analysis-prompt.ts";
 import { verifyQuotes, checkBlockquotes, repairQuotes, removeSentences, fakeInlineQuotes, shortDate } from "../_shared/quotes.js";
 import { fitNotes } from "../_shared/deep-notes.js";
@@ -25,7 +26,7 @@ async function tryCall(system: string, input: string, maxTokens: number, model: 
   try {
     return await complete(system, input, maxTokens, model, opts);
   } catch (err) {
-    if (err instanceof NotConfigured || err instanceof FreeLimit) throw err;
+    if (err instanceof NotConfigured || err instanceof FreeLimit || err instanceof ProviderError) throw err;
     console.error("Model call failed; retrying once", err);
     return null;
   }

@@ -21,7 +21,10 @@ const who = () =>
   : state.configured ? "Not signed in"
   : "Not connected yet";
 
-const planLine = () => `${MODELS[state.model].name.replace(/^Claude /, "").replace(/ \(.*\)$/, "")} · Free`;
+const OWN_NAMES = { groq: "Groq", huggingface: "Hugging Face", custom: "your provider" };
+const planLine = () => state.ownAI
+  ? `${state.ownAI.model.split("/").pop()} · Your key`
+  : `${MODELS[state.model].name.replace(/^Claude /, "").replace(/ \(.*\)$/, "")} · Free`;
 
 /** Redraws the account button. Called whenever the app chrome renders. */
 export function renderAccount() {
@@ -43,12 +46,12 @@ function open() {
   menu = html(`<div class="account-menu" id="account-menu" role="menu" aria-label="Account">
     <div class="menu-head"><div class="name">${esc(who())}</div><div class="small muted">Luna Free plan</div></div>
     <div class="menu-label" id="model-label">Model</div>
-    <div role="group" aria-labelledby="model-label">
+    ${state.ownAI ? `<p class="menu-note">Using your own ${esc(OWN_NAMES[state.ownAI.provider] || "")} key with <strong>${esc(state.ownAI.model)}</strong>. Change it in Settings → AI model.</p>` : `<div role="group" aria-labelledby="model-label">
       ${Object.entries(MODELS).map(([k, m]) => `<button type="button" role="menuitemradio" aria-checked="${state.model === k}" data-model="${k}">
         <span class="menu-text"><span>${esc(m.name)}</span><span class="small muted">${esc(m.blurb)}</span></span>
         <span class="menu-check">${ICON.check}</span></button>`).join("")}
-    </div>
-    <p class="menu-note">Used for reflections, patterns, check-ins and Ask Luna. Safety checks always use the fast model.</p>
+    </div>`}
+    ${state.ownAI ? "" : `<p class="menu-note">Used for reflections, patterns, check-ins and Ask Luna. Safety checks always use the fast model.</p>`}
     <div class="menu-sep" role="separator"></div>
     <button type="button" role="menuitem" data-upgrade>${ICON.spark}<span class="menu-text">Upgrade plan</span><span class="tag">Free</span></button>
     <a role="menuitem" href="#/settings">${ICON.gear}<span class="menu-text">Settings &amp; privacy</span></a>

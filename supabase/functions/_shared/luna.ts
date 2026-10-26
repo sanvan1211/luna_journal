@@ -2,6 +2,7 @@
 import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { splitByDate } from "./date-split.js";
 import { retryAfterSeconds } from "./limits.js";
+import { userAI, loadUserAI, compat, ProviderError } from "./providers.ts";
 
 export const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -56,8 +57,9 @@ export const DEEP_RULES = LUNA_RULES.replace(
 - No therapy jargon, no exclamation-heavy cheerleading, no emojis, no advice they didn't ask for, and no pressure to be more productive.`,
 );
 
-/** Wraps a handler with CORS, auth, and consistent error responses. */
-export function serve(handler: (ctx: { body: any; db: SupabaseClient; userId: string }) => Promise<Response>) {
+/** Wraps a handler with CORS, auth, and consistent error responses. Unless `ownKey` is false, the
+ *  user's own AI provider (Settings → AI model) is loaded and every complete() call uses it. */
+export function serve(handler: (ctx: { body: any; db: SupabaseClient; userId: string }) => Promise<Response>, { ownKey = true } = {}) {
   Deno.serve(async (req) => {
     if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
     if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
@@ -73,10 +75,16 @@ export function serve(handler: (ctx: { body: any; db: SupabaseClient; userId: st
     try { body = await req.json(); } catch { /* empty body is fine */ }
 
     try {
-      return await handler({ body, db, userId: user.id });
+      const own = ownKey ? await loadUserAI(user.id) : null;
+      return await userAI.run(own, () => handler({ body, db, userId: user.id }));
     } catch (err) {
       if (err instanceof NotConfigured) return json({ error: "ai_not_configured", message: err.message }, 503);
       if (err instanceof FreeLimit) return json({ error: "free_limit", message: FREE_LIMIT_MESSAGE, retry_after_seconds: err.retryAfter }, 429);
+      if (err instanceof ProviderError) {
+        console.error("Own-key provider error", err.code); // never the key, never the provider's raw body
+        if (err.code === "rate_limit") return json({ error: "free_limit", message: err.message, retry_after_seconds: err.retryAfter }, 429);
+        return json({ error: "provider_error", code: err.code, message: err.message }, 502);
+      }
       console.error(err);
       return json({ error: "server_error", message: "Luna couldn't finish that. Please try again." }, 500);
     }
@@ -138,25 +146,35 @@ ${e.content}${e.cut ? "\n[entry continues]" : ""}
 //   huggingface  Hugging Face Inference Providers (needs HF_TOKEN)
 //   anthropic    Claude through Anthropic's API (needs ANTHROPIC_API_KEY)
 //   ollama       a model running on your own computer (OLLAMA_URL, e.g. http://host.docker.internal:11434)
-const PROVIDER = (Deno.env.get("LUNA_PROVIDER") ?? "groq").trim().toLowerCase();
+//   custom       any OpenAI-compatible API (AI_BASE_URL, AI_API_KEY, AI_MODEL)
+// The generic AI_PROVIDER / AI_BASE_URL / AI_MODEL / AI_API_KEY secrets work for every provider and
+// take priority when set; with none of them set, Luna behaves exactly as before (Groq + GROQ_API_KEY).
+// A signed-in user's own key (Settings → AI model) overrides all of this for their requests.
 const env = (name: string, fallback: string) => Deno.env.get(name)?.trim() || fallback;
+const PROVIDER = env("AI_PROVIDER", env("LUNA_PROVIDER", "groq")).toLowerCase();
+const AI_MODEL = env("AI_MODEL", "");
+const keyFor = (name: string) => Deno.env.get(name)?.trim() || Deno.env.get("AI_API_KEY")?.trim() || "";
 
 // The two choices under Account → Model, per provider. Anything else gets the default.
 const MODELS: Record<string, { fast: string; thoughtful: string }> = {
   anthropic: { fast: "claude-haiku-5-5", thoughtful: "claude-sonnet-5-5" },
   ollama: { fast: env("OLLAMA_FAST_MODEL", "llama3.2"), thoughtful: env("OLLAMA_THOUGHTFUL_MODEL", "qwen2.5:7b") },
-  huggingface: { fast: env("HF_FAST_MODEL", "Qwen/Qwen2.5-7B-Instruct"), thoughtful: env("HF_THOUGHTFUL_MODEL", "Qwen/Qwen2.5-72B-Instruct") },
+  huggingface: { fast: env("HF_FAST_MODEL", "openai/gpt-oss-20b"), thoughtful: env("HF_THOUGHTFUL_MODEL", "openai/gpt-oss-120b") },
   groq: { fast: env("GROQ_FAST_MODEL", "openai/gpt-oss-20b"), thoughtful: env("GROQ_THOUGHTFUL_MODEL", "openai/gpt-oss-120b") },
   // OpenAI's model names change often, so they're set as secrets rather than guessed here.
   openai: { fast: env("OPENAI_FAST_MODEL", ""), thoughtful: env("OPENAI_THOUGHTFUL_MODEL", "") },
+  custom: { fast: AI_MODEL, thoughtful: AI_MODEL },
 };
 const models = () => {
   const m = MODELS[PROVIDER];
   if (!m) throw new NotConfigured(`LUNA_PROVIDER "${PROVIDER}" isn't one of: ${Object.keys(MODELS).join(", ")}.`);
-  if (!m.fast || !m.thoughtful) throw new NotConfigured("Set OPENAI_FAST_MODEL and OPENAI_THOUGHTFUL_MODEL in Supabase secrets.");
+  if (AI_MODEL) return { fast: AI_MODEL, thoughtful: AI_MODEL };
+  if (!m.fast || !m.thoughtful) throw new NotConfigured(PROVIDER === "custom" ? "Set AI_MODEL in Supabase secrets." : "Set OPENAI_FAST_MODEL and OPENAI_THOUGHTFUL_MODEL in Supabase secrets.");
   return m;
 };
 export const pickModel = (choice: unknown): string => {
+  const own = userAI.getStore();
+  if (own) return own.model; // the user's own model, whatever they picked (see complete)
   const m = models();
   return m[String(choice) as "fast" | "thoughtful"] ?? Deno.env.get("LUNA_MODEL") ?? m.fast;
 };
@@ -167,7 +185,11 @@ export type CallOptions = { reasoning?: "low" | "medium" | "high"; usage?: { cal
 
 /** Sends one system prompt and one user message to the configured provider; returns the reply text. */
 export async function complete(system: string, user: string, maxTokens = 600, model = pickModel(null), opts: CallOptions = {}): Promise<string> {
-  const text = (PROVIDER === "ollama" ? ollama : PROVIDER === "huggingface" ? huggingface : PROVIDER === "groq" ? groq : PROVIDER === "openai" ? openai : anthropic)(system, user, maxTokens, model, opts);
+  // The same system prompt (with Luna's rules) goes to every provider, including a user's own.
+  const own = userAI.getStore();
+  if (own && opts.usage) opts.usage.calls++;
+  const text = own ? compat(own, system, user, maxTokens, opts)
+    : (PROVIDER === "ollama" ? ollama : PROVIDER === "huggingface" ? huggingface : PROVIDER === "groq" ? groq : PROVIDER === "openai" ? openai : PROVIDER === "custom" ? customDefault : anthropic)(system, user, maxTokens, model, opts);
   const reply = (await text).trim();
   if (!reply) throw new Error("The model returned an empty reply");
   return reply;
@@ -181,7 +203,7 @@ const THINKING_OFF: Record<string, unknown> = {
 };
 
 async function anthropic(system: string, user: string, maxTokens: number, model: string, _opts: CallOptions = {}) {
-  const key = Deno.env.get("ANTHROPIC_API_KEY");
+  const key = keyFor("ANTHROPIC_API_KEY");
   if (!key) throw new NotConfigured("ANTHROPIC_API_KEY is not set in Supabase secrets.");
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -226,7 +248,7 @@ async function ollama(system: string, user: string, maxTokens: number, model: st
 }
 
 async function huggingface(system: string, user: string, maxTokens: number, model: string, _opts: CallOptions = {}) {
-  const token = Deno.env.get("HF_TOKEN");
+  const token = keyFor("HF_TOKEN");
   if (!token) throw new NotConfigured("HF_TOKEN is not set in Supabase secrets.");
   const res = await fetch("https://router.huggingface.co/v1/chat/completions", {
     method: "POST",
@@ -243,7 +265,7 @@ async function huggingface(system: string, user: string, maxTokens: number, mode
 }
 
 async function groq(system: string, user: string, maxTokens: number, model: string, opts: CallOptions = {}) {
-  const key = Deno.env.get("GROQ_API_KEY");
+  const key = keyFor("GROQ_API_KEY");
   if (!key) throw new NotConfigured("GROQ_API_KEY is not set in Supabase secrets.");
   const body = JSON.stringify({
     model, max_tokens: maxTokens, temperature: 0.4,
@@ -273,7 +295,7 @@ async function groq(system: string, user: string, maxTokens: number, model: stri
 }
 
 async function openai(system: string, user: string, maxTokens: number, model: string, _opts: CallOptions = {}) {
-  const key = Deno.env.get("OPENAI_API_KEY");
+  const key = keyFor("OPENAI_API_KEY");
   if (!key) throw new NotConfigured("OPENAI_API_KEY is not set in Supabase secrets.");
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -286,6 +308,13 @@ async function openai(system: string, user: string, maxTokens: number, model: st
   if (!res.ok) throw new Error(`OpenAI error ${res.status}: ${await res.text()}`);
   const data = await res.json();
   return String(data.choices?.[0]?.message?.content ?? "");
+}
+
+/** provider "custom" as the server default: any OpenAI-compatible API from AI_BASE_URL. */
+async function customDefault(system: string, user: string, maxTokens: number, model: string, opts: CallOptions = {}) {
+  const baseUrl = Deno.env.get("AI_BASE_URL")?.trim(), key = Deno.env.get("AI_API_KEY")?.trim();
+  if (!baseUrl || !key) throw new NotConfigured("Set AI_BASE_URL and AI_API_KEY in Supabase secrets.");
+  return compat({ provider: "custom", baseUrl, model, key }, system, user, maxTokens, opts);
 }
 
 /** Pulls the first JSON object out of a model reply. */

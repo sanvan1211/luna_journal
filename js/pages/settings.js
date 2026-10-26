@@ -2,6 +2,7 @@ import { state, MODELS } from "../state.js";
 import { AI_PROVIDER } from "../config.js";
 import { listEntries, listInsights, listMemory, deleteMemory, deleteAllInsights, deleteAccount, deleteAllChats } from "../data.js";
 import { bunny, emptyState } from "../bunny.js";
+import { renderAIModel } from "../ai-model-settings.js";
 import { esc, html, $, $$, dayKey, fmtLong, download, toast, confirmDialog } from "../util.js";
 
 // Where writing goes depends on which AI provider the Edge Functions use (see js/config.js).
@@ -24,6 +25,7 @@ const AI_HANDLING = {
     "OpenAI handles API requests under its own privacy policy.",
   ],
 };
+const OWN_PROVIDER = { groq: "Groq", huggingface: "Hugging Face", custom: "custom provider" };
 const AI_CREDIT = { anthropic: "Claude by Anthropic", ollama: "open models running in Ollama", huggingface: "open models on Hugging Face", groq: "open models on Groq", openai: "OpenAI" };
 
 // How this account signs in, from Supabase's app_metadata.provider.
@@ -56,21 +58,32 @@ export async function render(main) {
         <div><button type="button" class="btn btn-danger btn-sm" data-del-insights>Delete all insights</button></div>
       </section>
 
+      <section class="setting" aria-labelledby="aim-h">
+        <header><h2 id="aim-h">AI model</h2>
+          <p>Luna uses its own AI by default. You can connect your own Groq or Hugging Face key instead, so you get your own limits.</p></header>
+        <div data-ai-model></div>
+      </section>
+
       <section class="setting" aria-labelledby="ai-h">
         <header><h2 id="ai-h">What gets sent to the AI</h2>
           <p>Only what you ask for, only when you press a button. Nothing is analyzed in the background.</p></header>
         <div class="plain">
           <h3>When you press…</h3>
           <dl class="sent-list">
-            <div><dt>Reflect with Luna</dt><dd>That one entry's title and text.</dd></div>
+            <div><dt>Reflect with Luna</dt><dd>That one entry's title and text, plus your conversation with Luna about it.</dd></div>
+            <div><dt>Add to journal</dt><dd>The same entry and conversation, to draft a summary you check before it's added.</dd></div>
             <div><dt>Look for patterns</dt><dd>Your recent entries: title, text, date, tags, and the mood you picked.</dd></div>
             <div><dt>Ask Luna</dt><dd>Your question and the entries most related to it.</dd></div>
             <div><dt>Check-in reflection</dt><dd>Only your check-in answers.</dd></div>
           </dl>
           <h3>How it's handled</h3>
           <ul>
-            ${(AI_HANDLING[AI_PROVIDER] || AI_HANDLING.groq).map((t) => `<li>${esc(t)}</li>`).join("")}
-            <li>You pick the model under Account: ${esc(MODELS.fast.name)} (fast) or ${esc(MODELS.thoughtful.name)} (more thoughtful). Safety checks always use the fast one.</li>
+            ${state.ownAI
+              ? `<li>You connected your own ${esc(OWN_PROVIDER[state.ownAI.provider] || "AI provider")} key, so your requests go from Luna's server functions to ${esc(OWN_PROVIDER[state.ownAI.provider] || "that provider")} using ${esc(state.ownAI.model)}, under that provider's own privacy policy. Your key is stored encrypted on the server and never sent back to your browser.</li>
+                 <li>Luna's rules (no diagnosing, no mood labels, support resources) are sent with every request, whichever provider you use.</li>`
+              : `${(AI_HANDLING[AI_PROVIDER] || AI_HANDLING.groq).map((t) => `<li>${esc(t)}</li>`).join("")}
+                 <li>You pick the model under Account: ${esc(MODELS.fast.name)} (fast) or ${esc(MODELS.thoughtful.name)} (more thoughtful). Safety checks always use the fast one.</li>
+                 <li>If you connect your own key under AI model, your requests go to the provider you choose (Groq, Hugging Face, or another service) instead.</li>`}
             <li>A short safety check reads text you send for reflection, only to decide whether to show support resources.</li>
             <li>Your entries are stored in a database where only your account can read them. Luna never sells or shares them.</li>
             <li>Moods are only what you choose. Luna never assigns a mood or a score.</li>
@@ -107,15 +120,17 @@ export async function render(main) {
         <div class="about-body">
           <p>Luna is a place to write and then look back. It can point out patterns in your own words, always with the entries behind them, and answer questions about your journal. Luna is not a therapist and never diagnoses. If things feel heavy, support is always one tap away.</p>
           ${QUOTE ? `<figure class="about-quote"><blockquote>“${esc(QUOTE.text)}”</blockquote><figcaption>${esc(QUOTE.by)}</figcaption></figure>` : ""}
+          <p class="about-note">You are not alone.</p>
           <dl class="about-facts">
-            <div><dt>Built for</dt><dd>Congressional App Challenge</dd></div>
+            <div><dt>Created by</dt><dd>Sanhith Vandara · <a href="https://github.com/sanvan1211" target="_blank" rel="noopener noreferrer">GitHub</a></dd></div>
             <div><dt>Made with</dt><dd>HTML, CSS, JavaScript, Supabase, and ${esc(AI_CREDIT[AI_PROVIDER] || AI_CREDIT.groq)}</dd></div>
-            <div><dt>Mascot</dt><dd>Luna, a Holland Lop</dd></div>
           </dl>
         </div>
       </section>
     </div></div>`);
   main.append(page);
+
+  renderAIModel($("[data-ai-model]", page));
 
   const memEl = $("[data-memory]", page);
   const label = { theme: "Theme", goal: "Goal", strategy: "Helps me" };

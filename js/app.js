@@ -1,4 +1,5 @@
-import { state, initSupabase, signInWithGoogle, sendPasswordReset, updatePassword, loadDemoPref, loadModelPref, setDemo, subscribe } from "./state.js";
+import { state, initSupabase, signInWithGoogle, sendPasswordReset, updatePassword, loadDemoPref, loadModelPref, setOwnAI, setDemo, subscribe } from "./state.js";
+import { callAI } from "./ai.js";
 import { initAccount, renderAccount } from "./account.js";
 import { initRail } from "./rail.js";
 import { resetDemoStore } from "./data.js";
@@ -313,7 +314,19 @@ document.addEventListener("click", (e) => { if (e.target.closest("[data-demo]"))
 
 document.addEventListener("luna:demo-toggle", (e) => (e.detail ? enterDemo() : exitDemo()));
 
-subscribe((why) => { if (why === "auth") route(); });
+subscribe((why) => {
+  if (why === "auth") { refreshOwnAI(); route(); }
+  if (why === "ownai") renderAccount();
+});
+
+// Whether the user connected their own AI key (shown in the account menu). Runs in the background;
+// the answer never includes the key.
+async function refreshOwnAI() {
+  state.ownAI = null;
+  if (!state.session || state.demo) return;
+  const r = await callAI("ai-settings", { action: "get" });
+  if (r.ok) setOwnAI(r.data);
+}
 window.addEventListener("hashchange", route);
 
 // ───────────── Boot ─────────────
@@ -325,5 +338,6 @@ window.addEventListener("hashchange", route);
   initRail();
   if (state.demo) resetDemoStore();
   await initSupabase();
+  refreshOwnAI();
   route();
 })();

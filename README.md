@@ -55,7 +55,7 @@ supabase login
 supabase init                 # say no to the VS Code prompts; it keeps the functions folder
 supabase link --project-ref YOUR_PROJECT_REF
 supabase secrets set LUNA_PROVIDER=groq GROQ_API_KEY=gsk_...     # see "Choosing the AI model" below
-supabase functions deploy reflect-entry generate-insights ask-luna check-in safety-check analyze-journal
+supabase functions deploy reflect-entry generate-insights ask-luna check-in safety-check analyze-journal ai-settings
 ```
 
 Until the functions and key are set up, the app shows an honest "AI not configured" state. It never shows fake AI output.
@@ -82,7 +82,7 @@ Groq's free tier has limits on tokens per minute and per day. When one is reache
 | Provider | `LUNA_PROVIDER` | Secrets to set | Models |
 |---|---|---|---|
 | [OpenAI Platform](https://platform.openai.com/api-keys) | `openai` | `OPENAI_API_KEY`, `OPENAI_FAST_MODEL`, `OPENAI_THOUGHTFUL_MODEL` | You choose both from OpenAI's model list (names change often, so there's no default) |
-| [Hugging Face](https://huggingface.co/settings/tokens) | `huggingface` | `HF_TOKEN` | Qwen 2.5 7B / 72B by default; override with `HF_FAST_MODEL`, `HF_THOUGHTFUL_MODEL` |
+| [Hugging Face](https://huggingface.co/settings/tokens) | `huggingface` | `HF_TOKEN` (fine-grained, "Make calls to Inference Providers") | `openai/gpt-oss-20b` / `openai/gpt-oss-120b` by default; override with `HF_FAST_MODEL`, `HF_THOUGHTFUL_MODEL` |
 | [Anthropic](https://console.anthropic.com/settings/keys) | `anthropic` | `ANTHROPIC_API_KEY` | Claude Haiku 5.5 (Fast) / Claude Sonnet 5.5 (Thoughtful) |
 | [Ollama](https://ollama.com) (on your own computer, local Supabase only) | `ollama` | `OLLAMA_URL` (e.g. `http://host.docker.internal:11434`) | `llama3.2` / `qwen2.5:7b` by default; override with `OLLAMA_FAST_MODEL`, `OLLAMA_THOUGHTFUL_MODEL` |
 
@@ -90,12 +90,33 @@ For example, to switch to OpenAI:
 
 ```bash
 supabase secrets set LUNA_PROVIDER=openai OPENAI_API_KEY=sk-... OPENAI_FAST_MODEL=<model> OPENAI_THOUGHTFUL_MODEL=<model>
-supabase functions deploy reflect-entry generate-insights ask-luna check-in safety-check analyze-journal
+supabase functions deploy reflect-entry generate-insights ask-luna check-in safety-check analyze-journal ai-settings
 ```
 
 Then set `ai: "openai"` in `js/config.js`. To change which model everyone gets by default (instead of Fast), set `LUNA_MODEL` to a model name. If a provider's key or models are missing, the app shows an honest "AI not configured" message; it never shows made-up answers.
 
 After changing anything in `supabase/functions/`, deploy again with the same `supabase functions deploy …` command.
+
+### Generic secrets (any provider)
+
+`AI_PROVIDER`, `AI_MODEL`, `AI_API_KEY`, and `AI_BASE_URL` work with every provider and take priority when set. `AI_PROVIDER=custom` with `AI_BASE_URL` (https) points Luna at any OpenAI-compatible API. With none of them set, Luna behaves exactly as above.
+
+### People can bring their own key
+
+Under **Settings → AI model**, a signed-in person can connect their own Groq or Hugging Face key, or any OpenAI-compatible service. They get their own limits instead of sharing Luna's. It needs the "Bring your own AI key" part of `MIGRATION_NEEDED.sql` (Supabase Vault plus the `ai_settings` table) and the `ai-settings` function:
+
+```bash
+supabase functions deploy ai-settings
+```
+
+How keys are handled:
+- A key is tested with one tiny request before it's saved, then stored encrypted in Supabase Vault.
+- Only the Edge Functions can read a key, through the service role, and only for that same user's requests.
+- The browser only ever learns "a key is saved" and its last 4 characters.
+- Custom addresses must be https public hosts. IPs, internal names, and private DNS answers are refused.
+- Luna's rules travel in the system prompt to every provider.
+
+Demo mode never shows key entry.
 
 ## Deep analysis
 

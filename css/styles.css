@@ -593,6 +593,7 @@ label.field, div.field { display: grid; gap: 6px; font-size: 13px; color: var(--
 .about > header .bunny { width: 56px; display: block; margin-bottom: var(--s-3); }
 .about-body { display: grid; gap: var(--s-4); }
 .about-body > p { margin: 0; color: var(--muted); }
+.about-body > p.about-note { font: italic 400 20px/1.4 var(--serif); color: var(--text); }
 .about-quote { margin: 0; padding: 4px 0 4px 18px; border-left: 2px solid var(--accent); }
 .about-quote blockquote { margin: 0; font: italic 400 19px/1.5 var(--serif); color: var(--text); }
 .about-quote figcaption { margin-top: 6px; font-size: 13px; color: var(--muted); }
@@ -768,3 +769,19 @@ label.field, div.field { display: grid; gap: 6px; font-size: 13px; color: var(--
   .editor-wrap { padding: 0; max-width: none; }
   a { color: inherit; }
 }
+
+/* ───────────── Settings → AI model ───────────── */
+.aim { display: grid; gap: var(--s-4); min-width: 0; }
+.aim-status { padding: var(--s-3) var(--s-4); border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--inset); overflow-wrap: anywhere; }
+.aim-status code, .aim code { font-size: var(--fs-sm); }
+.aim-providers { border: 0; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-2); }
+.aim-option { display: flex; gap: var(--s-3); align-items: flex-start; padding: var(--s-3) var(--s-4); border: 1px solid var(--line); border-radius: var(--radius-sm); cursor: pointer; min-width: 0; }
+.aim-option:hover { background: var(--card); }
+.aim-option:has(input:checked) { border-color: var(--muted); background: var(--card); }
+.aim-option input { margin: 4px 0 0; accent-color: var(--accent); flex: none; }
+.aim-option > span { display: grid; gap: 2px; min-width: 0; }
+.aim-form { display: grid; gap: var(--s-3); min-width: 0; }
+.aim-form .input { width: 100%; }
+.aim-steps { margin: 0; padding-left: 1.3em; color: var(--muted); display: grid; gap: 2px; }
+.aim-actions { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+@media (max-width: 520px) { .aim-providers { grid-template-columns: minmax(0, 1fr); } }
