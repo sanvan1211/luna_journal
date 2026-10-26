@@ -1,7 +1,7 @@
+-- Run after schema.sql (Supabase → SQL Editor). Safe to run more than once.
+-- Without it, the reflection chat still works but isn't saved, and Settings → AI model asks for it.
+
 -- Saves the "Luna's reflection" conversation for each journal entry.
--- NOT applied yet. Run this once in Supabase → SQL Editor. Until then the conversation works
--- but lives only in the open page (Luna says so under the chat).
---
 -- One row per entry. Deleting the entry (or the account) deletes its conversation.
 
 create table if not exists public.entry_chats (

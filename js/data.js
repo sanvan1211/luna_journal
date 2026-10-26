@@ -164,7 +164,7 @@ export async function deleteAllChats() {
 }
 
 // ───────────── Reflection conversations (one per entry) ─────────────
-// Saved in entry_chats once MIGRATION_NEEDED.sql has been run. Before that, getEntryChat reports
+// Saved in entry_chats once supabase/schema-chats-and-keys.sql has been run. Before that, getEntryChat reports
 // saved: false and the conversation lives only in the open page.
 const demoEntryChats = new Map();
 let entryChatsMissing = false;
@@ -175,7 +175,7 @@ export async function getEntryChat(entryId) {
   if (state.demo) return { ...clone(demoEntryChats.get(entryId) || { messages: [], offer: null }), saved: false };
   if (entryChatsMissing) return { messages: [], offer: null, saved: false };
   const { data, error } = await sb().from("entry_chats").select("messages, offer").eq("entry_id", entryId).maybeSingle();
-  if (missingTable(error)) { entryChatsMissing = true; console.warn("entry_chats table not found; run MIGRATION_NEEDED.sql to save reflection chats"); return { messages: [], offer: null, saved: false }; }
+  if (missingTable(error)) { entryChatsMissing = true; console.warn("entry_chats table not found; run supabase/schema-chats-and-keys.sql to save reflection chats"); return { messages: [], offer: null, saved: false }; }
   if (error) throw error;
   return { messages: data ? data.messages : [], offer: data ? data.offer : null, saved: true };
 }

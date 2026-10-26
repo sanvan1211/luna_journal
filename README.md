@@ -32,9 +32,9 @@ luna_journal/
 │   └── pages/             home, journal, dashboard, checkin, ask, settings
 ├── supabase/
 │   ├── schema.sql         tables + Row-Level Security
+│   ├── schema-chats-and-keys.sql  saved reflection chats + bring-your-own-key (run after schema.sql)
 │   └── functions/         reflect-entry, generate-insights, ask-luna, check-in, safety-check,
 │                          analyze-journal, ai-settings
-├── MIGRATION_NEEDED.sql   entry_chats + bring-your-own-key tables (already applied on the hosted project)
 └── legacy/                the earlier Node + Notion version (not deployed)
 ```
 
@@ -51,10 +51,11 @@ Open http://localhost:5173. Without Supabase set up, you can still use **demo mo
 ## Set up Supabase (about 15 minutes)
 
 1. Create a project at supabase.com.
-2. **SQL Editor → New query →** paste `supabase/schema.sql` → **Run**.
+2. **SQL Editor → New query →** paste `supabase/schema.sql` → **Run**. Then do the same with `supabase/schema-chats-and-keys.sql`.
 3. **Project Settings → API:** copy the Project URL and the `anon` public key into `js/config.js`.
-4. Optional for demos: **Authentication → Providers → Email**, turn off "Confirm email" so sign-up is instant.
-5. Deploy the AI functions with the Supabase CLI:
+4. **Authentication → URL Configuration:** set **Site URL** to where the app lives (e.g. `https://your-app.vercel.app`) and add it plus `http://localhost:5173` under **Redirect URLs** (as `https://your-app.vercel.app/**`). Password-reset and confirmation links only return to addresses on this list; anything else falls back to the Site URL.
+5. Optional for demos: **Authentication → Providers → Email**, turn off "Confirm email" so sign-up is instant.
+6. Deploy the AI functions with the Supabase CLI:
 
 ```bash
 brew install supabase/tap/supabase
@@ -81,7 +82,7 @@ Luna's AI runs only in the Supabase Edge Functions. API keys go in **Supabase se
    ```
 3. In `js/config.js`, keep `ai: "groq"`.
 
-Each person picks a model in the account menu: **Fast** (`openai/gpt-oss-20b`) or **Thoughtful** (`openai/gpt-oss-120b`). Safety checks always use Fast. Deep analysis uses Fast for notes and Thoughtful for the analysis. To use other Groq models, set `GROQ_FAST_MODEL` and `GROQ_THOUGHTFUL_MODEL`.
+Each person picks a model in the account menu: **Fast** (`openai/gpt-oss-20b`) or **Thoughtful** (`openai/gpt-oss-120b`). Thoughtful is for in-depth answers: for Ask Luna and Look for patterns it gets about twice the room and more reasoning time, so it connects details across entries and dates. Reflections stay short with either model. Safety checks always use Fast. Deep analysis uses Fast for notes and Thoughtful for the analysis. To use other Groq models, set `GROQ_FAST_MODEL` and `GROQ_THOUGHTFUL_MODEL`.
 
 Groq's free tier has limits on tokens per minute and per day. When one is reached, Luna says so and tells people when it should work again. Deep analysis uses the most (about 15,000 tokens a run).
 
@@ -105,13 +106,36 @@ Then set `ai: "openai"` in `js/config.js`. To change which model everyone gets b
 
 After changing anything in `supabase/functions/`, deploy again with the same `supabase functions deploy …` command.
 
+### Use a model from Hugging Face
+
+Luna can run on almost any chat model hosted on [Hugging Face Inference Providers](https://huggingface.co/docs/inference-providers), which exposes them through one OpenAI-compatible API (`https://router.huggingface.co/v1`). There are two ways to use one.
+
+**As a user, from the app (no code, no secrets):**
+1. Create a token at [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens/new?ownUserPermissions=inference.serverless.write&tokenType=fineGrained). Choose a fine-grained token with **Make calls to Inference Providers** ticked (the link pre-selects it). It starts with `hf_`.
+2. In Luna, open **Settings → AI model → Hugging Face**.
+3. Pick a preset or choose **Other (type a model name)**. The box searches every chat model that is live on Hugging Face right now (the router's public model list), so you can type `Llama`, `Qwen`, `gemma`, `DeepSeek` and pick one. Any full model id works, e.g. `meta-llama/Llama-3.3-70B-Instruct`. You can also pin a provider with a suffix, like `openai/gpt-oss-120b:groq`, or add `:cheapest`/`:fastest`.
+4. Paste the token and click **Save and test**. Luna sends one tiny request to check the token and model together, and only saves them if it works.
+5. Switch between your Hugging Face models (or back to Luna's default) any time from the **account menu → Model**. Your token stays saved until you click **Remove my key**.
+
+Presets (checked against the live list): GPT-OSS 20B and 120B, Llama 3.3 70B Instruct, Qwen 2.5 72B Instruct, Gemma 3 27B.
+
+**As the person running Luna, for everyone:** make Hugging Face the server default instead of Groq.
+
+```bash
+supabase secrets set LUNA_PROVIDER=huggingface HF_TOKEN=hf_... \
+  HF_FAST_MODEL=openai/gpt-oss-20b HF_THOUGHTFUL_MODEL=meta-llama/Llama-3.3-70B-Instruct
+supabase functions deploy reflect-entry generate-insights ask-luna check-in safety-check analyze-journal ai-settings
+```
+
+Then set `ai: "huggingface"` in `js/config.js` so the Privacy page names the right provider. Whichever model you pick, Luna's rules (no diagnosing, no mood labels, support resources) are sent with every request. Smaller models follow them less reliably, so test a model with a few entries before relying on it.
+
 ### Generic secrets (any provider)
 
 `AI_PROVIDER`, `AI_MODEL`, `AI_API_KEY`, and `AI_BASE_URL` work with every provider and take priority when set. `AI_PROVIDER=custom` with `AI_BASE_URL` (https) points Luna at any OpenAI-compatible API. With none of them set, Luna behaves exactly as above.
 
 ### People can bring their own key
 
-Under **Settings → AI model**, a signed-in person can connect their own Groq or Hugging Face key, or any OpenAI-compatible service. They get their own limits instead of sharing Luna's. It needs the "Bring your own AI key" part of `MIGRATION_NEEDED.sql` (Supabase Vault plus the `ai_settings` table) and the `ai-settings` function:
+Under **Settings → AI model**, a signed-in person can connect their own Groq or Hugging Face key, or any OpenAI-compatible service. They get their own limits instead of sharing Luna's. It needs `supabase/schema-chats-and-keys.sql` (Supabase Vault plus the `ai_settings` table) and the `ai-settings` function:
 
 ```bash
 supabase functions deploy ai-settings
@@ -137,7 +161,7 @@ Demo mode never shows key entry.
 Email and password always work, including "Forgot password?" reset links. The "Continue with Google" button is hidden until Google is set up: after these steps, set `GOOGLE_SIGNIN_ENABLED = true` at the top of `js/app.js`. The Client Secret goes only into the Supabase dashboard, never into this repo.
 
 1. **Google Cloud Console → APIs & Services → Credentials → Create credentials → OAuth client ID → Web application.**
-2. Under **Authorized redirect URIs**, add `https://mhygsrifrklsrfxbcmvq.supabase.co/auth/v1/callback`.
+2. Under **Authorized redirect URIs**, add `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`.
 3. **Supabase → Authentication → Sign In / Providers → Google:** turn it on, paste the Client ID and Client Secret, and **Save**.
 4. **Supabase → Authentication → URL Configuration:** set **Site URL** to your Vercel URL, and add `http://localhost:5173` and your Vercel URL to **Redirect URLs**.
 5. **Google Cloud Console → OAuth consent screen:** add yourself (and anyone testing) as a **test user**, or publish the app so judges don't see an "unverified app" warning.
