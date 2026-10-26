@@ -8,3 +8,4 @@ secrets.local*
 .env.*
 control.md
 .github/
+LICENSE

@@ -183,3 +183,7 @@ npx wrangler pages deploy /tmp/luna-site --project-name luna
 - The AI only runs when you press a button. Nothing gets analyzed in the background.
 - Moods are only ever the ones you pick.
 - Demo mode uses its own sample data in the browser and never touches the database.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
