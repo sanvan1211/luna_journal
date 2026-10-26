@@ -3,6 +3,7 @@ import { AI_PROVIDER } from "../config.js";
 import { listEntries, listInsights, listMemory, deleteMemory, deleteAllInsights, deleteAccount, deleteAllChats } from "../data.js";
 import { bunny, emptyState } from "../bunny.js";
 import { renderAIModel } from "../ai-model-settings.js";
+import { supportMini } from "../support.js";
 import { esc, html, $, $$, dayKey, fmtLong, download, toast, confirmDialog } from "../util.js";
 
 // Where writing goes depends on which AI provider the Edge Functions use (see js/config.js).
@@ -89,6 +90,11 @@ export async function render(main, route) {
             <li>Moods are only what you choose. Luna never assigns a mood or a score.</li>
           </ul>
         </div>
+      </section>
+
+      <section class="setting" aria-labelledby="help-h">
+        <header><h2 id="help-h">Need someone?</h2><p>Luna is a journal, not a therapist, and can't respond in an emergency. If you're in danger, call 911.</p></header>
+        <div>${supportMini()}</div>
       </section>
 
       <section class="setting" aria-labelledby="demo-h">
