@@ -5,108 +5,100 @@
 
 const SAMPLES = {
   "demo-01": {
-    first: "You closed tonight, the 6 o'clock rush was a lot, and by the end you and Maya had a rhythm. You also wrote that someone left a note saying you made their day. What stayed with you most from the shift?",
+    first: "It's 3am and the main essay is done. You wrote that the ending finally sounds like you instead of an application, and that you went to bed with a quiet feeling of finishing something that mattered. What changed in the ending this time?",
     follow: [
-      "Thanks for adding that. You also wrote that you need to stop skipping dinner before shifts. Is that something you want to plan for next time?",
-      "That's worth keeping in your entry. You ended by saying you're grateful the night ended on that note. Anything else from tonight you want to remember?",
+      "Thanks for adding that. You reread the ending three times before closing the laptop. Is there a line from it you want to keep in this entry?",
+      "That's worth writing down. What do you want to remember about tonight when you look back at this later?",
     ],
-    about: "my closing shift, the rush at 6, and the note someone left",
+    about: "finishing my main college essay at 3am",
   },
   "demo-02": {
-    first: "You've got a chem test tomorrow. You wrote that stoichiometry feels fine, gas laws feel shaky, and you're stressed but less than last time. What's the one thing you most want to get done tonight?",
+    first: "You started the morning lost on your app and ended with a frontend ready to deploy. Then a busy shift with decent tips, and drink ideas sketched on an order slip. What helped most to get from lost to ready?",
     follow: [
-      "Got it. You already redid the practice set, and asking Ms. Patel about question 14 and sleeping before midnight are still open. Does one of those feel more doable right now?",
-      "Thanks for sharing that. You said you want to plan the morning so you're not rushing. What would that plan look like?",
+      "Thanks for sharing that. You wrote that the backend is tomorrow, then the demo video. Which of those feels bigger right now?",
+      "Makes sense. You took a piano break in the middle of it. Is that something you want to keep doing on long work days?",
     ],
-    about: "my chem test and how I'm getting ready for it",
+    about: "a long day building my app, then a shift at work",
   },
   "demo-03": {
-    first: "You ran a 21:48 at practice and Coach said your pacing looks steady. You also wrote that you laughed with Jordan the whole cooldown. What part of today do you want to remember?",
+    first: "You did two coding labs between sets at the gym, then had a drink idea at work: chai with brown sugar and boba. You also wrote about a cafe you keep imagining, called Burrow. What does Burrow look like when you picture it?",
     follow: [
-      "That makes sense. You wrote that you always feel lighter after a run. Is that how today felt too?",
-      "Thanks for adding that. Is there anything about the race or the cooldown you'd want to write down before it fades?",
+      "Thanks for adding that. You wrote that it feels good to have something you're building toward. What's one small step toward it?",
+      "That's a nice thing to have in your words. Do you want to write down the milk tea line idea before you forget it?",
     ],
-    about: "running my first 5k under 22 minutes",
+    about: "a drink idea and the cafe I keep imagining",
   },
   "demo-04": {
-    first: "You slept in, made pancakes with your little brother, and read for an hour, without opening anything about college. You wrote that you want more days like this. What made today feel the way it did?",
+    first: "You tried two new drinks on your shift and both turned out better than expected. You also presented a slide at your club meeting, and wrote that you didn't expect to feel that comfortable talking. What do you think made it feel comfortable?",
     follow: [
-      "Thanks for sharing that. You said you didn't feel guilty about taking the day. What helped with that?",
-      "That's good to have in your words. Is there a small piece of today you could bring into a busier week?",
+      "Thanks for sharing that. A few members came up afterward with questions. Was there one you liked answering?",
+      "That makes sense. Which of the two drinks would you make again?",
     ],
-    about: "a quiet day at home with my brother",
+    about: "drink experiments on my shift and presenting at my club",
   },
   "demo-05": {
-    first: "You're on your third draft of the Common App essay, and you wrote that it still sounds like you're trying to impress someone. You're thinking about writing about the bike you rebuilt with your dad. What draws you to that story?",
+    first: "A day off: you slept well, did laundry, finished week one of your probability course, and took a walk with the leaves changing. You wrote that you feel more settled than a few weeks ago. What do you think is helping with that?",
     follow: [
-      "Thanks for adding that. Your counselor told you to write the version only you could write. What do you think that version would include?",
-      "Makes sense. You also wrote that you're worried about running out of time. What would a first small step on the new draft be?",
+      "Thanks for adding that. You also wrote that you're not as excited as you were in the summer. Do you want to say more about that?",
+      "That's worth keeping. Is there anything from today you'd want more of in a regular week?",
     ],
-    about: "my Common App essay and the bike story",
+    about: "a quiet day off",
   },
   "demo-06": {
-    first: "You sat with Priya and Sam today instead of eating in the library. It was awkward for about five minutes and then it wasn't. How are you thinking about Thursday's study session?",
+    first: "Your last campout: the hike to the old mansion, herbs from the garden, and showing the younger scouts how to sharpen an axe. The nights were brutal and you barely slept, but you wrote it was worth it for the stories. Which story do you want to remember?",
     follow: [
-      "Thanks for sharing that. What made it stop feeling awkward, if you had to guess?",
-      "That's worth writing down. Is there anything you want to remember about how today went?",
+      "Thanks for sharing that. Since this was the last campout, is there anything you want to write down about it before it fades?",
+      "That's good to have in your words. Anything else from the trip you want to keep?",
     ],
-    about: "sitting with Priya and Sam at lunch",
+    about: "my last campout with the scouts",
   },
   "demo-07": {
-    first: "You skipped practice because of a headache and spent the afternoon scrolling, and you wrote that you felt worse for it. You left yourself a note that even a short walk would have helped. Want to say more about that afternoon?",
+    first: "You got a 70 on a calculus quiz when you thought you'd done much better. You remembered getting a 74 on a first quiz last year and a 98 on the test, and wrote that you're trying to stay steady. What does staying steady look like this week?",
     follow: [
-      "Thanks for adding that. Is there something you'd want to try next time a day like this comes up?",
-      "That's helpful to have in your own words. Anything else you want to note before you close this entry?",
+      "Thanks for adding that. You also wrote that your first live probability session was great. What made it work for you?",
+      "Makes sense. Is there anything you want to try before the next calculus quiz?",
     ],
-    about: "skipping practice and the afternoon after",
+    about: "a calculus quiz that didn't go how I expected",
   },
   "demo-08": {
-    first: "You worked 4 to 9 and did homework until 12:40, and you wrote that there's too much pressure this week. You made a plan: drop the Wednesday shift, read on the bus, bed by 11:30. Which part of the plan feels most important?",
+    first: "You passed your Eagle board of review today. The middle was rough, the end was good, and one reviewer said your cooling project idea was important. You wrote that you got a little teary on the drive home, the happy kind. What part of today do you want to hold on to?",
     follow: [
-      "Thanks for sharing that. You already did the reading on the bus. How did that go?",
-      "That makes sense. Is there anything that would make asking your manager about Wednesday easier?",
+      "Thanks for sharing that. You wrote that the whole scouting journey is wrapping up. Is there anything you want to say about it now?",
+      "That's a lot to have in one day. Anything about the cooling project idea you want to note?",
     ],
-    about: "a long shift, late homework, and my plan for next week",
+    about: "passing my Eagle board of review",
   },
   "demo-09": {
-    first: "Four mile repeats, and your legs were dead by the last one, but you finished. You wrote that you felt calm the rest of the night and thankful Coach Rivera didn't let you quit. What kept you going on the last one?",
+    first: "You went on a run using the 40% rule, refined the ending of your personal statement, started a short answer for another college, and learned a Bayesian module at work. Which part of the day felt best?",
     follow: [
-      "Thanks for adding that. Is the calm feeling something you want to remember for harder days?",
-      "That's good to have written down. Anything else about practice you want to keep?",
+      "Thanks for adding that. How did the 40% rule feel on the run?",
+      "That's worth keeping. What did you change in the ending of your personal statement?",
     ],
-    about: "mile repeats at practice",
+    about: "a run and working on my personal statement",
   },
   "demo-10": {
-    first: "You surprised your mom with dinner for her birthday, your dad cried during the toast, and then everyone did. You wrote that you're grateful for your family even when the house is loud. What moment do you want to hold on to?",
+    first: "Too rainy to run, so you took your first cybersecurity unit tests and noticed that social engineering is really just psychology. At work you made two cortados and a mango lemonade you invented as a joke, and someone ordered it. What did you think when they did?",
     follow: [
-      "Thanks for sharing that. Is there anything from the night you'd want to tell your mom?",
-      "That's a nice thing to have in your words. Anything else about the dinner you want to remember?",
+      "Thanks for sharing that. What made you connect social engineering to psychology?",
+      "Makes sense. Would you make the mango lemonade again?",
     ],
-    about: "my mom's birthday dinner",
+    about: "a rainy Sunday of tests and drinks at work",
   },
   "demo-11": {
-    first: "You narrowed your list to nine schools, and you keep changing your mind about going far away. You wrote that you want to be somewhere you can still come home some weekends. What do you want to ask your parents when you talk?",
+    first: "You deployed the new website, built a prospect list, and redid your Mac mini cooling stand in CAD using airflow optimization, barely needing help. You also submitted your poster. You called it a good day. What made it good?",
     follow: [
-      "Thanks for adding that. What matters most to you about being able to come home?",
-      "That makes sense. Is there anything that would help you feel more sure either way?",
+      "Thanks for adding that. You wrote that you barely needed help on the CAD work. How did that feel?",
+      "That's worth writing down. You mentioned the contact email still needs fixing. Want to note that for tomorrow?",
     ],
-    about: "my college list and how far from home I want to be",
+    about: "shipping the website and my CAD cooling stand",
   },
   "demo-12": {
-    first: "You ran in the rain with Jordan and wrote that it felt like a movie. You also left yourself a reminder that hard weeks get lighter when you move. What made this run stand out?",
+    first: "Waffles, two museums, and a long walk around the city, through heat and a couple of rain showers. You wrote that the fireworks over the rivers were one of the best shows you've ever seen. What do you want to remember about them?",
     follow: [
-      "Thanks for sharing that. Is that reminder something you want to come back to on a hard week?",
-      "That's worth keeping. Anything else about the run you want to remember?",
+      "Thanks for sharing that. Is there a moment from the museums you want to keep too?",
+      "That sounds like a full day. Anything else from the trip you want to write down?",
     ],
-    about: "running in the rain with Jordan",
-  },
-  "demo-13": {
-    first: "First training shift at the new job. You wrote that everyone's nice, you're nervous about the register, and the trainer said it takes a week to stop feeling lost. What are you most curious about for your next shift?",
-    follow: [
-      "Thanks for adding that. Is there one thing you want to practice on the register next time?",
-      "That makes sense. Anything else about your first day you want to remember?",
-    ],
-    about: "my first training shift at the new job",
+    about: "the Fourth of July in the city",
   },
 };
 
