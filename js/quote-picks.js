@@ -5,7 +5,7 @@
 const REFLECT = /\b(i think|i realized|i realised|i learned|i noticed|i feel like|i guess|i wonder|i hope|i want|i need|i miss|i love|i wish|i'?m (?:starting|learning|proud|grateful|not sure|trying|excited)|i (?:actually|finally|kind of) \w+|maybe i|for the first time|it felt|that felt|made me)\b/gi;
 const FEEL = /\b(proud|grateful|thankful|happy|glad|calm|peaceful|excited|hopeful|lighter|myself|alive|sad|heavy|empty|lonely|scared|nervous|tired|stressed|overwhelmed|guilty|relieved|confident|free)\b/gi;
 const REASON = /\b(because|since|so that|which is why|but|even though|instead)\b/gi;
-const URGENT = /\b(kill myself|end my life|want to die|wanna die|suicid\w*|self[- ]?harm\w*|hurt myself|cut myself|cutting myself|no reason to live|better off without me|overdose)\b/i;
+export const URGENT = /\b(kill myself|end my life|want to die|wanna die|suicid\w*|self[- ]?harm\w*|hurt myself|cut myself|cutting myself|no reason to live|better off without me|overdose)\b/i;
 
 const count = (re, s) => (s.match(re) || []).length;
 

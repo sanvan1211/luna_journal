@@ -6,7 +6,7 @@ import { uid } from "./util.js";
 
 // ───────────── Demo store (in memory only) ─────────────
 let demo = null;
-export function resetDemoStore() { demo = makeDemoData(); }
+export function resetDemoStore() { demo = makeDemoData(); demoEntryChats.clear(); }
 const D = () => (demo || resetDemoStore(), demo);
 const clone = (x) => JSON.parse(JSON.stringify(x));
 const byNewest = (a, b) => new Date(b.created_at) - new Date(a.created_at);
@@ -161,6 +161,33 @@ export async function deleteAllChats() {
   const me = state.session.user.id;
   must(await sb().from("ask_messages").delete().eq("user_id", me));
   must(await sb().from("ask_threads").delete().eq("user_id", me));
+}
+
+// ───────────── Reflection conversations (one per entry) ─────────────
+// Saved in entry_chats once MIGRATION_NEEDED.sql has been run. Before that, getEntryChat reports
+// saved: false and the conversation lives only in the open page.
+const demoEntryChats = new Map();
+let entryChatsMissing = false;
+const missingTable = (error) => error && (error.code === "42P01" || error.code === "PGRST205" || /entry_chats/.test(error.message || ""));
+
+/** { messages, offer, saved } for an entry. */
+export async function getEntryChat(entryId) {
+  if (state.demo) return { ...clone(demoEntryChats.get(entryId) || { messages: [], offer: null }), saved: false };
+  if (entryChatsMissing) return { messages: [], offer: null, saved: false };
+  const { data, error } = await sb().from("entry_chats").select("messages, offer").eq("entry_id", entryId).maybeSingle();
+  if (missingTable(error)) { entryChatsMissing = true; console.warn("entry_chats table not found; run MIGRATION_NEEDED.sql to save reflection chats"); return { messages: [], offer: null, saved: false }; }
+  if (error) throw error;
+  return { messages: data ? data.messages : [], offer: data ? data.offer : null, saved: true };
+}
+
+/** Saves an entry's conversation. Returns false when it can't be saved (table missing). */
+export async function saveEntryChat(entryId, { messages, offer = null }) {
+  if (state.demo) { demoEntryChats.set(entryId, clone({ messages, offer })); return false; }
+  if (entryChatsMissing) return false;
+  const { error } = await sb().from("entry_chats").upsert({ entry_id: entryId, messages, offer }, { onConflict: "entry_id" });
+  if (missingTable(error)) { entryChatsMissing = true; return false; }
+  if (error) throw error;
+  return true;
 }
 
 // ───────────── Account ─────────────

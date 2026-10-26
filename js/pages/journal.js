@@ -1,11 +1,10 @@
 import { state } from "../state.js";
 import { listEntries, createEntry, updateEntry, deleteEntry } from "../data.js";
 import { createEditor } from "../editor.js";
-import { callAI, aiProblem, aiLoading } from "../ai.js";
+import { mountReflection } from "../reflection-chat.js";
 import { emptyState } from "../bunny.js";
 import { openImport, previewTable } from "../import.js";
 import { splitEntry } from "../import-parse.js";
-import { safetyNote } from "../support.js";
 import { esc, html, $, $$, debounce, fmtShort, fmtLong, fmtMonth, fmtTime, plain, download, slug, toast, confirmDialog, onPageKey, typing, openModal } from "../util.js";
 
 // How the sidebar groups entries. Remembered per browser; only a view preference.
@@ -334,27 +333,22 @@ export async function render(main, route) {
   $("[data-reflect]", area).addEventListener("click", async (ev) => {
     const btn = ev.currentTarget;
     await debounced.flush();
-    const text = plain(editor.getMarkdown());
-    if (text.length < 30) {
+    if (plain(editor.getMarkdown()).length < 30) {
       reflEl.innerHTML = `<div class="state-inline notcfg"><div><strong>Write a little more first.</strong> Luna needs a few sentences to reflect on.</div></div>`;
       return;
     }
     btn.disabled = true;
-    reflEl.innerHTML = aiLoading("Luna is reading this entry…");
-    const [r, s] = await Promise.all([
-      callAI("reflect-entry", { entry_id: entry.id }),
-      callAI("safety-check", { text: `${titleEl.value}\n\n${text}` }),
-    ]);
+    await mountReflection(reflEl, {
+      entry,
+      flush: () => debounced.flush(),
+      text: () => `${titleEl.value}\n\n${plain(editor.getMarkdown())}`,
+      // Only called after the writer clicks Insert on the summary preview.
+      append: (md) => {
+        editor.setMarkdown(`${editor.getMarkdown().trimEnd()}\n\n${md}`);
+        queueSave();
+      },
+    });
     btn.disabled = false;
-    const safety = s.ok && s.data && s.data.flagged ? safetyNote() : "";
-    if (!r.ok) { reflEl.innerHTML = safety + aiProblem(r, { retry: true }); const rt = $("[data-retry]", reflEl); rt && rt.addEventListener("click", () => btn.click()); return; }
-    reflEl.innerHTML = safety + `<div class="card">
-      <div class="card-head"><span class="eyebrow">Luna's reflection</span>
-        <button type="button" class="btn btn-ghost btn-sm" data-close>Hide</button></div>
-      <div class="reflection-body">${esc(r.data.reflection || "")}</div>
-      <p class="mt-4 small muted">Luna reflects on what you wrote. It isn't advice or a diagnosis, and it can be wrong.</p>
-    </div>`;
-    $("[data-close]", reflEl).addEventListener("click", () => (reflEl.innerHTML = ""));
   });
 
   // flush on tab close
