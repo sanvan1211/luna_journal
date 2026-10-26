@@ -73,7 +73,8 @@ a { color: var(--accent); }
 /* Focus inside the rail is drawn inset in plain text color, so it never spills past the rail. */
 .rail :focus-visible { box-shadow: inset 0 0 0 2px var(--muted); }
 .rail, .rail-head, .nav-list, .nav-list li, .rail-foot { min-width: 0; max-width: 100%; }
-.rail-foot { margin-top: auto; position: relative; }
+.rail-foot { margin-top: auto; position: relative; display: grid; gap: var(--s-2); }
+.nav-foot { padding-bottom: var(--s-2); border-bottom: 1px solid var(--line); }
 
 /* Collapsible rail (desktop). Collapsed it is icons only; hovering it turns the logo into the open button. */
 .rail-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); position: relative; min-height: 32px; }
@@ -695,7 +696,7 @@ label.field, div.field { display: grid; gap: 6px; font-size: 13px; color: var(--
     flex-direction: row; padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); gap: 0; z-index: 20;
     border-right: 0; border-top: 1px solid var(--line); background: var(--bg);
   }
-  .rail-head, .nav-settings { display: none; }
+  .rail-head, .nav-foot { display: none; }
   .nav-list { grid-template-columns: repeat(5, 1fr); flex: 5; }
   .rail-foot { flex: 1; margin: 0; position: static; }
   .account-btn { flex-direction: column; justify-content: center; gap: 3px; padding: 6px 4px; height: 100%; color: var(--muted); font-size: 11px; font-weight: 500; }

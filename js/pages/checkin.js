@@ -8,7 +8,7 @@ import { MOODS } from "./journal.js";
 const WORDS = ["Calm", "Content", "Hopeful", "Proud", "Okay", "Tired", "Restless", "Stretched thin", "Unsure", "Low", "Lonely", "Grateful"];
 
 const STEPS = [
-  { id: "arriving", q: "How are you arriving right now?", help: "Pick up to three words, or skip.", kind: "words" },
+  { id: "arriving", q: "How are you feeling right now?", help: "Pick up to three words, or skip.", kind: "words" },
   { id: "space", q: "What's taking up the most space in your mind today?", help: "A sentence is plenty.", kind: "text" },
   { id: "okay", q: "What's one small thing that went okay?", help: "It can be tiny. Coffee was good counts.", kind: "text" },
   { id: "need", q: "What would help, even a little, in the next few hours?", help: "Rest, a person, a plan, something else.", kind: "text" },
@@ -68,7 +68,7 @@ export async function render(main) {
 
   function toMarkdown() {
     const parts = [];
-    if (answers.arriving.length) parts.push(`## How I'm arriving\n${answers.arriving.join(", ")}`);
+    if (answers.arriving.length) parts.push(`## How I'm feeling\n${answers.arriving.join(", ")}`);
     STEPS.slice(1).forEach((s) => { if (answers[s.id].trim()) parts.push(`## ${s.q}\n${answers[s.id].trim()}`); });
     return parts.join("\n\n");
   }
@@ -87,7 +87,7 @@ export async function render(main) {
       <h2 class="question" id="q" tabindex="-1">Thanks for checking in</h2>
       <p class="m-0 mb-5 muted">Here's what you shared. Nothing is saved unless you choose to.</p>
       <dl class="summary-list">
-        ${answers.arriving.length ? `<div><dt>How you're arriving</dt><dd>${esc(answers.arriving.join(", "))}</dd></div>` : ""}
+        ${answers.arriving.length ? `<div><dt>How you're feeling</dt><dd>${esc(answers.arriving.join(", "))}</dd></div>` : ""}
         ${STEPS.slice(1).filter((s) => answers[s.id].trim()).map((s) => `<div><dt>${esc(s.q)}</dt><dd>${esc(answers[s.id].trim())}</dd></div>`).join("")}
       </dl>
       <div class="start-wrap step-actions">
@@ -99,7 +99,7 @@ export async function render(main) {
     $("#q", card).focus();
 
     const out = $("[data-out]", card);
-    const fullText = `How I'm arriving: ${answers.arriving.join(", ")}\n${answers.space}\n${answers.okay}\n${answers.need}`;
+    const fullText = `How I'm feeling: ${answers.arriving.join(", ")}\n${answers.space}\n${answers.okay}\n${answers.need}`;
 
     // Quiet safety check: only shows something if it's needed.
     callAI("safety-check", { text: fullText }).then((s) => {
