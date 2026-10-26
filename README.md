@@ -8,11 +8,13 @@ Plain HTML, CSS, and JavaScript (no build step) + Supabase for auth, database, a
 
 - **Home:** a chat-style start page. Ask Luna a question, or start a new journal entry.
 - **Journal:** a block editor with autosave, an optional self-reported mood, and tags. Entries can be grouped by month, week, or day.
+- **Reflect with Luna:** a short reflection on one entry that you can reply to like a chat. After a reply, Luna offers to add a first-person summary to the entry; you edit it and click Insert, and nothing is added without that.
 - **Dashboard:** writing stats, an interactive calendar, journal language trends, and "Luna noticed" insights that always link to their entries.
 - **Check-in:** four gentle questions, which can be saved as an entry.
 - **Ask Luna:** answers from your own entries, with a link to every entry used.
-- **Account menu** (bottom left): choose the AI model, see your plan, open settings, and turn demo mode on or off.
-- **Settings & privacy:** delete Luna's memory, insights, or your whole account, and see exactly what gets sent to the AI.
+- **Account menu** (bottom left): choose the AI model (Luna's default on Groq, or models on your own Hugging Face / Groq key), see your plan, open settings, and turn demo mode on or off.
+- **Settings & privacy:** connect your own AI key, delete Luna's memory, insights, or your whole account, and see exactly what gets sent to the AI. Crisis resources (988, Crisis Text Line) are on every page that shows AI output.
+- **Demo mode** ("Try it with sample data"): a sample journal kept only in the browser. Luna's AI needs an account, so the reflection chat uses pre-written replies written for each sample entry, each labelled "Sample reply (demo mode)". Nothing in demo mode is saved or sent to an AI.
 
 ```
 luna_journal/
@@ -22,11 +24,17 @@ luna_journal/
 │   ├── config.js          ← paste your Supabase URL + anon key here
 │   ├── app.js             router, sign-in, demo mode
 │   ├── account.js         account menu and model picker
+│   ├── reflection-chat.js the reflection conversation and add-to-journal flow
+│   ├── demo-replies.js    labelled sample replies for demo mode
+│   ├── ai-model-settings.js  Settings → AI model (bring your own key)
+│   ├── rail.js            collapsible sidebar
 │   ├── state.js data.js ai.js editor.js markdown.js util.js bunny.js support.js demo.js
 │   └── pages/             home, journal, dashboard, checkin, ask, settings
 ├── supabase/
 │   ├── schema.sql         tables + Row-Level Security
-│   └── functions/         reflect-entry, generate-insights, ask-luna, check-in, safety-check
+│   └── functions/         reflect-entry, generate-insights, ask-luna, check-in, safety-check,
+│                          analyze-journal, ai-settings
+├── MIGRATION_NEEDED.sql   entry_chats + bring-your-own-key tables (already applied on the hosted project)
 └── legacy/                the earlier Node + Notion version (not deployed)
 ```
 
@@ -126,7 +134,7 @@ Demo mode never shows key entry.
 
 ## Sign in with Google
 
-Email and password always work. "Continue with Google" works once you do these steps. Until then, the button says Google sign-in isn't turned on. The Client Secret goes only into the Supabase dashboard, never into this repo.
+Email and password always work, including "Forgot password?" reset links. The "Continue with Google" button is hidden until Google is set up: after these steps, set `GOOGLE_SIGNIN_ENABLED = true` at the top of `js/app.js`. The Client Secret goes only into the Supabase dashboard, never into this repo.
 
 1. **Google Cloud Console → APIs & Services → Credentials → Create credentials → OAuth client ID → Web application.**
 2. Under **Authorized redirect URIs**, add `https://mhygsrifrklsrfxbcmvq.supabase.co/auth/v1/callback`.
@@ -158,6 +166,7 @@ Import the repo in Vercel with no build command and the repo root as the output.
 ## Privacy design
 
 - Row-Level Security: every row is readable only by its owner.
-- The AI key lives only in Supabase secrets; the browser never calls an AI API.
+- Luna's AI key lives only in Supabase secrets, and a user's own key only in Supabase Vault; the browser never calls an AI API and never gets a key back.
+- Luna's rules (no diagnosing, no mood labels, support resources) go in the system prompt to every provider.
 - AI runs only when the user presses a button. Moods are self-reported only.
 - Demo mode uses a separate in-memory store and is never written to the database.
